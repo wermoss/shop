@@ -25,16 +25,12 @@ export const useCartStore = defineStore<"cart", CartState, {}, CartActions>(
         const productsStore = useProductsStore();
         const product = productsStore.getProduct(productId);
 
-        if (!product || product.stock <= 0) {
+        if (!product) {
           return false;
         }
 
         const existingItem = this.items.find((item) => item.id === productId);
         if (existingItem) {
-          // Sprawdź czy nie przekraczamy stanu magazynowego
-          if (existingItem.quantity + 1 > product.stock) {
-            return false;
-          }
           existingItem.quantity++;
         } else {
           this.items.push({ id: productId, quantity: 1 });
@@ -51,13 +47,6 @@ export const useCartStore = defineStore<"cart", CartState, {}, CartActions>(
 
       updateQuantity(productId: number, quantity: number) {
         if (quantity < 1) return false;
-
-        const productsStore = useProductsStore();
-        const product = productsStore.getProduct(productId);
-
-        if (!product || quantity > product.stock) {
-          return false;
-        }
 
         const item = this.items.find((item) => item.id === productId);
         if (item) {

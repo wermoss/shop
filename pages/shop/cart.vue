@@ -29,20 +29,10 @@
               <span class="text-lg">{{ item.quantity }}</span>
               <button
                 @click="updateQuantity(item.id, item.quantity + 1)"
-                :disabled="item.quantity >= item.product.stock"
-                class="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-50"
+                class="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-100"
               >
                 +
               </button>
-              <span class="text-sm text-gray-500">
-                (dostępne: {{ item.product.stock }} szt.)
-              </span>
-            </div>
-            <div
-              v-if="quantityErrors[item.id]"
-              class="text-red-500 text-sm mt-1"
-            >
-              Nie można dodać więcej sztuk - przekroczono stan magazynowy
             </div>
           </div>
           <button
@@ -53,25 +43,23 @@
           </button>
         </div>
       </div>
-
-      <div class="mt-8 p-6 border border-gray-200 rounded-lg">
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="text-xl font-bold">Suma</h3>
-          <p class="text-2xl font-bold">{{ formatPrice(totalPrice) }}</p>
+      <div class="mt-8">
+        <div class="text-2xl font-bold mb-4">
+          Suma: {{ formatPrice(totalPrice) }}
         </div>
-        <NuxtLink
-          to="/shop/checkout"
-          class="block w-full py-3 px-4 bg-green-500 text-white text-center rounded-md hover:bg-green-600"
+        <button
+          @click="proceedToCheckout"
+          class="px-6 py-3 bg-green-500 text-white rounded-md hover:bg-green-600"
         >
-          Zamówienie
-        </NuxtLink>
+          Przejdź do płatności
+        </button>
       </div>
     </div>
     <div v-else class="text-center py-12">
-      <p class="text-xl text-gray-600 mb-4">Twój koszyk jest pusty</p>
+      <p class="text-xl text-gray-600">Twój koszyk jest pusty</p>
       <NuxtLink
         to="/shop"
-        class="inline-block py-2 px-6 bg-green-500 text-white rounded-md hover:bg-green-600"
+        class="inline-block mt-4 px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
       >
         Wróć do sklepu
       </NuxtLink>
@@ -82,22 +70,24 @@
 <script setup lang="ts">
 import { useCartStore } from "~/stores/shop/cart";
 import { useProductsStore } from "~/stores/shop/products";
+import { useRouter } from "vue-router";
 
+const router = useRouter();
 const cartStore = useCartStore();
 const productsStore = useProductsStore();
-const quantityErrors = ref<{ [key: number]: boolean }>({});
 
 const cartItems = computed(() => {
   return cartStore.items.map((item) => ({
     ...item,
-    product: productsStore.getProduct(item.id)!,
+    product: productsStore.getProduct(item.id),
   }));
 });
 
 const totalPrice = computed(() => {
-  return cartItems.value.reduce((sum, item) => {
-    return sum + item.product.price * item.quantity;
-  }, 0);
+  return cartItems.value.reduce(
+    (sum, item) => sum + item.product.price * item.quantity,
+    0
+  );
 });
 
 const formatPrice = (price: number) => {
@@ -108,17 +98,15 @@ const formatPrice = (price: number) => {
 };
 
 const updateQuantity = (productId: number, quantity: number) => {
-  const success = cartStore.updateQuantity(productId, quantity);
-  if (!success) {
-    quantityErrors.value[productId] = true;
-    setTimeout(() => {
-      quantityErrors.value[productId] = false;
-    }, 3000);
-  }
+  cartStore.updateQuantity(productId, quantity);
 };
 
 const removeFromCart = (productId: number) => {
   cartStore.removeFromCart(productId);
+};
+
+const proceedToCheckout = () => {
+  router.push("/shop/checkout");
 };
 </script>
 

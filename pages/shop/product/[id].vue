@@ -13,18 +13,9 @@
         <p class="text-gray-600 text-lg">{{ product.description }}</p>
         <p class="text-2xl font-bold">{{ formatPrice(product.price) }}</p>
         <div class="space-y-4">
-          <p class="text-gray-700">
-            Stan magazynowy:
-            <span
-              :class="product.stock > 0 ? 'text-green-600' : 'text-red-600'"
-            >
-              {{ product.stock > 0 ? `${product.stock} sztuk` : "Niedostępny" }}
-            </span>
-          </p>
           <button
             @click="addToCart"
-            :disabled="product.stock === 0"
-            class="w-full md:w-auto px-8 py-3 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+            class="w-full md:w-auto px-8 py-3 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
           >
             Dodaj do koszyka
           </button>
@@ -63,7 +54,7 @@ const formatPrice = (price: number) => {
 };
 
 const addToCart = () => {
-  if (product.value && product.value.stock > 0) {
+  if (product.value) {
     cartStore.addToCart(product.value.id);
   }
 };
