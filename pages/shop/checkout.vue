@@ -258,6 +258,21 @@ const handlePayment = async () => {
       );
     }
 
+    // Zapisz metadane zamówienia w sessionStorage
+    const orderMetadata = {
+      customerName: formData.value.name,
+      customerEmail: formData.value.email,
+      customerPhone: formData.value.phone,
+      shippingAddress: `${formData.value.street} ${formData.value.houseNumber}`,
+      shippingCity: formData.value.city,
+      shippingPostalCode: formData.value.postalCode,
+      shippingCountry: formData.value.country,
+    };
+    sessionStorage.setItem(
+      `order_${responseData.orderNumber}`,
+      JSON.stringify(orderMetadata)
+    );
+
     console.log("Session ID received:", responseData.sessionId);
 
     // Poczekaj na załadowanie Stripe
