@@ -1,7 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   devtools: { enabled: true },
-  ssr: true,
+  ssr: false,
 
   modules: ["@pinia/nuxt", "@vueuse/nuxt", "@nuxtjs/tailwindcss"],
 
@@ -10,9 +10,9 @@ export default defineNuxtConfig({
   },
 
   routeRules: {
-    "/": { ssr: true },
-    "/shop": { ssr: true },
-    "/shop/**": { ssr: true },
+    "/": { ssr: false },
+    "/shop": { ssr: false },
+    "/shop/**": { ssr: false },
   },
 
   runtimeConfig: {

@@ -1,36 +1,38 @@
 <template>
-  <div class="min-h-screen flex flex-col">
-    <header class="bg-gray-800 py-4">
-      <nav class="max-w-7xl mx-auto px-4 flex justify-between items-center">
-        <NuxtLink to="/shop" class="text-white text-2xl font-bold"
-          >NuxtShop</NuxtLink
-        >
-        <div class="flex gap-4">
-          <NuxtLink
-            to="/shop"
-            class="text-white px-4 py-2 rounded-md hover:bg-gray-700"
-            >Sklep</NuxtLink
+  <NuxtLayout>
+    <div class="min-h-screen flex flex-col">
+      <header class="bg-gray-800 py-4">
+        <nav class="max-w-7xl mx-auto px-4 flex justify-between items-center">
+          <NuxtLink to="/shop" class="text-white text-2xl font-bold"
+            >NuxtShop</NuxtLink
           >
-          <NuxtLink
-            to="/shop/cart"
-            class="text-white px-4 py-2 rounded-md hover:bg-gray-700 relative"
-          >
-            Koszyk
-            <span
-              v-if="cartItemsCount > 0"
-              class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"
+          <div class="flex gap-4">
+            <NuxtLink
+              to="/shop"
+              class="text-white px-4 py-2 rounded-md hover:bg-gray-700"
+              >Sklep</NuxtLink
             >
-              {{ cartItemsCount }}
-            </span>
-          </NuxtLink>
-        </div>
-      </nav>
-    </header>
+            <NuxtLink
+              to="/shop/cart"
+              class="text-white px-4 py-2 rounded-md hover:bg-gray-700 relative"
+            >
+              Koszyk
+              <span
+                v-if="cartItemsCount > 0"
+                class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"
+              >
+                {{ cartItemsCount }}
+              </span>
+            </NuxtLink>
+          </div>
+        </nav>
+      </header>
 
-    <main class="flex-1">
-      <NuxtPage />
-    </main>
-  </div>
+      <main class="flex-1">
+        <NuxtPage />
+      </main>
+    </div>
+  </NuxtLayout>
 </template>
 
 <script setup lang="ts">

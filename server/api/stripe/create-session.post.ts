@@ -54,8 +54,8 @@ export default defineEventHandler(async (event) => {
       locale: "pl",
       line_items: lineItems,
       mode: "payment",
-      success_url: `${baseUrl}/shop/checkout/success?order=${orderNumber}`,
-      cancel_url: `${baseUrl}/shop/cart`,
+      success_url: `${baseUrl}/shop/success?order=${orderNumber}`,
+      cancel_url: `${baseUrl}/shop/failed?order=${orderNumber}`,
       billing_address_collection: "auto",
       metadata: {
         orderNumber,

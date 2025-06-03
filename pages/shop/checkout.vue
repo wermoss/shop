@@ -291,7 +291,8 @@ const handlePayment = async () => {
 
     if (error) {
       console.error("Stripe redirect error:", error);
-      throw new Error(error.message);
+      // Przekieruj do strony błędu z numerem zamówienia
+      navigateTo(`/shop/failed?order=${responseData.orderNumber}`);
     }
   } catch (error) {
     console.error("Payment error:", error);
@@ -299,6 +300,11 @@ const handlePayment = async () => {
       error instanceof Error
         ? error.message
         : "Wystąpił błąd podczas przetwarzania płatności. Spróbuj ponownie.";
+
+    // W przypadku błędu płatności, przekieruj do strony błędu
+    if (responseData?.orderNumber) {
+      navigateTo(`/shop/failed?order=${responseData.orderNumber}`);
+    }
   } finally {
     submitting.value = false;
   }

@@ -10,3 +10,13 @@ export interface Product {
   price: number;
   image: string;
 }
+
+export interface OrderMetadata {
+  customerName: string;
+  customerEmail: string;
+  customerPhone?: string;
+  shippingAddress: string;
+  shippingCity: string;
+  shippingPostalCode: string;
+  shippingCountry: string;
+}
