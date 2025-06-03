@@ -22,9 +22,11 @@
           Zamówienie przyjęte!
         </h1>
         <p class="text-gray-600 mb-4">Dziękujemy za zakupy w naszym sklepie.</p>
-        <p class="text-gray-800 font-semibold">Numer zamówienia: {{ order }}</p>
+        <p v-if="orderNumber" class="text-gray-800 font-semibold">
+          Numer zamówienia: {{ orderNumber }}
+        </p>
       </div>
-      <div class="mt-8 space-y-4">
+      <div class="mt-8">
         <NuxtLink
           to="/shop"
           class="inline-block bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors"
@@ -36,21 +38,12 @@
   </div>
 </template>
 
-<script setup lang="ts">
-definePageMeta({
-  middleware: ["payment-success"],
-  ssr: true,
-});
-
+<script setup>
 const route = useRoute();
+const orderNumber = route.query.order;
+
+// Wyczyść koszyk
 const cartStore = useCartStore();
-
-// Pobierz numer zamówienia z query params
-const order = computed(() => {
-  return route.query.order as string;
-});
-
-// Wyczyść koszyk tylko po stronie klienta
 onMounted(() => {
   cartStore.clearCart();
 });

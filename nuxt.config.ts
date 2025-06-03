@@ -1,30 +1,15 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  devtools: { enabled: true },
-  compatibilityDate: "2025-06-03",
-  modules: ["@pinia/nuxt", "@vueuse/nuxt", "@nuxtjs/tailwindcss"],
-
-  // Włącz SSR globalnie
+  devtools: { enabled: false },
   ssr: true,
 
-  // Konfiguracja nitro dla lepszej obsługi routingu
+  modules: ["@pinia/nuxt", "@vueuse/nuxt", "@nuxtjs/tailwindcss"],
+
   nitro: {
+    preset: "vercel",
     routeRules: {
       "/": { ssr: true },
-      "/shop/**": { ssr: true },
-    },
-  },
-
-  app: {
-    // Konfiguracja head dla lepszego SEO i ładowania
-    head: {
-      htmlAttrs: {
-        lang: "pl",
-      },
-      meta: [
-        { charset: "utf-8" },
-        { name: "viewport", content: "width=device-width, initial-scale=1" },
-      ],
+      "/shop/**": { ssr: true, cache: false },
     },
   },
 
