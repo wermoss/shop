@@ -1,25 +1,18 @@
-export default defineNuxtRouteMiddleware((to, from) => {
-  try {
-    console.log("Payment Success Middleware - Route:", to.path);
-    console.log("Payment Success Middleware - Query:", to.query);
+export default defineNuxtRouteMiddleware(async (to) => {
+  // Sprawdź czy jesteśmy na stronie success
+  if (to.path === "/shop/checkout/success") {
+    // Sprawdź czy mamy numer zamówienia
+    const orderNumber = to.query.order as string;
 
-    // Upewnij się, że jesteśmy na stronie success i mamy numer zamówienia
-    if (to.path === "/shop/checkout/success") {
-      if (!to.query.order) {
-        console.warn("No order number provided in success page URL");
-        return navigateTo("/shop/cart");
-      }
-
-      // Sprawdź, czy numer zamówienia ma poprawny format (litera + 6 cyfr)
-      const orderNumber = to.query.order as string;
-      console.log("Order number validation:", orderNumber);
-      if (!/^[A-Z]\d{6}$/.test(orderNumber)) {
-        console.warn("Invalid order number format:", orderNumber);
-        return navigateTo("/shop/cart");
-      }
+    if (!orderNumber) {
+      console.warn("Brak numeru zamówienia w URL");
+      return navigateTo("/shop");
     }
-  } catch (error) {
-    console.error("Error in payment-success middleware:", error);
-    return navigateTo("/shop/cart");
+
+    // Sprawdź format numeru zamówienia (litera + 6 cyfr)
+    if (!/^[A-Z]\d{6}$/.test(orderNumber)) {
+      console.warn("Nieprawidłowy format numeru zamówienia:", orderNumber);
+      return navigateTo("/shop");
+    }
   }
 });

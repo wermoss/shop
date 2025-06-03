@@ -22,9 +22,7 @@
           Zamówienie przyjęte!
         </h1>
         <p class="text-gray-600 mb-4">Dziękujemy za zakupy w naszym sklepie.</p>
-        <p class="text-gray-800 font-semibold">
-          Numer zamówienia: {{ orderNumber }}
-        </p>
+        <p class="text-gray-800 font-semibold">Numer zamówienia: {{ order }}</p>
       </div>
       <div class="mt-8 space-y-4">
         <NuxtLink
@@ -44,24 +42,16 @@ definePageMeta({
   ssr: true,
 });
 
-import { onMounted, computed } from "vue";
-import { useCartStore } from "~/stores/shop/cart";
-import { useRoute } from "vue-router";
-
 const route = useRoute();
-console.log("Success Page - Route:", route.path);
-console.log("Success Page - Query params:", route.query);
-
 const cartStore = useCartStore();
 
-const orderNumber = computed(() => {
-  const number = route.query.order as string;
-  console.log("Success Page - Order number computed:", number);
-  return number;
+// Pobierz numer zamówienia z query params
+const order = computed(() => {
+  return route.query.order as string;
 });
 
+// Wyczyść koszyk tylko po stronie klienta
 onMounted(() => {
-  console.log("Success Page - Component mounted");
   cartStore.clearCart();
 });
 </script>

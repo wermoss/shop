@@ -4,13 +4,27 @@ export default defineNuxtConfig({
   compatibilityDate: "2025-06-03",
   modules: ["@pinia/nuxt", "@vueuse/nuxt", "@nuxtjs/tailwindcss"],
 
-  // Konfiguracja SSR
+  // Włącz SSR globalnie
   ssr: true,
 
-  // Konfiguracja serwera
+  // Konfiguracja nitro dla lepszej obsługi routingu
   nitro: {
     routeRules: {
-      "/shop/checkout/success": { ssr: true },
+      "/": { ssr: true },
+      "/shop/**": { ssr: true },
+    },
+  },
+
+  app: {
+    // Konfiguracja head dla lepszego SEO i ładowania
+    head: {
+      htmlAttrs: {
+        lang: "pl",
+      },
+      meta: [
+        { charset: "utf-8" },
+        { name: "viewport", content: "width=device-width, initial-scale=1" },
+      ],
     },
   },
 
@@ -30,10 +44,5 @@ export default defineNuxtConfig({
           ? process.env.STRIPE_TEST_PUBLIC_KEY
           : process.env.STRIPE_LIVE_PUBLIC_KEY,
     },
-  },
-
-  // Dodanie pustej trasy dla Chrome DevTools
-  routeRules: {
-    "/.well-known/**": { cors: true },
   },
 });

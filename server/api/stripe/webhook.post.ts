@@ -15,10 +15,13 @@ export default defineEventHandler(async (event: H3Event) => {
     apiVersion: "2023-10-16",
   });
 
+  console.log("Webhook received");
+
   const signature = getHeader(event, "stripe-signature");
   const body = await readRawBody(event);
 
   if (!signature || !body) {
+    console.error("Missing signature or body");
     throw createError({
       statusCode: 400,
       message: "Missing signature or body",
@@ -33,8 +36,9 @@ export default defineEventHandler(async (event: H3Event) => {
       signature,
       config.stripeWebhookSecret
     );
+    console.log("Webhook event constructed successfully:", stripeEvent.type);
   } catch (err) {
-    console.error("Webhook signature verification failed");
+    console.error("Webhook signature verification failed:", err);
     throw createError({
       statusCode: 400,
       message: "Webhook signature verification failed",
@@ -46,54 +50,27 @@ export default defineEventHandler(async (event: H3Event) => {
     const session = stripeEvent.data.object;
     const orderNumber = session.metadata?.orderNumber;
 
+    console.log("Processing checkout.session.completed");
+    console.log("Order number:", orderNumber);
+    console.log("Payment status:", session.payment_status);
+
     if (session.payment_status === "paid") {
       console.log(`Payment successful for order ${orderNumber}`);
 
-      try {
-        // Pobierz informacje o produktach z sesji
-        const lineItems = await stripe.checkout.sessions.listLineItems(
-          session.id
-        );
-
-        // Dla każdego produktu zaktualizuj stan magazynowy
-        for (const item of lineItems.data) {
-          const productId = item.price?.product_data?.metadata?.productId;
-          if (productId) {
-            const product = productsData.products.find(
-              (p) => p.id === parseInt(productId)
-            );
-            if (product) {
-              product.stock -= item.quantity;
-              if (product.stock < 0) product.stock = 0;
-            }
-          }
-        }
-
-        try {
-          // Aktualizuj plik products.json w bezpieczny sposób
-          const filePath = resolve(__dirname, "../../../data/products.json");
-          await writeFile(
-            filePath,
-            JSON.stringify(productsData, null, 2),
-            { mode: 0o644 } // Ustaw odpowiednie uprawnienia
-          );
-          console.log("Successfully updated product stock");
-        } catch (writeError) {
-          console.error("Failed to update products.json:", writeError);
-          // Nie rzucaj błędu - płatność została przyjęta, więc chcemy zwrócić sukces
-          // Możemy tu dodać kod do powiadomienia administratora o problemie
-        }
-
-        return { success: true, orderNumber };
-      } catch (error) {
-        console.error("Error processing webhook:", error);
-        // Nie rzucaj błędu HTTP 500, zwróć sukces ponieważ płatność została przyjęta
-        return { success: true, orderNumber, stockUpdateError: true };
-      }
+      // Zwracamy sukces bez aktualizacji pliku
+      return {
+        success: true,
+        orderNumber,
+        message: "Payment processed successfully",
+      };
     }
   }
 
+  // Dla innych typów eventów
+  console.log("Webhook processed successfully");
   return {
     received: true,
+    type: stripeEvent.type,
+    message: "Webhook received and processed",
   };
 });
