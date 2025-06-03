@@ -1,16 +1,18 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  devtools: { enabled: false },
+  devtools: { enabled: true },
   ssr: true,
 
   modules: ["@pinia/nuxt", "@vueuse/nuxt", "@nuxtjs/tailwindcss"],
 
   nitro: {
     preset: "vercel",
-    routeRules: {
-      "/": { ssr: true },
-      "/shop/**": { ssr: true, cache: false },
-    },
+  },
+
+  routeRules: {
+    "/": { ssr: true },
+    "/shop": { ssr: true },
+    "/shop/**": { ssr: true },
   },
 
   runtimeConfig: {

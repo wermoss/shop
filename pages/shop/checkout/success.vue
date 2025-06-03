@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-100">
+  <div class="min-h-screen flex items-center justify-center bg-gray-100 p-4">
     <div class="bg-white p-8 rounded-lg shadow-md max-w-md w-full text-center">
       <div class="mb-6">
         <div class="text-green-500 mb-4">
@@ -22,8 +22,8 @@
           Zamówienie przyjęte!
         </h1>
         <p class="text-gray-600 mb-4">Dziękujemy za zakupy w naszym sklepie.</p>
-        <p v-if="orderNumber" class="text-gray-800 font-semibold">
-          Numer zamówienia: {{ orderNumber }}
+        <p v-if="$route.query.order" class="text-gray-800 font-semibold">
+          Numer zamówienia: {{ $route.query.order }}
         </p>
       </div>
       <div class="mt-8">
@@ -39,11 +39,9 @@
 </template>
 
 <script setup>
-const route = useRoute();
-const orderNumber = route.query.order;
-
-// Wyczyść koszyk
 const cartStore = useCartStore();
+
+// Wyczyść koszyk po załadowaniu strony
 onMounted(() => {
   cartStore.clearCart();
 });
