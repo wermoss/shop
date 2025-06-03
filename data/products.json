@@ -1,0 +1,20 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "name": "Smartfon XYZ",
+      "description": "Nowoczesny smartfon z najnowszymi funkcjami",
+      "price": 2499.99,
+      "image": "/products/phone.jpg",
+      "stock": 8
+    },
+    {
+      "id": 2,
+      "name": "Laptop ABC",
+      "description": "Wydajny laptop do pracy i rozrywki",
+      "price": 4999.99,
+      "image": "/products/laptop.jpg",
+      "stock": 5
+    }
+  ]
+}
