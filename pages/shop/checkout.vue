@@ -121,8 +121,6 @@
                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
               >
                 <option value="PL">Polska</option>
-                <option value="DE">Niemcy</option>
-                <option value="US">Stany Zjednoczone</option>
               </select>
             </div>
           </div>
@@ -151,14 +149,22 @@
             <div
               v-for="item in cartItems"
               :key="item.id"
-              class="flex justify-between"
+              class="flex flex-col border-b pb-2"
             >
-              <span class="text-gray-600"
-                >{{ item.product.name }} x {{ item.quantity }}</span
-              >
-              <span class="font-medium">{{
-                formatPrice(item.product.price * item.quantity)
-              }}</span>
+              <div class="flex justify-between">
+                <span class="text-gray-600">
+                  {{ item.product.name }} x {{ item.quantity }}
+                </span>
+                <div class="text-right">
+                  <p :class="{ 'line-through text-gray-400': item.discount }">
+                    {{ formatPrice(item.product.price * item.quantity) }}
+                  </p>
+                  <p v-if="item.discount" class="text-green-600 font-medium">
+                    {{ formatPrice(item.finalPrice * item.quantity) }}
+                    (-{{ item.discount }}%)
+                  </p>
+                </div>
+              </div>
             </div>
             <div class="border-t pt-4 mt-4">
               <div class="flex justify-between">
@@ -176,6 +182,10 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({
+  middleware: ["check-cart"],
+});
+
 import { useCartStore } from "~/stores/shop/cart";
 import { useProductsStore } from "~/stores/shop/products";
 import { useStripe } from "~/composables/useStripe";
@@ -197,18 +207,9 @@ const formData = ref({
   country: "PL",
 });
 
-const cartItems = computed(() => {
-  return cartStore.items.map((item) => ({
-    ...item,
-    product: productsStore.getProduct(item.id)!,
-  }));
-});
+const cartItems = computed(() => cartStore.itemsWithDiscounts);
 
-const totalPrice = computed(() => {
-  return cartItems.value.reduce((sum, item) => {
-    return sum + item.product.price * item.quantity;
-  }, 0);
-});
+const totalPrice = computed(() => cartStore.totalPrice);
 
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat("pl-PL", {
@@ -220,11 +221,12 @@ const formatPrice = (price: number) => {
 const handlePayment = async () => {
   if (cartItems.value.length === 0) return;
 
+  let responseData;
   try {
     submitting.value = true;
     errorMessage.value = "";
 
-    // Utwórz sesję płatności
+    // Najpierw utwórz sesję płatności aby uzyskać numer zamówienia
     const response = await fetch("/api/stripe/create-session", {
       method: "POST",
       headers: {
@@ -250,13 +252,35 @@ const handlePayment = async () => {
       }),
     });
 
-    const responseData = await response.json();
+    responseData = await response.json();
 
     if (!response.ok) {
       throw new Error(
         responseData.message || "Failed to create payment session"
       );
     }
+
+    // Teraz wyślij powiadomienie o przejściu do płatności z numerem zamówienia
+    await $fetch("/api/mail/cart-notification", {
+      method: "POST",
+      body: {
+        cartDetails: {
+          orderNumber: responseData.orderNumber,
+          items: cartItems.value,
+          totalPrice: totalPrice.value,
+          customerEmail: formData.value.email,
+          customerName: formData.value.name,
+          customerPhone: formData.value.phone,
+          shippingAddress: {
+            street: formData.value.street,
+            houseNumber: formData.value.houseNumber,
+            postalCode: formData.value.postalCode,
+            city: formData.value.city,
+            country: formData.value.country,
+          },
+        },
+      },
+    });
 
     // Zapisz metadane zamówienia w sessionStorage
     const orderMetadata = {
@@ -291,8 +315,7 @@ const handlePayment = async () => {
 
     if (error) {
       console.error("Stripe redirect error:", error);
-      // Przekieruj do strony błędu z numerem zamówienia
-      navigateTo(`/shop/failed?order=${responseData.orderNumber}`);
+      navigateTo("/shop/cart");
     }
   } catch (error) {
     console.error("Payment error:", error);
@@ -300,15 +323,40 @@ const handlePayment = async () => {
       error instanceof Error
         ? error.message
         : "Wystąpił błąd podczas przetwarzania płatności. Spróbuj ponownie.";
-
-    // W przypadku błędu płatności, przekieruj do strony błędu
-    if (responseData?.orderNumber) {
-      navigateTo(`/shop/failed?order=${responseData.orderNumber}`);
-    }
   } finally {
     submitting.value = false;
   }
 };
+
+// Funkcja sprawdzająca parametry URL po powrocie z płatności
+const checkPaymentReturn = () => {
+  const orderNumber = sessionStorage.getItem("current_order_number");
+  if (!orderNumber) return;
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const redirectStatus = urlParams.get("redirect_status");
+  const sessionId = urlParams.get("session_id");
+
+  if (redirectStatus === "failed" || sessionId) {
+    navigateTo(
+      `/shop/failed?order=${orderNumber}&status=failed&error_code=payment_authentication_failed`
+    );
+
+    // Wyczyść dane sesji
+    sessionStorage.removeItem("stripe_session_id");
+    sessionStorage.removeItem("current_order_number");
+  }
+};
+
+onMounted(() => {
+  checkPaymentReturn();
+});
+
+onBeforeUnmount(() => {
+  // Wyczyść dane sesji przy opuszczeniu strony
+  sessionStorage.removeItem("stripe_session_id");
+  sessionStorage.removeItem("current_order_number");
+});
 </script>
 
 <style scoped>

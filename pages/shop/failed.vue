@@ -110,9 +110,34 @@ import { useCartStore } from "~/stores/shop/cart";
 const route = useRoute();
 const cartStore = useCartStore();
 const orderNumber = computed(() => route.query.order);
+const status = computed(() => route.query.status || "failed");
+const reason = computed(() => route.query.reason || null);
 
 // Pobierz dane zamówienia z sessionStorage
 const orderMetadata = ref(null);
+
+const failureMessage = computed(() => {
+  if (status.value === "expired") {
+    return "Sesja płatności wygasła. Proszę spróbować ponownie.";
+  }
+  if (status.value === "cancelled") {
+    return "Płatność została anulowana.";
+  }
+  if (status.value === "failed" && reason.value) {
+    return reason.value;
+  }
+
+  // Sprawdź status przekierowania ze Stripe
+  const redirectStatus = route.query.redirect_status;
+  if (redirectStatus === "failed") {
+    return "Płatność nie powiodła się. Spróbuj ponownie lub wybierz inną metodę płatności.";
+  }
+  if (redirectStatus === "expired") {
+    return "Sesja płatności wygasła. Proszę spróbować ponownie.";
+  }
+
+  return "Wystąpił problem z płatnością. Proszę spróbować ponownie.";
+});
 
 onMounted(() => {
   console.log("Failed page mounted");

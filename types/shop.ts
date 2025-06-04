@@ -1,6 +1,6 @@
-export interface CartItem {
-  id: number;
+export interface DiscountTier {
   quantity: number;
+  discount: number;
 }
 
 export interface Product {
@@ -9,6 +9,13 @@ export interface Product {
   description: string;
   price: number;
   image: string;
+  orderLimit: number;
+  discountTiers: DiscountTier[];
+}
+
+export interface CartItem {
+  id: number;
+  quantity: number;
 }
 
 export interface OrderMetadata {

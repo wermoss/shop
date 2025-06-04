@@ -15,24 +15,73 @@
           />
           <div class="flex-1">
             <h3 class="text-xl font-semibold">{{ item.product.name }}</h3>
-            <p class="text-lg text-gray-600">
-              {{ formatPrice(item.product.price) }}
-            </p>
+            <div class="flex flex-col gap-1">
+              <p
+                class="text-lg"
+                :class="{ 'line-through text-gray-400': item.discount }"
+              >
+                {{ formatPrice(item.product.price) }} / szt.
+              </p>
+              <p
+                v-if="item.discount"
+                class="text-lg text-green-600 font-semibold"
+              >
+                {{ formatPrice(item.finalPrice) }} / szt. (-{{
+                  item.discount
+                }}%)
+              </p>
+              <p class="text-sm text-gray-600">
+                Suma:
+                {{
+                  formatPrice(
+                    item.finalPrice
+                      ? item.finalPrice * item.quantity
+                      : item.product.price * item.quantity
+                  )
+                }}
+              </p>
+            </div>
             <div class="flex items-center gap-4 mt-2">
-              <button
-                @click="updateQuantity(item.id, item.quantity - 1)"
-                :disabled="item.quantity <= 1"
-                class="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-50"
-              >
-                -
-              </button>
-              <span class="text-lg">{{ item.quantity }}</span>
-              <button
-                @click="updateQuantity(item.id, item.quantity + 1)"
-                class="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-100"
-              >
-                +
-              </button>
+              <div class="flex items-center space-x-2">
+                <button
+                  @click="decreaseQuantity(item.id)"
+                  class="px-2 py-1 text-gray-600 hover:bg-gray-100 rounded"
+                >
+                  -
+                </button>
+                <span class="w-8 text-center">{{ item.quantity }}</span>
+                <button
+                  @click="increaseQuantity(item.id)"
+                  class="px-2 py-1 text-gray-600 hover:bg-gray-100 rounded"
+                  :disabled="!canIncreaseQuantity(item.id)"
+                >
+                  +
+                </button>
+                <div
+                  v-if="isLimitReached(item.id)"
+                  class="text-sm text-red-600 ml-2"
+                >
+                  Max: {{ getProductLimit(item.id) }}
+                </div>
+              </div>
+            </div>
+            <div
+              v-if="item.product.discountTiers.length > 0"
+              class="mt-2 text-sm text-gray-600"
+            >
+              <p>Dostępne progi zniżek:</p>
+              <ul class="list-disc list-inside">
+                <li
+                  v-for="tier in item.product.discountTiers"
+                  :key="tier.quantity"
+                  :class="{
+                    'text-green-600 font-semibold':
+                      item.quantity >= tier.quantity,
+                  }"
+                >
+                  {{ tier.quantity }}+ szt: -{{ tier.discount }}%
+                </li>
+              </ul>
             </div>
           </div>
           <button
@@ -76,19 +125,9 @@ const router = useRouter();
 const cartStore = useCartStore();
 const productsStore = useProductsStore();
 
-const cartItems = computed(() => {
-  return cartStore.items.map((item) => ({
-    ...item,
-    product: productsStore.getProduct(item.id),
-  }));
-});
+const cartItems = computed(() => cartStore.itemsWithDiscounts);
 
-const totalPrice = computed(() => {
-  return cartItems.value.reduce(
-    (sum, item) => sum + item.product.price * item.quantity,
-    0
-  );
-});
+const totalPrice = computed(() => cartStore.totalPrice);
 
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat("pl-PL", {
@@ -107,6 +146,37 @@ const removeFromCart = (productId: number) => {
 
 const proceedToCheckout = () => {
   router.push("/shop/checkout");
+};
+
+const isLimitReached = (productId: number) => {
+  const item = cartItems.value.find((item) => item.id === productId);
+  const product = item?.product;
+  if (!item || !product) return false;
+  return item.quantity >= product.orderLimit;
+};
+
+const canIncreaseQuantity = (productId: number) => {
+  return !isLimitReached(productId);
+};
+
+const getProductLimit = (productId: number) => {
+  const item = cartItems.value.find((item) => item.id === productId);
+  return item?.product.orderLimit ?? 0;
+};
+
+const increaseQuantity = (productId: number) => {
+  if (!isLimitReached(productId)) {
+    cartStore.addToCart(productId);
+  }
+};
+
+const decreaseQuantity = (productId: number) => {
+  const item = cartStore.items.find((item) => item.id === productId);
+  if (item && item.quantity > 1) {
+    cartStore.updateQuantity(productId, item.quantity - 1);
+  } else {
+    cartStore.removeFromCart(productId);
+  }
 };
 </script>
 

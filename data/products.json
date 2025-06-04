@@ -5,14 +5,71 @@
       "name": "Smartfon XYZ",
       "description": "Nowoczesny smartfon z najnowszymi funkcjami",
       "price": 2499.99,
-      "image": "/products/phone.jpg"
+      "image": "/products/phone.jpg",
+      "orderLimit": 2,
+      "discountTiers": [
+        {
+          "quantity": 2,
+          "discount": 10
+        },
+        {
+          "quantity": 3,
+          "discount": 20
+        }
+      ]
     },
     {
       "id": 2,
       "name": "Laptop ABC",
       "description": "Wydajny laptop do pracy i rozrywki",
       "price": 4999.99,
-      "image": "/products/laptop.jpg"
+      "image": "/products/laptop.jpg",
+      "orderLimit": 1,
+      "discountTiers": []
+    },
+    {
+      "id": 3,
+      "name": "Betonowe dłonie z mchem - Spring Green",
+      "description": "Betonowe dłonie z mchem - Spring Green. To jest przykładowy opis produktu",
+      "price": 199.99,
+      "image": "/products/phone.jpg",
+      "orderLimit": 20,
+      "discountTiers": [
+        {
+          "quantity": 2,
+          "discount": 10
+        },
+        {
+          "quantity": 5,
+          "discount": 20
+        },
+        {
+          "quantity": 10,
+          "discount": 50
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Betonowe dłonie z mchem - Dark Green",
+      "description": "Betonowe dłonie z mchem - Dark Green. To jest przykładowy opis produktu",
+      "price": 199.99,
+      "image": "/products/phone.jpg",
+      "orderLimit": 20,
+      "discountTiers": [
+        {
+          "quantity": 2,
+          "discount": 10
+        },
+        {
+          "quantity": 5,
+          "discount": 20
+        },
+        {
+          "quantity": 10,
+          "discount": 50
+        }
+      ]
     }
   ]
 }

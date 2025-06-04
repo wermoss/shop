@@ -27,6 +27,14 @@ export default defineEventHandler(async (event) => {
       const product = productsData.products.find((p) => p.id === item.id);
       if (!product) throw new Error("Product not found");
 
+      // Znajdź odpowiedni próg zniżki
+      const discountTier = [...product.discountTiers]
+        .sort((a, b) => b.quantity - a.quantity)
+        .find((tier) => item.quantity >= tier.quantity);
+
+      const discount = discountTier?.discount || 0;
+      const finalPrice = product.price * (1 - discount / 100);
+
       return {
         price_data: {
           currency: "pln",
@@ -36,8 +44,9 @@ export default defineEventHandler(async (event) => {
             metadata: {
               productId: product.id,
             },
+            description: discount > 0 ? `Zniżka: -${discount}%` : undefined,
           },
-          unit_amount: Math.round(product.price * 100),
+          unit_amount: Math.round(finalPrice * 100),
         },
         quantity: item.quantity,
       };
@@ -55,36 +64,24 @@ export default defineEventHandler(async (event) => {
       line_items: lineItems,
       mode: "payment",
       success_url: `${baseUrl}/shop/success?order=${orderNumber}`,
-      cancel_url: `${baseUrl}/shop/failed?order=${orderNumber}`,
-      billing_address_collection: "auto",
+      cancel_url: `${baseUrl}/shop/cart`,
+      customer_email: customer?.email,
       metadata: {
         orderNumber,
+        customerName: customer?.name,
+        customerEmail: customer?.email,
+        customerPhone: customer?.phone,
+        shippingStreet: customer?.address?.street,
+        shippingHouseNumber: customer?.address?.houseNumber,
+        shippingPostalCode: customer?.address?.postalCode,
+        shippingCity: customer?.address?.city,
+        shippingCountry: customer?.address?.country,
       },
     };
 
     // Dodaj dane klienta tylko jeśli są dostępne
     if (customer?.email) {
       sessionConfig.customer_email = customer.email;
-    }
-
-    // Dodaj metadane tylko jeśli wszystkie wymagane pola są dostępne
-    if (customer?.address) {
-      const metadata = sessionConfig.metadata || {};
-
-      if (customer.name) metadata.customerName = customer.name;
-      if (customer.email) metadata.customerEmail = customer.email;
-      if (customer.phone) metadata.customerPhone = customer.phone;
-
-      const { street, houseNumber, city, postalCode, country } =
-        customer.address;
-      if (street && houseNumber) {
-        metadata.shippingAddress = `${street} ${houseNumber}`;
-      }
-      if (city) metadata.shippingCity = city;
-      if (postalCode) metadata.shippingPostalCode = postalCode;
-      if (country) metadata.shippingCountry = country;
-
-      sessionConfig.metadata = metadata;
     }
 
     // Utwórz sesję płatności

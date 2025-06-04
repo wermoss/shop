@@ -1,6 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  devtools: { enabled: true },
+  devtools: { enabled: false },
   ssr: false,
 
   modules: ["@pinia/nuxt", "@vueuse/nuxt", "@nuxtjs/tailwindcss"],
@@ -17,6 +17,10 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     useTestKeys: process.env.USE_TEST_KEYS === "true",
+    brevo: {
+      apiKey: process.env.BREVO_API_KEY,
+      adminEmail: "konrad@wooboo.pl",
+    },
     stripeSecretKey:
       process.env.USE_TEST_KEYS === "true"
         ? process.env.STRIPE_TEST_SECRET_KEY

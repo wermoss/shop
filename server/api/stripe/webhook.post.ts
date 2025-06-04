@@ -1,19 +1,19 @@
+import { defineEventHandler, readBody, readRawBody, getHeader } from "h3";
 import Stripe from "stripe";
-import { createError, H3Event } from "h3";
 
-export default defineEventHandler(async (event: H3Event) => {
+export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig();
   const stripe = new Stripe(config.stripeSecretKey, {
     apiVersion: "2023-10-16",
   });
 
-  console.log("Webhook endpoint hit");
+  console.log("🔔 [Webhook] Endpoint hit");
 
   const signature = getHeader(event, "stripe-signature");
-  const body = await readRawBody(event);
+  const rawBody = await readRawBody(event);
 
-  if (!signature || !body) {
-    console.error("No signature or body found");
+  if (!signature || !rawBody) {
+    console.error("❌ [Webhook] No signature or body found");
     throw createError({
       statusCode: 400,
       message: "Missing signature or body",
@@ -24,13 +24,13 @@ export default defineEventHandler(async (event: H3Event) => {
 
   try {
     stripeEvent = stripe.webhooks.constructEvent(
-      body,
+      rawBody,
       signature,
       config.stripeWebhookSecret
     );
-    console.log("Webhook verified successfully:", stripeEvent.type);
+    console.log("✅ [Webhook] Event verified successfully:", stripeEvent.type);
   } catch (err) {
-    console.error("Webhook signature verification failed:", err);
+    console.error("❌ [Webhook] Signature verification failed:", err);
     throw createError({
       statusCode: 400,
       message: "Webhook signature verification failed",
@@ -38,68 +38,119 @@ export default defineEventHandler(async (event: H3Event) => {
   }
 
   const session = stripeEvent.data.object;
-  const orderNumber = session.metadata?.orderNumber;
 
-  console.log("Processing webhook event:", stripeEvent.type);
-  console.log("Order number:", orderNumber);
-  console.log("Payment status:", session.payment_status);
-  console.log("Payment intent:", session.payment_intent);
+  // Reagujemy tylko na zdarzenie checkout.session.completed
+  if (stripeEvent.type === "checkout.session.completed") {
+    // Sprawdzamy czy płatność została zakończona pomyślnie
+    if (session.payment_status !== "paid") {
+      console.log("⚠️ [Webhook] Payment not completed yet");
+      return {
+        received: true,
+        type: stripeEvent.type,
+        message: "Payment not completed yet",
+        status: "pending",
+      };
+    }
 
-  switch (stripeEvent.type) {
-    case "checkout.session.completed":
-      if (session.payment_status === "paid") {
-        console.log(`Payment successful for order ${orderNumber}`);
-        const metadata = {
-          customerName: session.metadata?.customerName,
+    console.log("💰 [Webhook] Processing completed checkout session:", {
+      sessionId: session.id,
+      orderNumber: session.metadata?.orderNumber,
+      customerEmail: session.metadata?.customerEmail,
+      customerName: session.metadata?.customerName,
+      amount: session.amount_total,
+    });
+
+    // Sprawdź czy mail już został wysłany
+    if (session.metadata?.emailSent === "true") {
+      console.log(
+        "📧 [Webhook] Confirmation email already sent for this session"
+      );
+      return {
+        success: true,
+        orderNumber: session.metadata?.orderNumber,
+        message: "Email already sent",
+        status: "success",
+      };
+    }
+
+    try {
+      // Pobierz pełne dane sesji wraz z line_items
+      const expandedSession = await stripe.checkout.sessions.retrieve(
+        session.id,
+        {
+          expand: ["line_items"],
+        }
+      );
+
+      console.log("📦 [Webhook] Retrieved expanded session with line items");
+
+      const products =
+        expandedSession.line_items?.data.map((item) => ({
+          name: item.description,
+          quantity: item.quantity,
+          price: (item.amount_total / 100).toFixed(2),
+        })) || [];
+
+      console.log("📧 [Webhook] Preparing to send confirmation emails");
+
+      const emailResponse = await $fetch("/api/mail/order-confirmation", {
+        method: "POST",
+        body: {
           customerEmail: session.metadata?.customerEmail,
-          customerPhone: session.metadata?.customerPhone,
-          shippingAddress: session.metadata?.shippingAddress,
-          shippingCity: session.metadata?.shippingCity,
-          shippingPostalCode: session.metadata?.shippingPostalCode,
-          shippingCountry: session.metadata?.shippingCountry,
-        };
+          orderDetails: {
+            orderNumber: session.metadata?.orderNumber,
+            customerName: session.metadata?.customerName,
+            customerEmail: session.metadata?.customerEmail,
+            customerPhone: session.metadata?.customerPhone,
+            shippingAddress: {
+              street: session.metadata?.shippingStreet,
+              houseNumber: session.metadata?.shippingHouseNumber,
+              postalCode: session.metadata?.shippingPostalCode,
+              city: session.metadata?.shippingCity,
+              country: session.metadata?.shippingCountry,
+            },
+            amount: (session.amount_total / 100).toFixed(2),
+            items: products,
+          },
+        },
+      });
 
-        return {
-          success: true,
-          orderNumber,
-          metadata,
-          message: "Payment processed successfully",
-        };
+      if (!emailResponse.success) {
+        throw new Error("Failed to send confirmation emails");
       }
-      break;
 
-    case "payment_intent.payment_failed":
-      console.log(`Payment intent failed for order ${orderNumber}`);
-      const error = session.last_payment_error;
-      return {
-        success: false,
-        orderNumber,
-        message: error?.message || "Payment failed",
-        redirectUrl: `/shop/failed?order=${orderNumber}`,
-      };
+      // Oznacz sesję jako obsłużoną (mail wysłany)
+      await stripe.checkout.sessions.update(session.id, {
+        metadata: {
+          ...session.metadata,
+          emailSent: "true",
+        },
+      });
 
-    case "checkout.session.async_payment_failed":
-      console.log(`Payment failed for order ${orderNumber}`);
-      return {
-        success: false,
-        orderNumber,
-        message: "Payment failed",
-        redirectUrl: `/shop/failed?order=${orderNumber}`,
-      };
+      console.log("✅ [Webhook] Confirmation emails sent successfully");
 
-    case "checkout.session.expired":
-      console.log(`Session expired for order ${orderNumber}`);
       return {
-        success: false,
-        orderNumber,
-        message: "Payment session expired",
-        redirectUrl: `/shop/failed?order=${orderNumber}`,
+        success: true,
+        orderNumber: session.metadata?.orderNumber,
+        message: "Payment processed successfully",
+        status: "success",
       };
+    } catch (error) {
+      console.error(
+        "❌ [Webhook] Error processing checkout completion:",
+        error
+      );
+      throw createError({
+        statusCode: 500,
+        message: "Error processing checkout completion",
+      });
+    }
   }
 
   return {
     received: true,
     type: stripeEvent.type,
-    message: "Webhook received and processed",
+    message: "Webhook received",
+    status: "unhandled",
   };
 });
