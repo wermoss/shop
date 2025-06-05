@@ -28,14 +28,42 @@
           </p>
         </div>
 
-        <!-- Informacja o osiągniętym rabacie -->
+        <!-- Informacja o osiągniętym pierwszym progu rabatowym -->
         <div
-          v-else-if="cartStore.cartDiscount === firstDiscountTier.discount"
+          v-else-if="
+            cartStore.cartDiscount === firstDiscountTier.discount &&
+            cartStore.totalQuantity < secondDiscountTier.quantity
+          "
           class="mb-6 bg-green-50 p-4 rounded-lg border-l-4 border-green-500"
         >
           <p class="text-green-700 font-semibold">
             Gratulacje! Otrzymujesz rabat {{ firstDiscountTier.discount }}% na
             całe zamówienie!
+          </p>
+        </div>
+
+        <!-- Informacja o osiągniętym drugim progu rabatowym -->
+        <div
+          v-else-if="
+            cartStore.cartDiscount === secondDiscountTier.discount &&
+            cartStore.totalQuantity < thirdDiscountTier.quantity
+          "
+          class="mb-6 bg-green-50 p-4 rounded-lg border-l-4 border-green-500"
+        >
+          <p class="text-green-700 font-semibold">
+            Całkiem spore zamówienie! Twój rabat właśnie wzrósł do
+            {{ secondDiscountTier.discount }}% na całe zamówienie!
+          </p>
+        </div>
+
+        <!-- Informacja o osiągniętym trzecim progu rabatowym -->
+        <div
+          v-else-if="cartStore.cartDiscount === thirdDiscountTier.discount"
+          class="mb-6 bg-green-50 p-4 rounded-lg border-l-4 border-green-500"
+        >
+          <p class="text-green-700 font-semibold">
+            Wow, chyba zamierzasz handlować łapami. Teraz Twój rabat wynosi
+            {{ thirdDiscountTier.discount }}%!
           </p>
         </div>
 
@@ -224,6 +252,16 @@ const discountValue = computed(() => {
 // Pierwszy próg rabatowy (najniższy)
 const firstDiscountTier = computed(() => {
   return [...CART_DISCOUNT_TIERS].sort((a, b) => a.quantity - b.quantity)[0];
+});
+
+// Drugi próg rabatowy (środkowy)
+const secondDiscountTier = computed(() => {
+  return [...CART_DISCOUNT_TIERS].sort((a, b) => a.quantity - b.quantity)[1];
+});
+
+// Trzeci próg rabatowy (najwyższy)
+const thirdDiscountTier = computed(() => {
+  return [...CART_DISCOUNT_TIERS].sort((a, b) => a.quantity - b.quantity)[2];
 });
 
 // Obliczenie ile produktów brakuje do pierwszego progu rabatowego

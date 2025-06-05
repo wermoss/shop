@@ -10,6 +10,10 @@ export default defineNuxtConfig({
     "@vee-validate/nuxt",
   ],
 
+  build: {
+    transpile: ["pinia-plugin-persistedstate"],
+  },
+
   veeValidate: {
     // Generuje automatycznie komponenty walidacji
     autoImports: true,

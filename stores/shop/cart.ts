@@ -148,5 +148,6 @@ export const useCartStore = defineStore<
     },
   },
 
+  // Uproszczona konfiguracja persist
   persist: true,
 });
