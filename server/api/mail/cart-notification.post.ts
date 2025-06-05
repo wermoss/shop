@@ -34,6 +34,9 @@ export default defineEventHandler(async (event) => {
 
   const emailData = {
     templateId: 17,
+    sender: {
+      email: "services@lexxo.pl",
+    },
     to: [{ email: adminEmail }],
     params: {
       ORDER_NUMBER: orderNumber,
@@ -48,6 +51,7 @@ export default defineEventHandler(async (event) => {
       TOTAL_PRICE: Number(cartDetails.totalPrice).toFixed(2),
       PRODUCTS: products,
     },
+    subject: `Rozpoczęcie zamówienia - ${orderNumber}`,
   };
 
   console.log(

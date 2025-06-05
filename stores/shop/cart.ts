@@ -6,23 +6,32 @@ interface CartState {
   items: CartItem[];
 }
 
-interface CartItemWithDiscount extends CartItem {
+export interface CartItemWithDiscount extends CartItem {
+  product: Product;
   discount?: number;
-  finalPrice?: number;
+  finalPrice?: number; // zmiana z required na optional
 }
 
-export const useCartStore = defineStore<"cart", CartState>("cart", {
+export const useCartStore = defineStore<
+  "cart",
+  CartState,
+  {
+    itemsWithDiscounts: CartItemWithDiscount[];
+    totalPrice: number;
+  }
+>("cart", {
   state: () => ({
     items: [],
   }),
 
   getters: {
-    itemsWithDiscounts(): (CartItemWithDiscount & { product: Product })[] {
+    itemsWithDiscounts(): CartItemWithDiscount[] {
       const productsStore = useProductsStore();
 
       return this.items.map((item) => {
         const product = productsStore.getProduct(item.id);
-        if (!product) return { ...item, product } as any;
+        if (!product)
+          return { ...item, product, finalPrice: 0 } as CartItemWithDiscount;
 
         // Znajdź odpowiedni próg zniżki
         const discountTier = [...product.discountTiers]
@@ -43,8 +52,7 @@ export const useCartStore = defineStore<"cart", CartState>("cart", {
 
     totalPrice(): number {
       return this.itemsWithDiscounts.reduce((sum, item) => {
-        const price = item.finalPrice ?? item.product.price;
-        return sum + price * item.quantity;
+        return sum + item.finalPrice * item.quantity;
       }, 0);
     },
   },

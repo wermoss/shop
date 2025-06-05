@@ -3,7 +3,24 @@ export default defineNuxtConfig({
   devtools: { enabled: false },
   ssr: false,
 
-  modules: ["@pinia/nuxt", "@vueuse/nuxt", "@nuxtjs/tailwindcss"],
+  modules: [
+    "@pinia/nuxt",
+    "@vueuse/nuxt",
+    "@nuxtjs/tailwindcss",
+    "@vee-validate/nuxt",
+  ],
+
+  veeValidate: {
+    // Generuje automatycznie komponenty walidacji
+    autoImports: true,
+    // Konfiguracja komponentów
+    componentNames: {
+      Form: "VeeForm",
+      Field: "VeeField",
+      FieldArray: "VeeFieldArray",
+      ErrorMessage: "VeeErrorMessage",
+    },
+  },
 
   nitro: {
     preset: "vercel",

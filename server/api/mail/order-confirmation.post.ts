@@ -43,15 +43,23 @@ export default defineEventHandler(async (event) => {
   // Mail do klienta
   const customerEmailData = {
     templateId: 16,
+    sender: {
+      email: "services@lexxo.pl",
+    },
     to: [{ email: customerEmail }],
     params,
+    subject: `Zakończenie zamówienia - ${orderDetails.orderNumber}`,
   };
 
   // Mail do administratora (kopia)
   const adminEmailData = {
     templateId: 16,
+    sender: {
+      email: "services@lexxo.pl",
+    },
     to: [{ email: adminEmail }],
     params,
+    subject: `Zakończenie zamówienia - ${orderDetails.orderNumber}`,
   };
 
   try {
