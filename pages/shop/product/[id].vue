@@ -82,6 +82,7 @@ const formatPrice = (price: number) => {
 
 const quantity = ref(1);
 const cartStore = useCartStore();
+const isAddingToCart = ref(false);
 
 const isLimitReached = computed(() => {
   const cartItem = cartStore.items.find(
@@ -92,13 +93,16 @@ const isLimitReached = computed(() => {
 });
 
 const canAddToCart = computed(() => {
-  return product.value && !isLimitReached.value;
+  return product.value && !isLimitReached.value && !isAddingToCart.value;
 });
 
 const addToCartButtonText = computed(() => {
   if (!product.value) return "Dodaj do koszyka";
   if (isLimitReached.value) {
     return `Limit: ${product.value.orderLimit} szt.`;
+  }
+  if (isAddingToCart.value) {
+    return "Dodano";
   }
   return "Dodaj do koszyka";
 });
@@ -116,12 +120,18 @@ const decreaseQuantity = () => {
 };
 
 const addToCart = () => {
-  if (product.value && !isLimitReached.value) {
+  if (product.value && !isLimitReached.value && !isAddingToCart.value) {
     for (let i = 0; i < quantity.value; i++) {
       const success = cartStore.addToCart(product.value.id);
       if (!success) break;
     }
     quantity.value = 1;
+
+    // Ustaw stan dodawania i zresetuj go po 3 sekundach
+    isAddingToCart.value = true;
+    setTimeout(() => {
+      isAddingToCart.value = false;
+    }, 3000);
   }
 };
 </script>

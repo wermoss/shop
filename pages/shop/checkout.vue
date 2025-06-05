@@ -211,22 +211,36 @@
                   {{ item.product.name }} x {{ item.quantity }}
                 </span>
                 <div class="text-right">
-                  <p :class="{ 'line-through text-gray-400': item.discount }">
-                    {{ formatPrice(item.product.price * item.quantity) }}
-                  </p>
-                  <p v-if="item.discount" class="text-green-600 font-medium">
-                    {{ formatPrice(item.finalPrice * item.quantity) }}
-                    (-{{ item.discount }}%)
-                  </p>
+                  <p>{{ formatPrice(item.product.price * item.quantity) }}</p>
                 </div>
               </div>
             </div>
-            <div class="border-t pt-4 mt-4">
+
+            <!-- Podsumowanie z rabatem -->
+            <div class="border-t pt-4 mt-4 space-y-2">
               <div class="flex justify-between">
-                <span class="text-lg font-bold">Suma:</span>
-                <span class="text-lg font-bold">{{
-                  formatPrice(totalPrice)
-                }}</span>
+                <span>Liczba produktów:</span>
+                <span>{{ cartStore.totalQuantity }} szt.</span>
+              </div>
+
+              <div class="flex justify-between">
+                <span>Wartość przed rabatem:</span>
+                <span>{{ formatPrice(cartStore.subtotalPrice) }}</span>
+              </div>
+
+              <div
+                v-if="cartStore.cartDiscount > 0"
+                class="flex justify-between text-green-600 font-medium"
+              >
+                <span>Rabat {{ cartStore.cartDiscount }}%:</span>
+                <span>-{{ formatPrice(discountValue) }}</span>
+              </div>
+
+              <div
+                class="flex justify-between text-lg font-bold pt-2 border-t border-gray-300"
+              >
+                <span>Do zapłaty:</span>
+                <span>{{ formatPrice(totalPrice) }}</span>
               </div>
             </div>
           </div>
@@ -310,6 +324,9 @@ const cartItems = computed<CartItemWithDiscount[]>(
   () => cartStore.itemsWithDiscounts
 );
 const totalPrice = computed<number>(() => cartStore.totalPrice);
+const discountValue = computed<number>(() => {
+  return cartStore.subtotalPrice - cartStore.totalPrice;
+});
 
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat("pl-PL", {

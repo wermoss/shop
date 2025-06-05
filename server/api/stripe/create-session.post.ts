@@ -2,6 +2,7 @@ import Stripe from "stripe";
 import { CartItem } from "~/types/shop";
 import productsData from "../../../data/products.json";
 import { generateOrderNumber } from "~/utils/orderNumber";
+import { CART_DISCOUNT_TIERS } from "~/stores/shop/cart";
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig();
@@ -22,18 +23,26 @@ export default defineEventHandler(async (event) => {
     // Generuj numer zamówienia
     const orderNumber = generateOrderNumber();
 
-    // Przygotuj listę produktów dla Stripe
+    // Oblicz całkowitą liczbę produktów w koszyku
+    const totalQuantity = cartItems.reduce(
+      (total, item) => total + item.quantity,
+      0
+    );
+
+    // Oblicz rabat dla całego koszyka na podstawie łącznej liczby produktów
+    const discountTier = [...CART_DISCOUNT_TIERS]
+      .sort((a, b) => b.quantity - a.quantity)
+      .find((tier) => totalQuantity >= tier.quantity);
+
+    const cartDiscount = discountTier?.discount || 0;
+
+    // Przygotuj listę produktów dla Stripe z uwzględnieniem globalnego rabatu
     const lineItems = cartItems.map((item: CartItem) => {
       const product = productsData.products.find((p) => p.id === item.id);
       if (!product) throw new Error("Product not found");
 
-      // Znajdź odpowiedni próg zniżki
-      const discountTier = [...product.discountTiers]
-        .sort((a, b) => b.quantity - a.quantity)
-        .find((tier) => item.quantity >= tier.quantity);
-
-      const discount = discountTier?.discount || 0;
-      const finalPrice = product.price * (1 - discount / 100);
+      // Zastosuj rabat dla całego koszyka do każdego produktu
+      const finalPrice = product.price * (1 - cartDiscount / 100);
 
       return {
         price_data: {
@@ -44,7 +53,8 @@ export default defineEventHandler(async (event) => {
             metadata: {
               productId: product.id,
             },
-            description: discount > 0 ? `Zniżka: -${discount}%` : undefined,
+            description:
+              cartDiscount > 0 ? `Cena z rabatem -${cartDiscount}%` : undefined,
           },
           unit_amount: Math.round(finalPrice * 100),
         },
@@ -76,6 +86,8 @@ export default defineEventHandler(async (event) => {
         shippingPostalCode: customer?.address?.postalCode,
         shippingCity: customer?.address?.city,
         shippingCountry: customer?.address?.country,
+        cartDiscount: cartDiscount.toString(), // Dodaj informację o rabacie w metadanych
+        totalQuantity: totalQuantity.toString(), // Dodaj informację o łącznej liczbie produktów
       },
     };
 

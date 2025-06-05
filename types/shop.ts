@@ -1,8 +1,3 @@
-export interface DiscountTier {
-  quantity: number;
-  discount: number;
-}
-
 export interface Product {
   id: number;
   name: string;
@@ -10,7 +5,6 @@ export interface Product {
   price: number;
   image: string;
   orderLimit: number;
-  discountTiers: DiscountTier[];
 }
 
 export interface CartItem {

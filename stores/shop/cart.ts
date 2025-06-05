@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import type { CartItem, Product } from "~/types/shop";
 import { useProductsStore } from "./products";
+import discountsData from "../../data/discounts.json";
 
 interface CartState {
   items: CartItem[];
@@ -8,16 +9,20 @@ interface CartState {
 
 export interface CartItemWithDiscount extends CartItem {
   product: Product;
-  discount?: number;
-  finalPrice?: number; // zmiana z required na optional
 }
+
+// Importujemy progi rabatowe z pliku JSON
+export const CART_DISCOUNT_TIERS = discountsData.cartDiscountTiers;
 
 export const useCartStore = defineStore<
   "cart",
   CartState,
   {
     itemsWithDiscounts: CartItemWithDiscount[];
-    totalPrice: number;
+    totalQuantity: number; // Nowy getter - łączna liczba sztuk w koszyku
+    cartDiscount: number; // Nowy getter - obliczony rabat dla koszyka
+    subtotalPrice: number; // Nowy getter - cena przed rabatem
+    totalPrice: number; // Zaktualizowany getter - cena po rabacie
   }
 >("cart", {
   state: () => ({
@@ -30,30 +35,41 @@ export const useCartStore = defineStore<
 
       return this.items.map((item) => {
         const product = productsStore.getProduct(item.id);
-        if (!product)
-          return { ...item, product, finalPrice: 0 } as CartItemWithDiscount;
+        if (!product) return { ...item, product } as CartItemWithDiscount;
 
-        // Znajdź odpowiedni próg zniżki
-        const discountTier = [...product.discountTiers]
-          .sort((a, b) => b.quantity - a.quantity)
-          .find((tier) => item.quantity >= tier.quantity);
-
-        const discount = discountTier?.discount || 0;
-        const finalPrice = product.price * (1 - discount / 100);
-
+        // Zwracamy element bez rabatu per produkt
         return {
           ...item,
           product,
-          discount,
-          finalPrice,
         };
       });
     },
 
-    totalPrice(): number {
+    // Nowy getter - łączna liczba sztuk w koszyku
+    totalQuantity(): number {
+      return this.items.reduce((total, item) => total + item.quantity, 0);
+    },
+
+    // Nowy getter - obliczanie rabatu dla całego koszyka
+    cartDiscount(): number {
+      // Znajdź odpowiedni próg rabatowy dla koszyka
+      const discountTier = [...CART_DISCOUNT_TIERS]
+        .sort((a, b) => b.quantity - a.quantity)
+        .find((tier) => this.totalQuantity >= tier.quantity);
+
+      return discountTier?.discount || 0;
+    },
+
+    // Nowy getter - suma cen przed rabatem
+    subtotalPrice(): number {
       return this.itemsWithDiscounts.reduce((sum, item) => {
-        return sum + item.finalPrice * item.quantity;
+        return sum + item.product.price * item.quantity;
       }, 0);
+    },
+
+    // Zaktualizowany getter - cena po rabacie
+    totalPrice(): number {
+      return this.subtotalPrice * (1 - this.cartDiscount / 100);
     },
   },
 

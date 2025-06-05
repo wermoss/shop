@@ -24,11 +24,43 @@ export default defineEventHandler(async (event) => {
     return { success: false, error: "Missing cart details" };
   }
 
-  const products = cartDetails.items.map((item) => ({
-    name: item.product.name,
-    quantity: item.quantity,
-    price: Number(item.finalPrice).toFixed(2),
-  }));
+  // Funkcja do formatowania cen w stylu polskim
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat("pl-PL", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(price);
+  };
+
+  // Obliczenie rabatu dla całego koszyka
+  const subtotalPrice = cartDetails.items.reduce(
+    (sum, item) => sum + item.product.price * item.quantity,
+    0
+  );
+  const discountedPrice = cartDetails.totalPrice;
+  const discountAmount = subtotalPrice - discountedPrice;
+  const discountPercent =
+    cartDetails.cartDiscount ||
+    Math.round((discountAmount / subtotalPrice) * 100);
+
+  // Tworzenie danych produktów z uwzględnieniem ceny po rabacie i informacji o rabacie
+  const products = cartDetails.items.map((item) => {
+    // Obliczenie ceny jednostkowej po rabacie
+    const unitPrice = item.product.price;
+    const unitPriceWithDiscount = unitPrice * (1 - discountPercent / 100);
+
+    // Całkowita cena za wszystkie sztuki po rabacie
+    const totalPrice = unitPriceWithDiscount * item.quantity;
+
+    return {
+      name: item.product.name,
+      quantity: item.quantity,
+      price: formatPrice(totalPrice), // Cena za wszystkie sztuki z rabatem
+      unitPrice: formatPrice(unitPrice), // Cena jednostkowa przed rabatem
+      unitPriceWithDiscount: formatPrice(unitPriceWithDiscount), // Cena jednostkowa po rabacie
+      discountPercent: discountPercent, // Wysokość rabatu w procentach
+    };
+  });
 
   const orderNumber = cartDetails.orderNumber;
 
@@ -48,7 +80,10 @@ export default defineEventHandler(async (event) => {
       SHIPPING_POSTAL_CODE: cartDetails.shippingAddress?.postalCode || "",
       SHIPPING_CITY: cartDetails.shippingAddress?.city || "",
       SHIPPING_COUNTRY: cartDetails.shippingAddress?.country || "",
-      TOTAL_PRICE: Number(cartDetails.totalPrice).toFixed(2),
+      TOTAL_PRICE: formatPrice(cartDetails.totalPrice), // Formatowanie łącznej kwoty w stylu polskim
+      SUBTOTAL_PRICE: formatPrice(subtotalPrice),
+      DISCOUNT_AMOUNT: formatPrice(discountAmount),
+      DISCOUNT_PERCENT: discountPercent,
       PRODUCTS: products,
     },
     subject: `Rozpoczęcie zamówienia - ${orderNumber}`,

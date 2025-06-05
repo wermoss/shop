@@ -93,6 +93,22 @@ export default defineEventHandler(async (event) => {
 
       console.log("📧 [Webhook] Preparing to send confirmation emails");
 
+      // Pobierz wartość rabatu z metadanych sesji
+      const cartDiscount = parseInt(session.metadata?.cartDiscount || "0");
+
+      // Obliczenie wartości przed rabatem
+      const totalAmount = parseFloat((session.amount_total / 100).toFixed(2));
+      const subtotalAmount =
+        cartDiscount > 0 ? totalAmount / (1 - cartDiscount / 100) : totalAmount;
+      const discountAmount = subtotalAmount - totalAmount;
+
+      console.log("💰 [Webhook] Discount calculation:", {
+        cartDiscount,
+        totalAmount,
+        subtotalAmount,
+        discountAmount,
+      });
+
       const emailResponse = await $fetch("/api/mail/order-confirmation", {
         method: "POST",
         body: {
@@ -110,7 +126,10 @@ export default defineEventHandler(async (event) => {
               country: session.metadata?.shippingCountry,
             },
             amount: (session.amount_total / 100).toFixed(2),
+            subtotalAmount: subtotalAmount.toFixed(2),
+            discountAmount: discountAmount.toFixed(2),
             items: products,
+            cartDiscount: cartDiscount,
           },
         },
       });

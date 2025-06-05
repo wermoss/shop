@@ -1,0 +1,7 @@
+{
+  "cartDiscountTiers": [
+    { "quantity": 10, "discount": 30 },
+    { "quantity": 5, "discount": 20 },
+    { "quantity": 3, "discount": 10 }
+  ]
+}

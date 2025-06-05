@@ -16,29 +16,12 @@
           <div class="flex-1">
             <h3 class="text-xl font-semibold">{{ item.product.name }}</h3>
             <div class="flex flex-col gap-1">
-              <p
-                class="text-lg"
-                :class="{ 'line-through text-gray-400': item.discount }"
-              >
+              <p class="text-lg">
                 {{ formatPrice(item.product.price) }} / szt.
-              </p>
-              <p
-                v-if="item.discount"
-                class="text-lg text-green-600 font-semibold"
-              >
-                {{ formatPrice(item.finalPrice) }} / szt. (-{{
-                  item.discount
-                }}%)
               </p>
               <p class="text-sm text-gray-600">
                 Suma:
-                {{
-                  formatPrice(
-                    item.finalPrice
-                      ? item.finalPrice * item.quantity
-                      : item.product.price * item.quantity
-                  )
-                }}
+                {{ formatPrice(item.product.price * item.quantity) }}
               </p>
             </div>
             <div class="flex items-center gap-4 mt-2">
@@ -65,24 +48,6 @@
                 </div>
               </div>
             </div>
-            <div
-              v-if="item.product.discountTiers.length > 0"
-              class="mt-2 text-sm text-gray-600"
-            >
-              <p>Dostępne progi zniżek:</p>
-              <ul class="list-disc list-inside">
-                <li
-                  v-for="tier in item.product.discountTiers"
-                  :key="tier.quantity"
-                  :class="{
-                    'text-green-600 font-semibold':
-                      item.quantity >= tier.quantity,
-                  }"
-                >
-                  {{ tier.quantity }}+ szt: -{{ tier.discount }}%
-                </li>
-              </ul>
-            </div>
           </div>
           <button
             @click="removeFromCart(item.id)"
@@ -92,10 +57,61 @@
           </button>
         </div>
       </div>
-      <div class="mt-8">
-        <div class="text-2xl font-bold mb-4">
-          Suma: {{ formatPrice(totalPrice) }}
+
+      <!-- Sekcja rabatu koszyka -->
+      <div class="mt-8 bg-gray-50 p-4 rounded-lg">
+        <h2 class="text-xl font-semibold mb-2">Podsumowanie</h2>
+
+        <div class="flex justify-between items-center mb-2">
+          <span>Liczba produktów:</span>
+          <span class="font-semibold">{{ cartStore.totalQuantity }} szt.</span>
         </div>
+
+        <div class="flex justify-between items-center mb-2">
+          <span>Wartość przed rabatem:</span>
+          <span>{{ formatPrice(cartStore.subtotalPrice) }}</span>
+        </div>
+
+        <div
+          v-if="cartStore.cartDiscount > 0"
+          class="flex justify-between items-center text-green-600 mb-2"
+        >
+          <span>Rabat {{ cartStore.cartDiscount }}%:</span>
+          <span class="font-semibold">-{{ formatPrice(discountValue) }}</span>
+        </div>
+
+        <div
+          class="flex justify-between items-center text-xl font-bold border-t border-gray-300 pt-2 mt-2"
+        >
+          <span>Do zapłaty:</span>
+          <span>{{ formatPrice(totalPrice) }}</span>
+        </div>
+      </div>
+
+      <!-- Informacja o progach rabatowych -->
+      <div class="mt-4 bg-blue-50 p-4 rounded-lg">
+        <h3 class="font-semibold mb-2">Dostępne progi rabatowe:</h3>
+        <ul class="space-y-1">
+          <li
+            v-for="tier in cartDiscountTiers"
+            :key="tier.quantity"
+            :class="{
+              'text-green-600 font-semibold':
+                cartStore.totalQuantity >= tier.quantity,
+            }"
+          >
+            <span
+              >{{ tier.quantity }}+ produktów: -{{ tier.discount }}%
+              rabatu</span
+            >
+            <span v-if="cartStore.totalQuantity >= tier.quantity">
+              (aktywny)</span
+            >
+          </li>
+        </ul>
+      </div>
+
+      <div class="mt-8">
         <button
           @click="proceedToCheckout"
           class="px-6 py-3 bg-green-500 text-white rounded-md hover:bg-green-600"
@@ -117,7 +133,7 @@
 </template>
 
 <script setup lang="ts">
-import { useCartStore } from "~/stores/shop/cart";
+import { useCartStore, CART_DISCOUNT_TIERS } from "~/stores/shop/cart";
 import { useProductsStore } from "~/stores/shop/products";
 import { useRouter } from "vue-router";
 
@@ -126,8 +142,15 @@ const cartStore = useCartStore();
 const productsStore = useProductsStore();
 
 const cartItems = computed(() => cartStore.itemsWithDiscounts);
-
 const totalPrice = computed(() => cartStore.totalPrice);
+const cartDiscountTiers = computed(() =>
+  [...CART_DISCOUNT_TIERS].sort((a, b) => a.quantity - b.quantity)
+);
+
+// Obliczenie konkretnej wartości rabatu
+const discountValue = computed(() => {
+  return cartStore.subtotalPrice - cartStore.totalPrice;
+});
 
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat("pl-PL", {

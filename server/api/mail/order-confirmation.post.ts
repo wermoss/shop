@@ -21,6 +21,43 @@ export default defineEventHandler(async (event) => {
 
   console.log("📦 [Order Confirmation] Received order details:", orderDetails);
 
+  // Funkcja do formatowania cen w stylu polskim
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat("pl-PL", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(price);
+  };
+
+  // Sprawdź, czy mamy informację o procencie rabatu w metadanych
+  const discountPercent = orderDetails.cartDiscount || 0;
+  const subtotalAmount = parseFloat(
+    orderDetails.subtotalAmount || orderDetails.amount
+  );
+  const discountAmount = parseFloat(orderDetails.discountAmount || "0");
+  const totalAmount = parseFloat(orderDetails.amount);
+
+  // Dla każdego produktu dodajemy informacje o cenie jednostkowej i rabacie
+  const enhancedProducts = orderDetails.items.map((item) => {
+    // W webhook.post.ts item.price to już jest całkowita cena za wszystkie sztuki po rabacie
+    // Obliczmy cenę jednostkową po rabacie
+    const totalPriceAfterDiscount = parseFloat(item.price);
+    const unitPriceAfterDiscount = totalPriceAfterDiscount / item.quantity;
+
+    // Obliczamy cenę jednostkową przed rabatem
+    const unitPriceBeforeDiscount =
+      unitPriceAfterDiscount / (1 - discountPercent / 100);
+
+    return {
+      name: item.name,
+      quantity: item.quantity,
+      price: formatPrice(totalPriceAfterDiscount), // Całkowita cena po rabacie
+      unitPrice: formatPrice(unitPriceBeforeDiscount), // Cena jednostkowa przed rabatem
+      unitPriceWithDiscount: formatPrice(unitPriceAfterDiscount), // Cena jednostkowa po rabacie
+      discountPercent: discountPercent, // Wysokość rabatu w procentach
+    };
+  });
+
   // Przygotuj parametry w takiej samej strukturze dla obu maili
   const params = {
     ORDER_NUMBER: orderDetails.orderNumber,
@@ -32,12 +69,11 @@ export default defineEventHandler(async (event) => {
     SHIPPING_POSTAL_CODE: orderDetails.shippingAddress?.postalCode || "",
     SHIPPING_CITY: orderDetails.shippingAddress?.city || "",
     SHIPPING_COUNTRY: orderDetails.shippingAddress?.country || "",
-    TOTAL_PRICE: Number(orderDetails.amount).toFixed(2),
-    PRODUCTS: orderDetails.items.map((item) => ({
-      name: item.name,
-      quantity: item.quantity,
-      price: Number(item.price).toFixed(2),
-    })),
+    TOTAL_PRICE: formatPrice(totalAmount),
+    SUBTOTAL_PRICE: formatPrice(subtotalAmount),
+    DISCOUNT_AMOUNT: formatPrice(discountAmount),
+    DISCOUNT_PERCENT: discountPercent,
+    PRODUCTS: enhancedProducts,
   };
 
   // Mail do klienta

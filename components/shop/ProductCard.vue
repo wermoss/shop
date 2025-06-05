@@ -10,17 +10,6 @@
     <p class="text-2xl font-bold text-gray-900 my-4">
       {{ formatPrice(product.price) }}
     </p>
-    <div
-      v-if="product.discountTiers.length > 0"
-      class="text-sm text-gray-600 mb-4"
-    >
-      <p>Dostępne zniżki:</p>
-      <ul class="list-disc list-inside">
-        <li v-for="tier in product.discountTiers" :key="tier.quantity">
-          {{ tier.quantity }}+ szt: -{{ tier.discount }}%
-        </li>
-      </ul>
-    </div>
     <div class="space-y-2 mt-4">
       <div class="mt-4">
         <button
@@ -53,17 +42,24 @@ const props = defineProps<{
 }>();
 
 const cartStore = useCartStore();
+const isAddingToCart = ref(false);
 
 const isLimitReached = computed(() => {
   const cartItem = cartStore.items.find((item) => item.id === props.product.id);
   return cartItem && cartItem.quantity >= props.product.orderLimit;
 });
 
-const canAddToCart = computed(() => !isLimitReached.value);
+// Przycisk jest aktywny, gdy nie osiągnięto limitu i nie trwa dodawanie do koszyka
+const canAddToCart = computed(
+  () => !isLimitReached.value && !isAddingToCart.value
+);
 
 const addToCartButtonText = computed(() => {
   if (isLimitReached.value) {
     return `Limit: ${props.product.orderLimit} szt.`;
+  }
+  if (isAddingToCart.value) {
+    return "Dodano";
   }
   return "Dodaj do koszyka";
 });
@@ -76,8 +72,14 @@ const formatPrice = (price: number) => {
 };
 
 const addToCart = () => {
-  if (!isLimitReached.value) {
+  if (!isLimitReached.value && !isAddingToCart.value) {
     cartStore.addToCart(props.product.id);
+
+    // Ustaw stan dodawania i zresetuj go po 3 sekundach
+    isAddingToCart.value = true;
+    setTimeout(() => {
+      isAddingToCart.value = false;
+    }, 3000);
   }
 };
 </script>
