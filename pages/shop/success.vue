@@ -39,8 +39,73 @@
               >
                 <span class="text-gray-600">Numer zamówienia:</span>
                 <span class="font-mono font-medium text-gray-900">{{
-                  route.query.order
+                  orderNumber
                 }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div
+            v-if="orderMetadata"
+            class="space-y-6 bg-gray-50 rounded-xl p-6 mb-8"
+          >
+            <!-- Dane klienta -->
+            <div class="border-b border-gray-200 pb-4">
+              <h3 class="text-md font-medium text-gray-700 mb-3">
+                Dane klienta
+              </h3>
+              <div class="grid grid-cols-1 gap-2 text-sm">
+                <div class="flex">
+                  <span class="text-gray-500 w-32">Imię i nazwisko:</span>
+                  <span class="text-gray-800 font-medium">{{
+                    orderMetadata.customerName
+                  }}</span>
+                </div>
+                <div class="flex">
+                  <span class="text-gray-500 w-32">Email:</span>
+                  <span class="text-gray-800 font-medium">{{
+                    orderMetadata.customerEmail
+                  }}</span>
+                </div>
+                <div v-if="orderMetadata.customerPhone" class="flex">
+                  <span class="text-gray-500 w-32">Telefon:</span>
+                  <span class="text-gray-800 font-medium">{{
+                    orderMetadata.customerPhone
+                  }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Adres wysyłki -->
+            <div>
+              <h3 class="text-md font-medium text-gray-700 mb-3">
+                Adres wysyłki
+              </h3>
+              <div class="grid grid-cols-1 gap-2 text-sm">
+                <div class="flex">
+                  <span class="text-gray-500 w-32">Adres:</span>
+                  <span class="text-gray-800 font-medium">{{
+                    orderMetadata.shippingAddress
+                  }}</span>
+                </div>
+                <div class="flex">
+                  <span class="text-gray-500 w-32">Kod pocztowy:</span>
+                  <span class="text-gray-800 font-medium">{{
+                    orderMetadata.shippingPostalCode
+                  }}</span>
+                </div>
+                <div class="flex">
+                  <span class="text-gray-500 w-32">Miejscowość:</span>
+                  <span class="text-gray-800 font-medium">{{
+                    orderMetadata.shippingCity
+                  }}</span>
+                </div>
+                <div class="flex">
+                  <span class="text-gray-500 w-32">Kraj:</span>
+                  <span class="text-gray-800 font-medium">{{
+                    orderMetadata.shippingCountry
+                  }}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -72,16 +137,45 @@
 
 <script setup lang="ts">
 import { useCartStore } from "~/stores/shop/cart";
+import type { OrderMetadata } from "~/types/shop";
 
 const route = useRoute();
 const cartStore = useCartStore();
+const orderMetadata = ref<OrderMetadata | null>(null);
+const orderNumber = computed(() => route.query.order as string);
 
 console.log("Success page loaded");
 console.log("Route:", route.fullPath);
-console.log("Order number:", route.query.order);
+console.log("Order number:", orderNumber.value);
 
 onMounted(() => {
   console.log("Success page mounted");
   cartStore.clearCart();
+
+  // Pobierz dane zamówienia z sessionStorage tylko w przeglądarce
+  if (process.client && orderNumber.value) {
+    // Sprawdź czy zamówienie jest autoryzowane
+    const storedOrders = sessionStorage.getItem("authorized_orders");
+    let authorizedOrders: string[] = [];
+
+    if (storedOrders) {
+      try {
+        authorizedOrders = JSON.parse(storedOrders);
+      } catch (e) {
+        console.error("Błąd parsowania listy autoryzowanych zamówień:", e);
+      }
+    }
+
+    // Pobierz dane zamówienia tylko jeśli jest autoryzowane
+    if (authorizedOrders.includes(orderNumber.value)) {
+      const storedData = sessionStorage.getItem(`order_${orderNumber.value}`);
+      if (storedData) {
+        orderMetadata.value = JSON.parse(storedData);
+        console.log("Order metadata:", orderMetadata.value);
+      } else {
+        console.warn("Nie znaleziono danych zamówienia w sessionStorage");
+      }
+    }
+  }
 });
 </script>

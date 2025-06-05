@@ -397,6 +397,18 @@ const handlePayment = async () => {
       JSON.stringify(orderMetadata)
     );
 
+    // Zapisz ten numer zamówienia jako autoryzowany dla tej sesji
+    let authorizedOrders: string[] = [];
+    const storedOrders = sessionStorage.getItem("authorized_orders");
+    if (storedOrders) {
+      authorizedOrders = JSON.parse(storedOrders);
+    }
+    authorizedOrders.push(responseData.orderNumber);
+    sessionStorage.setItem(
+      "authorized_orders",
+      JSON.stringify(authorizedOrders)
+    );
+
     console.log("Session ID received:", responseData.sessionId);
 
     // Poczekaj na załadowanie Stripe
