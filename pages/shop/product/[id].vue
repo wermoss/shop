@@ -11,6 +11,32 @@
       <div class="space-y-6">
         <h1 class="text-3xl font-bold">{{ product.name }}</h1>
         <p class="text-gray-600 text-lg">{{ product.description }}</p>
+
+        <!-- Cechy produktu -->
+        <div
+          v-if="product.features && product.features.length > 0"
+          class="mt-4"
+        >
+          <h2 class="text-lg font-semibold mb-2">Cechy produktu:</h2>
+          <ul class="space-y-2">
+            <li
+              v-for="feature in product.features"
+              :key="feature.name"
+              class="flex items-center"
+            >
+              <span class="font-medium">{{ feature.name }}:</span>
+              <span class="ml-2">{{ feature.value }}</span>
+              <!-- Kolorowe kółko, jeśli cecha ma zdefiniowany kolor -->
+              <span
+                v-if="feature.colorCode"
+                class="ml-2 inline-block w-4 h-4 rounded-full"
+                :style="{ backgroundColor: feature.colorCode }"
+                :title="feature.value"
+              ></span>
+            </li>
+          </ul>
+        </div>
+
         <p class="text-2xl font-bold">{{ formatPrice(product.price) }}</p>
         <div class="space-y-4">
           <div class="mt-8">

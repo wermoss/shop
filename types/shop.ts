@@ -1,3 +1,9 @@
+export interface ProductFeature {
+  name: string;
+  value: string;
+  colorCode?: string; // Opcjonalny kod koloru dla cech typu kolor
+}
+
 export interface Product {
   id: number;
   name: string;
@@ -5,6 +11,7 @@ export interface Product {
   price: number;
   image: string;
   orderLimit: number;
+  features?: ProductFeature[]; // Opcjonalna tablica cech produktu
 }
 
 export interface CartItem {

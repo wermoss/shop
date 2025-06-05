@@ -6,8 +6,33 @@
       class="w-full h-48 object-cover rounded-md"
     />
     <h3 class="text-xl font-semibold mt-4">{{ product.name }}</h3>
-    <p class="text-gray-600 mt-2 line-clamp-2">{{ product.description }}</p>
-    <p class="text-2xl font-bold text-gray-900 my-4">
+    <!-- <p class="text-gray-600 mt-2 line-clamp-2">{{ product.description }}</p> -->
+
+    <!-- Cechy produktu -->
+    <div
+      v-if="product.features && product.features.length > 0"
+      class="mt-3 mb-3"
+    >
+      <div class="flex flex-wrap gap-2">
+        <div
+          v-for="feature in product.features"
+          :key="feature.name"
+          class="inline-flex items-center text-sm text-gray-700"
+        >
+          <span class="font-medium">{{ feature.name }}:</span>
+          <span class="ml-1">{{ feature.value }}</span>
+          <!-- Kolorowe kółko dla cech z kolorem -->
+          <span
+            v-if="feature.colorCode"
+            class="ml-1 inline-block w-3 h-3 rounded-full border border-gray-300"
+            :style="{ backgroundColor: feature.colorCode }"
+            :title="feature.value"
+          ></span>
+        </div>
+      </div>
+    </div>
+
+    <p class="text-2xl font-bold text-gray-900 my-3">
       {{ formatPrice(product.price) }}
     </p>
     <div class="space-y-2 mt-4">

@@ -2,35 +2,43 @@
   "products": [
     {
       "id": 1,
-      "name": "Smartfon XYZ",
-      "description": "Nowoczesny smartfon z najnowszymi funkcjami",
-      "price": 2499.99,
-      "image": "/products/phone.jpg",
-      "orderLimit": 2
-    },
-    {
-      "id": 2,
-      "name": "Laptop ABC",
-      "description": "Wydajny laptop do pracy i rozrywki",
-      "price": 4999.99,
-      "image": "/products/laptop.jpg",
-      "orderLimit": 1
-    },
-    {
-      "id": 3,
-      "name": "Betonowe dłonie z mchem - Spring Green",
+      "name": "Betonowe dłonie z mchem",
       "description": "Betonowe dłonie z mchem - Spring Green. To jest przykładowy opis produktu",
       "price": 199.99,
       "image": "/products/phone.jpg",
-      "orderLimit": 20
+      "orderLimit": 20,
+      "features": [
+        {
+          "name": "beton",
+          "value": "szary",
+          "colorCode": "#808080"
+        },
+        {
+          "name": "mech",
+          "value": "spring green",
+          "colorCode": "#00FF7F"
+        }
+      ]
     },
     {
-      "id": 4,
-      "name": "Betonowe dłonie z mchem - Dark Green",
+      "id": 2,
+      "name": "Betonowe dłonie z mchem",
       "description": "Betonowe dłonie z mchem - Dark Green. To jest przykładowy opis produktu",
       "price": 199.99,
       "image": "/products/phone.jpg",
-      "orderLimit": 20
+      "orderLimit": 20,
+      "features": [
+        {
+          "name": "beton",
+          "value": "szary",
+          "colorCode": "#808080"
+        },
+        {
+          "name": "mech",
+          "value": "dark green",
+          "colorCode": "#006400"
+        }
+      ]
     }
   ]
 }

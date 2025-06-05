@@ -214,6 +214,31 @@
                   <p>{{ formatPrice(item.product.price * item.quantity) }}</p>
                 </div>
               </div>
+
+              <!-- Cechy produktu -->
+              <div
+                v-if="item.product.features && item.product.features.length > 0"
+                class="mt-1 mb-2 pl-2"
+              >
+                <div class="flex flex-wrap gap-1">
+                  <div
+                    v-for="feature in item.product.features"
+                    :key="feature.name"
+                    class="inline-flex items-center text-xs text-gray-500"
+                  >
+                    <span class="font-medium">{{ feature.name }}:</span>
+                    <span class="ml-1">{{ feature.value }}</span>
+                    <!-- Kolorowe kółko dla cech z kolorem -->
+                    <span
+                      v-if="feature.colorCode"
+                      class="ml-1 inline-block w-2 h-2 rounded-full border border-gray-300"
+                      :style="{ backgroundColor: feature.colorCode }"
+                      :title="feature.value"
+                    ></span>
+                    <span class="mx-1">|</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <!-- Podsumowanie z rabatem -->
