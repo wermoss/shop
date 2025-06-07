@@ -21,40 +21,75 @@ export default defineEventHandler(async (event) => {
 
   console.log("📦 [Order Confirmation] Received order details:", orderDetails);
 
-  // Funkcja do formatowania cen w stylu polskim
+  // Funkcja do formatowania cen w stylu polskim - użyj dokładnie takiego samego formatowania jak w cart-notification
   const formatPrice = (price) => {
+    // Najpierw zaokrąglij do dwóch miejsc po przecinku aby uniknąć problemów z 0.01 PLN
+    const roundedPrice = Math.round(price * 100) / 100;
     return new Intl.NumberFormat("pl-PL", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    }).format(price);
+    }).format(roundedPrice);
   };
 
-  // Sprawdź, czy mamy informację o procencie rabatu w metadanych
-  const discountPercent = orderDetails.cartDiscount || 0;
-  const subtotalAmount = parseFloat(
-    orderDetails.subtotalAmount || orderDetails.amount
-  );
-  const discountAmount = parseFloat(orderDetails.discountAmount || "0");
-  const totalAmount = parseFloat(orderDetails.amount);
+  // Wartości z webhooka - nie robimy parseFloat na liczbach które już są liczbami
+  // Dla pewności zaokrąglamy wartości do dwóch miejsc po przecinku, aby mieć spójne wyniki
+  const subtotalAmount = Math.round(orderDetails.subtotalAmount * 100) / 100;
+  const discountAmount = Math.round(orderDetails.discountAmount * 100) / 100;
+  const totalAmount = Math.round(orderDetails.amount * 100) / 100;
+
+  // Dodajemy szczegółową informację o kwotach dla debugowania
+  console.log("🔢 [Order Confirmation] Rounded values:", {
+    originalSubtotal: orderDetails.subtotalAmount,
+    roundedSubtotal: subtotalAmount,
+    originalDiscount: orderDetails.discountAmount,
+    roundedDiscount: discountAmount,
+    originalTotal: orderDetails.amount,
+    roundedTotal: totalAmount,
+  });
+
+  // Rabaty z webhooka
+  const cartDiscount = parseInt(orderDetails.cartDiscount || "0");
+  const codeDiscount = parseInt(orderDetails.codeDiscount || "0");
+  const totalDiscount = cartDiscount + codeDiscount;
+
+  interface OrderItem {
+    name: string;
+    quantity: number;
+    unitPrice: number;
+    totalPrice: number;
+  }
+
+  // Logowanie szczegółów dla debugowania
+  console.log("💰 [Order Confirmation] Using values from webhook:", {
+    subtotal: subtotalAmount,
+    discount: discountAmount,
+    total: totalAmount,
+    discountPercent: totalDiscount,
+  });
 
   // Dla każdego produktu dodajemy informacje o cenie jednostkowej i rabacie
-  const enhancedProducts = orderDetails.items.map((item) => {
-    // W webhook.post.ts item.price to już jest całkowita cena za wszystkie sztuki po rabacie
-    // Obliczmy cenę jednostkową po rabacie
-    const totalPriceAfterDiscount = parseFloat(item.price);
-    const unitPriceAfterDiscount = totalPriceAfterDiscount / item.quantity;
+  const enhancedProducts = orderDetails.items.map((item: OrderItem) => {
+    // Obliczamy cenę po rabacie - zaokrąglij tak samo jak w innych miejscach
+    const unitPriceWithDiscount =
+      Math.round(item.unitPrice * (1 - totalDiscount / 100) * 100) / 100;
+    const totalPriceWithDiscount =
+      Math.round(unitPriceWithDiscount * item.quantity * 100) / 100;
 
-    // Obliczamy cenę jednostkową przed rabatem
-    const unitPriceBeforeDiscount =
-      unitPriceAfterDiscount / (1 - discountPercent / 100);
+    // Dla debugowania - loguj każdy produkt i jego ceny
+    console.log(`📝 [Order Confirmation] Product ${item.name} calculations:`, {
+      originalPrice: item.unitPrice,
+      quantity: item.quantity,
+      discountedUnitPrice: unitPriceWithDiscount,
+      totalPriceWithDiscount: totalPriceWithDiscount,
+    });
 
     return {
       name: item.name,
       quantity: item.quantity,
-      price: formatPrice(totalPriceAfterDiscount), // Całkowita cena po rabacie
-      unitPrice: formatPrice(unitPriceBeforeDiscount), // Cena jednostkowa przed rabatem
-      unitPriceWithDiscount: formatPrice(unitPriceAfterDiscount), // Cena jednostkowa po rabacie
-      discountPercent: discountPercent, // Wysokość rabatu w procentach
+      price: formatPrice(totalPriceWithDiscount),
+      unitPrice: formatPrice(item.unitPrice),
+      unitPriceWithDiscount: formatPrice(unitPriceWithDiscount),
+      discountPercent: totalDiscount,
     };
   });
 
@@ -72,7 +107,10 @@ export default defineEventHandler(async (event) => {
     TOTAL_PRICE: formatPrice(totalAmount),
     SUBTOTAL_PRICE: formatPrice(subtotalAmount),
     DISCOUNT_AMOUNT: formatPrice(discountAmount),
-    DISCOUNT_PERCENT: discountPercent,
+    CART_DISCOUNT: cartDiscount,
+    CODE_DISCOUNT: codeDiscount,
+    TOTAL_DISCOUNT: totalDiscount,
+    DISCOUNT_CODE: orderDetails.discountCode || "",
     PRODUCTS: enhancedProducts,
   };
 

@@ -3,6 +3,11 @@ export default defineNuxtConfig({
   devtools: { enabled: false },
   ssr: false,
 
+  nitro: {
+    compatibilityDate: "2025-06-07",
+    preset: "vercel",
+  },
+
   modules: [
     "@pinia/nuxt",
     "@vueuse/nuxt",
@@ -24,10 +29,6 @@ export default defineNuxtConfig({
       FieldArray: "VeeFieldArray",
       ErrorMessage: "VeeErrorMessage",
     },
-  },
-
-  nitro: {
-    preset: "vercel",
   },
 
   routeRules: {

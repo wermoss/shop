@@ -253,12 +253,22 @@
                 <span>{{ formatPrice(cartStore.subtotalPrice) }}</span>
               </div>
 
+              <!-- Rabat ilościowy -->
               <div
                 v-if="cartStore.cartDiscount > 0"
                 class="flex justify-between text-green-600 font-medium"
               >
-                <span>Rabat {{ cartStore.cartDiscount }}%:</span>
-                <span>-{{ formatPrice(discountValue) }}</span>
+                <span>Rabat ilościowy ({{ cartStore.cartDiscount }}%):</span>
+                <span>-{{ formatPrice(cartStore.cartDiscountAmount) }}</span>
+              </div>
+
+              <!-- Rabat z kodu -->
+              <div
+                v-if="cartStore.codeDiscount > 0"
+                class="flex justify-between text-green-600 font-medium"
+              >
+                <span>Rabat z kodu ({{ cartStore.codeDiscount }}%):</span>
+                <span>-{{ formatPrice(cartStore.codeDiscountAmount) }}</span>
               </div>
 
               <div
@@ -391,6 +401,7 @@ const handlePayment = async () => {
             country: formData.value.country,
           },
         },
+        appliedDiscountCode: cartStore.appliedDiscountCode,
       }),
     });
 
@@ -410,6 +421,9 @@ const handlePayment = async () => {
           orderNumber: responseData.orderNumber,
           items: cartItems.value,
           totalPrice: totalPrice.value,
+          cartDiscountPercent: cartStore.cartDiscount,
+          codeDiscountPercent: cartStore.codeDiscount,
+          discountCode: cartStore.appliedDiscountCode,
           customerEmail: formData.value.email,
           customerName: formData.value.name,
           customerPhone: formData.value.phone,

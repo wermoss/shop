@@ -24,33 +24,57 @@ export default defineEventHandler(async (event) => {
     return { success: false, error: "Missing cart details" };
   }
 
-  // Funkcja do formatowania cen w stylu polskim
+  // Funkcja do formatowania cen w stylu polskim (identyczna jak w order-confirmation)
   const formatPrice = (price) => {
+    // Najpierw zaokrąglij do dwóch miejsc po przecinku aby uniknąć problemów z 0.01 PLN
+    const roundedPrice = Math.round(price * 100) / 100;
     return new Intl.NumberFormat("pl-PL", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    }).format(price);
+    }).format(roundedPrice);
   };
 
-  // Obliczenie rabatu dla całego koszyka
+  // Obliczenie rabatów dla koszyka - używamy dokładnie tej samej logiki jak w create-session.post.ts
   const subtotalPrice = cartDetails.items.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
     0
   );
-  const discountedPrice = cartDetails.totalPrice;
-  const discountAmount = subtotalPrice - discountedPrice;
-  const discountPercent =
-    cartDetails.cartDiscount ||
-    Math.round((discountAmount / subtotalPrice) * 100);
+
+  // Pobierz rabaty z cartDetails
+  const cartDiscount = cartDetails.cartDiscountPercent || 0;
+  const codeDiscount = cartDetails.codeDiscountPercent || 0;
+  const totalDiscount = cartDiscount + codeDiscount;
+
+  // Obliczanie rabatu i finalnej kwoty - z zaokrągleniem
+  const discountAmount =
+    Math.round(subtotalPrice * (totalDiscount / 100) * 100) / 100;
+  const finalPrice = Math.round((subtotalPrice - discountAmount) * 100) / 100;
+
+  // Logowanie w celu debugowania obliczeń
+  console.log("💰 [Cart Notification] Price calculations:", {
+    subtotalPrice,
+    discountAmount,
+    finalPrice,
+    totalDiscount,
+    calculationSteps: {
+      discountRaw: subtotalPrice * (totalDiscount / 100),
+      discountRounded:
+        Math.round(subtotalPrice * (totalDiscount / 100) * 100) / 100,
+      finalRaw: subtotalPrice - discountAmount,
+      finalRounded: Math.round((subtotalPrice - discountAmount) * 100) / 100,
+    },
+  });
 
   // Tworzenie danych produktów z uwzględnieniem ceny po rabacie i informacji o rabacie
   const products = cartDetails.items.map((item) => {
-    // Obliczenie ceny jednostkowej po rabacie
+    // Obliczenie ceny jednostkowej po rabacie z zaokrągleniem (tak samo jak w order-confirmation)
     const unitPrice = item.product.price;
-    const unitPriceWithDiscount = unitPrice * (1 - discountPercent / 100);
+    const unitPriceWithDiscount =
+      Math.round(unitPrice * (1 - totalDiscount / 100) * 100) / 100;
 
-    // Całkowita cena za wszystkie sztuki po rabacie
-    const totalPrice = unitPriceWithDiscount * item.quantity;
+    // Całkowita cena za wszystkie sztuki po rabacie z zaokrągleniem
+    const totalPrice =
+      Math.round(unitPriceWithDiscount * item.quantity * 100) / 100;
 
     return {
       name: item.product.name,
@@ -58,7 +82,7 @@ export default defineEventHandler(async (event) => {
       price: formatPrice(totalPrice), // Cena za wszystkie sztuki z rabatem
       unitPrice: formatPrice(unitPrice), // Cena jednostkowa przed rabatem
       unitPriceWithDiscount: formatPrice(unitPriceWithDiscount), // Cena jednostkowa po rabacie
-      discountPercent: discountPercent, // Wysokość rabatu w procentach
+      discountPercent: totalDiscount, // Wysokość rabatu w procentach
     };
   });
 
@@ -80,10 +104,13 @@ export default defineEventHandler(async (event) => {
       SHIPPING_POSTAL_CODE: cartDetails.shippingAddress?.postalCode || "",
       SHIPPING_CITY: cartDetails.shippingAddress?.city || "",
       SHIPPING_COUNTRY: cartDetails.shippingAddress?.country || "",
-      TOTAL_PRICE: formatPrice(cartDetails.totalPrice), // Formatowanie łącznej kwoty w stylu polskim
+      TOTAL_PRICE: formatPrice(finalPrice), // Formatowanie łącznej kwoty w stylu polskim
       SUBTOTAL_PRICE: formatPrice(subtotalPrice),
       DISCOUNT_AMOUNT: formatPrice(discountAmount),
-      DISCOUNT_PERCENT: discountPercent,
+      CART_DISCOUNT: cartDiscount,
+      CODE_DISCOUNT: codeDiscount,
+      TOTAL_DISCOUNT: totalDiscount,
+      DISCOUNT_CODE: cartDetails.discountCode || "",
       PRODUCTS: products,
     },
     subject: `Rozpoczęcie zamówienia - ${orderNumber}`,

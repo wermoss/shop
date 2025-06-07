@@ -17,11 +17,24 @@ export interface CartItemWithDiscount extends CartItem {
 export const CART_DISCOUNT_TIERS = discountsData.cartDiscountTiers;
 export const DISCOUNT_CODES = discountsData.discountCodes;
 
-export const useCartStore = defineStore("cart", {
+export const useCartStore = defineStore<
+  "cart",
+  CartState,
+  {
+    itemsWithDiscounts: CartItemWithDiscount[];
+    totalQuantity: number;
+    cartDiscount: number;
+    codeDiscount: number;
+    totalDiscount: number;
+    subtotalPrice: number;
+    totalPrice: number;
+    discountCodeValid: boolean;
+  }
+>("cart", {
   state: () => ({
-    items: [] as CartItem[],
-    discountCode: null as string | null,
-    appliedDiscountCode: null as string | null,
+    items: [],
+    discountCode: null,
+    appliedDiscountCode: null,
   }),
 
   getters: {
@@ -30,23 +43,18 @@ export const useCartStore = defineStore("cart", {
 
       return this.items.map((item) => {
         const product = productsStore.getProduct(item.id);
+        if (!product) return { ...item, product } as CartItemWithDiscount;
+
         return {
           ...item,
-          product: product ?? {
-            id: item.id,
-            name: "Produkt niedostępny",
-            price: 0,
-            image: "",
-            description: "",
-            orderLimit: 0,
-          },
+          product,
         };
       });
     },
 
     // Łączna liczba sztuk w koszyku
     totalQuantity(): number {
-      return this.items.reduce((total, item) => total + item.quantity, 0);
+      return this.items.reduce((total: number, item: CartItem) => total + item.quantity, 0);
     },
 
     // Rabat ilościowy dla koszyka
@@ -69,55 +77,39 @@ export const useCartStore = defineStore("cart", {
     // Rabat z kodu rabatowego
     codeDiscount(): number {
       if (!this.appliedDiscountCode) return 0;
-
+      
       const discountCode = DISCOUNT_CODES.find(
-        (code) =>
-          code.code.toUpperCase() === this.appliedDiscountCode?.toUpperCase()
+        (code) => code.code.toUpperCase() === this.appliedDiscountCode?.toUpperCase()
       );
-
+      
       return discountCode?.discount || 0;
+    },
+
+    // Łączny rabat (koszyk + kod)
+    totalDiscount(): number {
+      // Stosujemy oba rabaty (najpierw ilościowy, potem kodowy)
+      // Przykład: 20% rabatu ilościowego + 10% kodu = 0.8 * 0.9 = 28% łącznie
+      const cartDiscountFactor = 1 - this.cartDiscount / 100;
+      const codeDiscountFactor = 1 - this.codeDiscount / 100;
+      
+      // Wynik w procentach
+      return Math.round((1 - (cartDiscountFactor * codeDiscountFactor)) * 100);
     },
 
     // Suma cen przed rabatem
     subtotalPrice(): number {
-      return this.itemsWithDiscounts.reduce(
-        (sum, item) => sum + (item.product?.price || 0) * item.quantity,
-        0
-      );
-    },
-
-    // Wartość rabatu ilościowego
-    cartDiscountAmount(): number {
-      const amount = (this.subtotalPrice * this.cartDiscount) / 100;
-      return Math.round(amount * 100) / 100;
-    },
-
-    // Wartość rabatu z kodu
-    codeDiscountAmount(): number {
-      const amount = (this.subtotalPrice * this.codeDiscount) / 100;
-      return Math.round(amount * 100) / 100;
-    },
-
-    // Łączna wartość rabatu
-    totalDiscountAmount(): number {
-      return this.cartDiscountAmount + this.codeDiscountAmount;
-    },
-
-    // Łączny procent rabatu (koszyk + kod)
-    totalDiscount(): number {
-      return this.cartDiscount + this.codeDiscount;
+      return this.itemsWithDiscounts.reduce((sum: number, item: CartItemWithDiscount) => {
+        return sum + (item.product?.price || 0) * item.quantity;
+      }, 0);
     },
 
     // Cena po rabacie
     totalPrice(): number {
-      return (
-        Math.round((this.subtotalPrice - this.totalDiscountAmount) * 100) / 100
-      );
+      return this.subtotalPrice * (1 - this.totalDiscount / 100);
     },
   },
 
   actions: {
-    // Add item to cart
     addToCart(productId: number) {
       const productsStore = useProductsStore();
       const product = productsStore.getProduct(productId);
@@ -140,7 +132,6 @@ export const useCartStore = defineStore("cart", {
       return true;
     },
 
-    // Remove item from cart
     removeFromCart(productId: number) {
       const index = this.items.findIndex((item) => item.id === productId);
       if (index > -1) {
@@ -148,24 +139,32 @@ export const useCartStore = defineStore("cart", {
       }
     },
 
-    // Increment quantity
-    incrementQuantity(productId: number) {
-      const item = this.items.find((item) => item.id === productId);
-      if (item) {
-        item.quantity += 1;
-      }
-    },
+    updateQuantity(productId: number, quantity: number) {
+      const productsStore = useProductsStore();
+      const product = productsStore.getProduct(productId);
 
-    // Decrement quantity
-    decrementQuantity(productId: number) {
+      if (!product) return false;
+
+      // Sprawdź czy nowa ilość nie przekracza limitu
+      if (quantity > product.orderLimit) {
+        quantity = product.orderLimit;
+      }
+
       const item = this.items.find((item) => item.id === productId);
       if (item) {
-        if (item.quantity > 1) {
-          item.quantity -= 1;
-        } else {
+        if (quantity <= 0) {
           this.removeFromCart(productId);
+        } else {
+          item.quantity = quantity;
         }
       }
+      return true;
+    },
+
+    clearCart() {
+      this.items = [];
+      this.discountCode = null;
+      this.appliedDiscountCode = null;
     },
 
     // Sprawdzanie dostępności limitu
@@ -195,7 +194,6 @@ export const useCartStore = defineStore("cart", {
     applyDiscountCode() {
       if (this.discountCodeValid) {
         this.appliedDiscountCode = this.discountCode;
-        this.discountCode = null;
         return true;
       }
       return false;
@@ -203,26 +201,17 @@ export const useCartStore = defineStore("cart", {
 
     // Usunięcie zastosowanego kodu rabatowego
     removeDiscountCode() {
+      this.discountCode = null;
       this.appliedDiscountCode = null;
     },
 
     // Pobranie informacji o zastosowanym kodzie rabatowym
     getAppliedDiscountInfo() {
       if (!this.appliedDiscountCode) return null;
-
-      return (
-        DISCOUNT_CODES.find(
-          (code) =>
-            code.code.toUpperCase() === this.appliedDiscountCode?.toUpperCase()
-        ) || null
-      );
-    },
-
-    // Clear cart
-    clearCart() {
-      this.items = [];
-      this.discountCode = null;
-      this.appliedDiscountCode = null;
+      
+      return DISCOUNT_CODES.find(
+        (code) => code.code.toUpperCase() === this.appliedDiscountCode?.toUpperCase()
+      ) || null;
     },
   },
 
