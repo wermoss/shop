@@ -13,7 +13,7 @@
         </div>
         <div class="flex justify-between items-center">
           <div>{{ orderNumber }}</div>
-          <div>{{ new Date().toLocaleString("pl-PL") }}</div>
+          <div>{{ orderTimestamp }}</div>
         </div>
       </div>
     </div>
@@ -162,6 +162,17 @@ const route = useRoute();
 const cartStore = useCartStore();
 const orderMetadata = ref<OrderMetadata | null>(null);
 const orderNumber = computed(() => route.query.order as string);
+const orderTimestamp = computed(() => {
+  const timestamp = route.query.timestamp as string;
+  if (!timestamp) return new Date().toLocaleString("pl-PL");
+  return new Date(parseInt(timestamp)).toLocaleString("pl-PL", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+});
 
 console.log("Success page loaded");
 console.log("Route:", route.fullPath);

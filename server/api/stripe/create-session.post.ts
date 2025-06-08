@@ -24,8 +24,9 @@ export default defineEventHandler(async (event) => {
     const host = headers["x-forwarded-host"] || headers.host;
     const baseUrl = `${protocol}://${host}`;
 
-    // Generuj numer zamówienia
+    // Generuj numer zamówienia i timestamp
     const orderNumber = generateOrderNumber();
+    const orderTimestamp = Date.now().toString();
 
     // Oblicz całkowitą liczbę produktów w koszyku
     const totalQuantity = cartItems.reduce(
@@ -160,7 +161,7 @@ export default defineEventHandler(async (event) => {
       locale: "pl",
       line_items: lineItems,
       mode: "payment",
-      success_url: `${baseUrl}/shop/success?order=${orderNumber}`,
+      success_url: `${baseUrl}/shop/success?order=${orderNumber}&timestamp=${orderTimestamp}`,
       cancel_url: `${baseUrl}/shop/cart`,
       customer_email: customer?.email,
       // Zapisujemy dane o produktach w metadanych
