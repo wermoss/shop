@@ -74,15 +74,30 @@ export default defineEventHandler(async (event) => {
       };
     });
 
-    // Obliczamy rabat od całej kwoty
-    const discountAmount = subtotalAmount * (totalDiscount / 100);
-    const finalAmount = subtotalAmount - discountAmount;
+    // Obliczenie rabatów według nowej metody:
+    // 1. Najpierw obliczamy wartość produktów (już mamy w subtotalAmount)
+    // 2. Obliczamy rabat ilościowy i zaokrąglamy do pełnych złotych
+    const cartDiscountAmount =
+      cartDiscount > 0 ? Math.round(subtotalAmount * (cartDiscount / 100)) : 0;
+
+    // 3. Obliczamy rabat z kuponu i zaokrąglamy do pełnych złotych
+    const codeDiscountAmount =
+      codeDiscount > 0 ? Math.round(subtotalAmount * (codeDiscount / 100)) : 0;
+
+    // 4. Suma rabatów
+    const totalDiscountAmount = cartDiscountAmount + codeDiscountAmount;
+
+    // 5. Finalna kwota po odjęciu rabatów
+    const finalAmount = subtotalAmount - totalDiscountAmount;
 
     console.log("💰 [Create Session] Cart values:", {
       subtotalAmount,
-      discountAmount,
+      cartDiscount: `${cartDiscount}%`,
+      cartDiscountAmount,
+      codeDiscount: `${codeDiscount}%`,
+      codeDiscountAmount,
+      totalDiscountAmount,
       finalAmount,
-      totalDiscount,
     });
 
     // Przygotuj pojedynczy wiersz z łączną kwotą zamówienia
@@ -128,8 +143,10 @@ export default defineEventHandler(async (event) => {
       discountCode: appliedDiscountCode || "",
       productIds: JSON.stringify(items),
       subtotalAmount: subtotalAmount.toString(),
-      discountAmount: discountAmount.toString(),
-      totalAmount: finalAmount.toString(),
+      cartDiscountAmount: cartDiscountAmount.toString(),
+      codeDiscountAmount: codeDiscountAmount.toString(),
+      totalDiscountAmount: totalDiscountAmount.toString(),
+      finalAmount: finalAmount.toString(),
     };
 
     // Podstawowa konfiguracja sesji
@@ -160,9 +177,13 @@ export default defineEventHandler(async (event) => {
         cartDiscount: cartDiscount.toString(),
         codeDiscount: codeDiscount.toString(),
         totalDiscount: totalDiscount.toString(),
+        cartDiscountAmount: cartDiscountAmount.toString(),
+        codeDiscountAmount: codeDiscountAmount.toString(),
+        totalDiscountAmount: totalDiscountAmount.toString(),
         discountCode: discountCodeInfo?.code || "",
         totalQuantity: totalQuantity.toString(),
-        totalAmount: finalAmount.toFixed(2),
+        finalAmount: finalAmount.toFixed(2),
+        subtotalAmount: subtotalAmount.toString(),
         productIds: JSON.stringify(
           cartItems.map((item: CartItem) => ({
             id: item.id,

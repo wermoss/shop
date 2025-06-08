@@ -45,36 +45,49 @@ export default defineEventHandler(async (event) => {
   const codeDiscount = cartDetails.codeDiscountPercent || 0;
   const totalDiscount = cartDiscount + codeDiscount;
 
-  // Obliczanie rabatu i finalnej kwoty - z zaokrągleniem
-  const discountAmount =
-    Math.round(subtotalPrice * (totalDiscount / 100) * 100) / 100;
-  const finalPrice = Math.round((subtotalPrice - discountAmount) * 100) / 100;
+  // Obliczanie rabatu i finalnej kwoty - zgodnie z nową metodologią
+  // 1. Rabat ilościowy zaokrąglony do pełnych złotych
+  const cartDiscountAmount =
+    cartDiscount > 0 ? Math.round(subtotalPrice * (cartDiscount / 100)) : 0;
+
+  // 2. Rabat z kuponu zaokrąglony do pełnych złotych
+  const codeDiscountAmount =
+    codeDiscount > 0 ? Math.round(subtotalPrice * (codeDiscount / 100)) : 0;
+
+  // 3. Łączny rabat
+  const totalDiscountAmount = cartDiscountAmount + codeDiscountAmount;
+
+  // 4. Finalna kwota
+  const finalPrice = subtotalPrice - totalDiscountAmount;
 
   // Logowanie w celu debugowania obliczeń
   console.log("💰 [Cart Notification] Price calculations:", {
     subtotalPrice,
-    discountAmount,
+    cartDiscountAmount,
+    codeDiscountAmount,
+    totalDiscountAmount,
     finalPrice,
-    totalDiscount,
-    calculationSteps: {
-      discountRaw: subtotalPrice * (totalDiscount / 100),
-      discountRounded:
-        Math.round(subtotalPrice * (totalDiscount / 100) * 100) / 100,
-      finalRaw: subtotalPrice - discountAmount,
-      finalRounded: Math.round((subtotalPrice - discountAmount) * 100) / 100,
+    discountPercents: {
+      cartDiscount,
+      codeDiscount,
+      totalDiscount,
     },
   });
 
   // Tworzenie danych produktów z uwzględnieniem ceny po rabacie i informacji o rabacie
   const products = cartDetails.items.map((item) => {
-    // Obliczenie ceny jednostkowej po rabacie z zaokrągleniem (tak samo jak w order-confirmation)
+    // Cena jednostkowa przed rabatem
     const unitPrice = item.product.price;
-    const unitPriceWithDiscount =
-      Math.round(unitPrice * (1 - totalDiscount / 100) * 100) / 100;
 
-    // Całkowita cena za wszystkie sztuki po rabacie z zaokrągleniem
-    const totalPrice =
-      Math.round(unitPriceWithDiscount * item.quantity * 100) / 100;
+    // Wyliczenie rabatu procentowo dla każdego produktu
+    const itemTotalBeforeDiscount = unitPrice * item.quantity;
+    const itemDiscountAmount = itemTotalBeforeDiscount * (totalDiscount / 100);
+
+    // Całkowita cena za wszystkie sztuki po rabacie
+    const totalPrice = itemTotalBeforeDiscount - Math.round(itemDiscountAmount);
+
+    // Cena jednostkowa po rabacie (wyliczamy dzieląc całkowitą cenę po rabacie przez ilość)
+    const unitPriceWithDiscount = totalPrice / item.quantity;
 
     return {
       name: item.product.name,
@@ -106,7 +119,9 @@ export default defineEventHandler(async (event) => {
       SHIPPING_COUNTRY: cartDetails.shippingAddress?.country || "",
       TOTAL_PRICE: formatPrice(finalPrice), // Formatowanie łącznej kwoty w stylu polskim
       SUBTOTAL_PRICE: formatPrice(subtotalPrice),
-      DISCOUNT_AMOUNT: formatPrice(discountAmount),
+      DISCOUNT_AMOUNT: formatPrice(totalDiscountAmount),
+      CART_DISCOUNT_AMOUNT: formatPrice(cartDiscountAmount),
+      CODE_DISCOUNT_AMOUNT: formatPrice(codeDiscountAmount),
       CART_DISCOUNT: cartDiscount,
       CODE_DISCOUNT: codeDiscount,
       TOTAL_DISCOUNT: totalDiscount,
