@@ -6,7 +6,6 @@
       class="w-full h-48 object-cover rounded-md"
     />
     <h3 class="text-xl font-semibold mt-4">{{ product.name }}</h3>
-    <!-- <p class="text-gray-600 mt-2 line-clamp-2">{{ product.description }}</p> -->
 
     <!-- Cechy produktu -->
     <div

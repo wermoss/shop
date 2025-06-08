@@ -1,5 +1,5 @@
 <template>
-  <NuxtLayout>
+  <NuxtLayout name="clean">
     <div class="min-h-screen bg-gradient-to-b from-red-50 to-white">
       <div class="max-w-3xl mx-auto px-4 py-16">
         <div class="bg-white rounded-2xl shadow-xl overflow-hidden">

@@ -4,8 +4,12 @@ export default defineNuxtConfig({
   ssr: false,
 
   nitro: {
-    compatibilityDate: "2025-06-07",
+    compatibilityDate: "2025-06-08",
     preset: "vercel",
+  },
+
+  app: {
+    layoutTransition: { name: "layout", mode: "out-in" },
   },
 
   modules: [
@@ -13,7 +17,19 @@ export default defineNuxtConfig({
     "@vueuse/nuxt",
     "@nuxtjs/tailwindcss",
     "@vee-validate/nuxt",
+    "@nuxtjs/google-fonts",
   ],
+
+  googleFonts: {
+    families: {
+      "Roboto+Mono": {
+        wght: [400],
+      },
+    },
+    display: "swap",
+    download: true,
+    preconnect: true,
+  },
 
   build: {
     transpile: ["pinia-plugin-persistedstate"],
