@@ -4,7 +4,7 @@
       "id": 1,
       "name": "Betonowe dłonie z mchem",
       "description": "Betonowe dłonie z mchem - Spring Green. To jest przykładowy opis produktu",
-      "price": 199.99,
+      "price": 200.0,
       "image": "/products/phone.jpg",
       "orderLimit": 20,
       "features": [
@@ -24,7 +24,7 @@
       "id": 2,
       "name": "Betonowe dłonie z mchem",
       "description": "Betonowe dłonie z mchem - Dark Green. To jest przykładowy opis produktu",
-      "price": 199.99,
+      "price": 200.0,
       "image": "/products/phone.jpg",
       "orderLimit": 20,
       "features": [

@@ -6,17 +6,17 @@
   ],
   "discountCodes": [
     {
-      "code": "WELCOME10",
+      "code": "X",
       "discount": 10,
       "description": "Rabat powitalny 10%"
     },
     {
-      "code": "SUMMER15",
+      "code": "XV",
       "discount": 15,
       "description": "Letnia promocja 15%"
     },
     {
-      "code": "SPECIAL20",
+      "code": "XX",
       "discount": 20,
       "description": "Specjalna promocja 20%"
     }

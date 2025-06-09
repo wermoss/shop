@@ -31,9 +31,26 @@
       </div>
     </div>
 
-    <p class="text-2xl font-bold text-gray-900 my-3">
-      {{ formatPrice(product.price) }}
-    </p>
+    <div class="my-3">
+      <!-- If there's a quantity discount available, show original and discounted price -->
+      <div v-if="showDiscount" class="flex flex-col">
+        <div class="flex items-center">
+          <span class="text-lg text-gray-400 line-through mr-2">{{
+            formatPrice(product.price)
+          }}</span>
+          <span class="bg-black text-white px-1.5 py-0.5 text-xs rounded"
+            >-{{ getDiscountPercent }}%</span
+          >
+        </div>
+        <p class="text-2xl font-bold text-gray-900 mt-1">
+          {{ formatPrice(discountedPrice) }}
+        </p>
+      </div>
+      <!-- Otherwise just show the normal price -->
+      <p v-else class="text-2xl font-bold text-gray-900">
+        {{ formatPrice(product.price) }}
+      </p>
+    </div>
     <div class="space-y-2 mt-4">
       <div class="mt-4">
         <button
@@ -94,6 +111,39 @@ const formatPrice = (price: number) => {
     currency: "PLN",
   }).format(price);
 };
+
+// Import discount tiers
+import { CART_DISCOUNT_TIERS } from "~/stores/shop/cart";
+
+// Compute discount information
+const getDiscountPercent = computed(() => {
+  // Check if the product has a custom discount in the metadata
+  // This is for products that might have their own specific discount
+  const customDiscount = props.product.features?.find(
+    (f) => f.name === "Rabat"
+  )?.value;
+  if (customDiscount) {
+    const discountValue = parseInt(customDiscount);
+    if (!isNaN(discountValue)) return discountValue;
+  }
+
+  // Otherwise see if there's a cart discount based on quantity
+  const discountTier = CART_DISCOUNT_TIERS.sort(
+    (a: any, b: any) => b.quantity - a.quantity
+  ).find((tier: any) => 1 >= tier.quantity); // Assume minimum 1 item
+
+  return discountTier?.discount || 0;
+});
+
+// Show discount if there's any discount percentage to apply
+const showDiscount = computed(() => getDiscountPercent.value > 0);
+
+// Calculate discounted price
+const discountedPrice = computed(() => {
+  const price = props.product.price;
+  const discountMultiplier = 1 - getDiscountPercent.value / 100;
+  return price * discountMultiplier;
+});
 
 const addToCart = () => {
   if (!isLimitReached.value && !isAddingToCart.value) {
