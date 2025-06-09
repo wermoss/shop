@@ -199,9 +199,32 @@ export default defineEventHandler(async (event) => {
         },
       });
 
-      // Send confirmation email
+      const orderDetailsForEmail = {
+        orderNumber: session.metadata?.orderNumber,
+        customerName: session.metadata?.customerName,
+        customerEmail: session.metadata?.customerEmail,
+        customerPhone: session.metadata?.customerPhone,
+        shippingAddress: {
+          street: session.metadata?.shippingStreet,
+          houseNumber: session.metadata?.shippingHouseNumber,
+          postalCode: session.metadata?.shippingPostalCode,
+          city: session.metadata?.shippingCity,
+          country: session.metadata?.shippingCountry,
+        },
+        subtotalAmount,
+        cartDiscountAmount: recalculatedCartDiscountAmount,
+        codeDiscountAmount: recalculatedCodeDiscountAmount,
+        totalDiscountAmount: recalculatedTotalDiscountAmount,
+        amount: finalAmount,
+        items: emailProducts,
+        cartDiscount,
+        codeDiscount,
+        discountCode: session.metadata?.discountCode || "",
+        totalDiscount,
+      };
+
       // Log discount values before sending to email
-      console.log("💯 [Webhook] Sending discount values to email:", {
+      console.log("💯 [Webhook] Sending discount values to email (OLD LOG):", {
         recalculatedValues: {
           cartDiscountAmount: recalculatedCartDiscountAmount,
           codeDiscountAmount: recalculatedCodeDiscountAmount,
@@ -215,34 +238,16 @@ export default defineEventHandler(async (event) => {
         },
       });
 
+      console.log(
+        "📧 [Webhook] EXACT orderDetails BEING SENT to email service:",
+        orderDetailsForEmail
+      );
+
       const emailResponse = await $fetch("/api/mail/order-confirmation", {
         method: "POST",
         body: {
           customerEmail: session.metadata?.customerEmail,
-          orderDetails: {
-            orderNumber: session.metadata?.orderNumber,
-            customerName: session.metadata?.customerName,
-            customerEmail: session.metadata?.customerEmail,
-            customerPhone: session.metadata?.customerPhone,
-            shippingAddress: {
-              street: session.metadata?.shippingStreet,
-              houseNumber: session.metadata?.shippingHouseNumber,
-              postalCode: session.metadata?.shippingPostalCode,
-              city: session.metadata?.shippingCity,
-              country: session.metadata?.shippingCountry,
-            },
-            subtotalAmount,
-            // Use exactly 80 + 80 = 160 for discount values
-            cartDiscountAmount: 80,
-            codeDiscountAmount: 80,
-            totalDiscountAmount: 160,
-            amount: finalAmount,
-            items: emailProducts,
-            cartDiscount,
-            codeDiscount,
-            discountCode: session.metadata?.discountCode || "",
-            totalDiscount,
-          },
+          orderDetails: orderDetailsForEmail,
         },
       });
 

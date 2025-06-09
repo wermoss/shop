@@ -41,22 +41,15 @@ export default defineEventHandler(async (event) => {
   // Wartości z webhooka - przyjmujemy już obliczone wartości
   const subtotalAmount = parseFloat(orderDetails.subtotalAmount);
 
-  // Gwarantujemy że rabaty to dokładnie 80 PLN każdy, łącznie 160 PLN
-  // Niezależnie od wartości przekazanych z webhooka!
-  const cartDiscountAmount = 80; // Zawsze dokładnie 80 PLN
-  const codeDiscountAmount = 80; // Zawsze dokładnie 80 PLN
-  const totalDiscountAmount = 160; // Zawsze dokładnie 160 PLN
+  // Pobieramy rzeczywiste kwoty rabatów z orderDetails
+  const cartDiscountAmount = parseFloat(orderDetails.cartDiscountAmount || "0");
+  const codeDiscountAmount = parseFloat(orderDetails.codeDiscountAmount || "0");
+  const totalDiscountAmount = cartDiscountAmount + codeDiscountAmount; // Suma rzeczywistych rabatów
 
-  // Oryginalną wartość podajemy tylko dla celów debugowania
-  const originalCartDiscountAmount = parseFloat(
-    orderDetails.cartDiscountAmount || "0"
-  );
-  const originalCodeDiscountAmount = parseFloat(
-    orderDetails.codeDiscountAmount || "0"
-  );
-  const originalTotalDiscountAmount = parseFloat(
-    orderDetails.totalDiscountAmount || "0"
-  );
+  // Oryginalną wartość podajemy tylko dla celów debugowania (teraz to te same wartości)
+  const originalCartDiscountAmount = cartDiscountAmount;
+  const originalCodeDiscountAmount = codeDiscountAmount;
+  const originalTotalDiscountAmount = totalDiscountAmount;
 
   const totalAmount = parseFloat(orderDetails.amount);
 
@@ -209,10 +202,10 @@ export default defineEventHandler(async (event) => {
     SHIPPING_COUNTRY: orderDetails.shippingAddress?.country || "",
     TOTAL_PRICE: formatPrice(totalAmount),
     SUBTOTAL_PRICE: formatPrice(subtotalAmount),
-    // Stosujemy dokładnie takie samo formatowanie jak w pierwszym mailu (cart-notification.post.ts)
-    DISCOUNT_AMOUNT: formatPrice(160), // 160,00
-    CART_DISCOUNT_AMOUNT: formatPrice(80), // 80,00
-    CODE_DISCOUNT_AMOUNT: formatPrice(80), // 80,00
+    // Używamy dynamicznie przekazanych i zsumowanych wartości rabatów
+    DISCOUNT_AMOUNT: formatPrice(totalDiscountAmount),
+    CART_DISCOUNT_AMOUNT: formatPrice(cartDiscountAmount),
+    CODE_DISCOUNT_AMOUNT: formatPrice(codeDiscountAmount),
     CART_DISCOUNT: cartDiscount,
     CODE_DISCOUNT: codeDiscount,
     TOTAL_DISCOUNT: totalDiscount,

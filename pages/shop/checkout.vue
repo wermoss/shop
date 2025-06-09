@@ -401,7 +401,21 @@ const handlePayment = async () => {
             country: formData.value.country,
           },
         },
-        appliedDiscountCode: cartStore.appliedDiscountCode,
+        // Dodaj szczegóły zamówienia do metadanych przekazywanych do Stripe
+        // Te dane zostaną użyte na stronie success i w emailu potwierdzającym
+        order_details: {
+          products: cartItems.value.map((item) => ({
+            id: item.product.id,
+            name: item.product.name,
+            price: item.product.price, // Cena jednostkowa
+            quantity: item.quantity,
+          })),
+          subtotal: cartStore.subtotalPrice,
+          quantityDiscount: cartStore.cartDiscountAmount,
+          couponDiscount: cartStore.codeDiscountAmount,
+          total: totalPrice.value, // Całkowita kwota po rabatach
+          // vatAmount i vatRate mogą być dodane później, jeśli są obliczane serwerowo
+        },
       }),
     });
 
@@ -409,9 +423,44 @@ const handlePayment = async () => {
 
     if (!response.ok) {
       throw new Error(
-        responseData.message || "Failed to create payment session"
+        responseData.error || "Błąd podczas tworzenia sesji płatności."
       );
     }
+
+    // Zapisz metadane zamówienia w sessionStorage, aby użyć ich na stronie success
+    // Te dane są niezależne od Stripe i służą do wyświetlenia podsumowania ZANIM webhook zaktualizuje stan
+    const orderMetadata = {
+      customerName: formData.value.name,
+      customerEmail: formData.value.email,
+      customerPhone: formData.value.phone,
+      shippingAddress: `${formData.value.street} ${formData.value.houseNumber}`,
+      shippingCity: formData.value.city,
+      shippingPostalCode: formData.value.postalCode,
+      shippingCountry: formData.value.country,
+      products: cartItems.value.map((item) => ({
+        id: item.product.id,
+        name: item.product.name,
+        price: item.product.price, // Cena jednostkowa produktu
+        quantity: item.quantity,
+      })),
+      subtotal: cartStore.subtotalPrice,
+      vatAmount: 0, // Placeholder, jeśli VAT nie jest jeszcze obliczony
+      vatRate: 0, // Placeholder
+      quantityDiscount: cartStore.cartDiscountAmount,
+      couponDiscount: cartStore.codeDiscountAmount,
+      total: totalPrice.value,
+    };
+
+    console.log(
+      "CheckoutPage: Saving to sessionStorage:",
+      `order_${responseData.orderNumber}`,
+      orderMetadata
+    );
+
+    sessionStorage.setItem(
+      `order_${responseData.orderNumber}`,
+      JSON.stringify(orderMetadata)
+    );
 
     // Teraz wyślij powiadomienie o przejściu do płatności z numerem zamówienia
     await $fetch("/api/mail/cart-notification", {
@@ -437,21 +486,6 @@ const handlePayment = async () => {
         },
       },
     });
-
-    // Zapisz metadane zamówienia w sessionStorage
-    const orderMetadata = {
-      customerName: formData.value.name,
-      customerEmail: formData.value.email,
-      customerPhone: formData.value.phone,
-      shippingAddress: `${formData.value.street} ${formData.value.houseNumber}`,
-      shippingCity: formData.value.city,
-      shippingPostalCode: formData.value.postalCode,
-      shippingCountry: formData.value.country,
-    };
-    sessionStorage.setItem(
-      `order_${responseData.orderNumber}`,
-      JSON.stringify(orderMetadata)
-    );
 
     // Zapisz ten numer zamówienia jako autoryzowany dla tej sesji
     let authorizedOrders: string[] = [];

@@ -19,6 +19,13 @@ export interface CartItem {
   quantity: number;
 }
 
+export interface OrderProduct {
+  id: number;
+  name: string;
+  price: number;
+  quantity: number;
+}
+
 export interface OrderMetadata {
   customerName: string;
   customerEmail: string;
@@ -27,4 +34,11 @@ export interface OrderMetadata {
   shippingCity: string;
   shippingPostalCode: string;
   shippingCountry: string;
+  products: OrderProduct[];
+  subtotal: number;
+  vatAmount?: number;
+  vatRate?: number;
+  quantityDiscount?: number;
+  couponDiscount?: number;
+  total: number;
 }
