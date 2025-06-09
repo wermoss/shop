@@ -1,275 +1,140 @@
 <template>
   <NuxtLayout name="clean">
-    <div class="min-h-screen">
-      <div class="max-w-xl mx-auto px-6 py-10 bg-black text-white">
-        wershapes
-      </div>
-      <div
-        class="max-w-xl mx-auto px-6 py-10 bg-white font-roboto-mono text-black"
-      >
-        <!-- zamówienie - Start -->
-        <div class="flex justify-between items-center">
-          <div>Numer zamówienia</div>
-          <div>Data zamówienia</div>
-        </div>
-        <div class="flex justify-between items-center">
-          <div>{{ orderNumber }}</div>
-          <div>{{ orderTimestamp }}</div>
-        </div>
-        <!-- zamówienie - Koniec -->
-        <!-- Produkty - Start -->
-        <div>
-          <div class="flex justify-between items-center">
-            <div>Betonowe dłonie z mchem</div>
-            <div>200,00</div>
-          </div>
-          <div class="flex justify-between items-center">
-            <div>Betonowe dłonie z mchem</div>
-            <div>200,00</div>
-          </div>
-        </div>
-        <!-- Produkty - Koniec -->
-        <!-- Podsumowanie - Start -->
-        <div>
-          <div class="flex justify-between items-center">
-            <div>Wartość produktów</div>
-            <div>400,00</div>
-          </div>
-          <div class="flex justify-between items-center">
-            <div>Wartość VAT</div>
-            <div>0,00</div>
-          </div>
-          <div class="flex justify-between items-center">
-            <div>Rabat ilościowy</div>
-            <div>20,00</div>
-          </div>
-          <div class="flex justify-between items-center">
-            <div>Rabat kuponowy</div>
-            <div>20,00</div>
-          </div>
-          <div class="flex justify-between items-center">
-            <div>Suma</div>
-            <div>360,00</div>
-          </div>
-        </div>
-        <!-- Podsumowanie - Koniec -->
-        <!-- Dane klienta - Start -->
-        <div>
-          {{ orderMetadata?.customerName }}<br />
-          {{ orderMetadata?.customerEmail }}<br />
-          {{ orderMetadata?.customerPhone }}<br />
-        </div>
-        <!-- Dane klienta - Koniec -->
-        <!-- Adres wysyłki - Start -->
-        <div>
-          {{ orderMetadata?.shippingAddress }}<br />
-          {{ orderMetadata?.shippingPostalCode }}
-          {{ orderMetadata?.shippingCity }}, {{ orderMetadata?.shippingCountry
-          }}<br />
-        </div>
-        <!-- Adres wysyłki - Koniec -->
-      </div>
-    </div>
-    <div class="min-h-screen">
-      <div class="max-w-3xl mx-auto px-4 py-16">
-        <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
-          <div class="p-8">
-            <div class="text-center">
-              <div
-                class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 mb-6"
-              >
-                <svg
-                  class="w-10 h-10 text-green-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
+    <div class="min-h-screen bg-[#EBEBEB]">
+      <div class="max-w-md mx-auto py-16">
+        <div class="bg-white rounded-md">
+          <!-- Order Details -->
+          <div
+            class="max-w-lg mx-auto px-10 py-10 bg-white font-roboto-mono text-black text-sm"
+          >
+            <!-- Order Number and Date -->
+            <div class="mb-10">
+              <div class="flex justify-between items-center">
+                <div class="text-gray-600">Numer zamówienia</div>
+                <div class="text-gray-600">Data zamówienia</div>
               </div>
-              <h1 class="text-3xl font-bold text-gray-900 mb-4">
-                Dziękujemy za zamówienie!
-              </h1>
-              <p class="text-xl text-gray-600 mb-8">
-                Twoje zamówienie zostało przyjęte do realizacji
+              <div class="flex justify-between items-center">
+                <div>{{ orderNumber }}</div>
+                <div>{{ orderTimestamp }}</div>
+              </div>
+            </div>
+
+            <!-- Products List -->
+            <div v-if="orderMetadata?.products" class="mb-6">
+              <div
+                v-for="product in orderMetadata.products"
+                :key="product.id"
+                class="flex justify-between items-top"
+              >
+                <div class="flex-1">
+                  <div>{{ product.name }}</div>
+                  <div class="">
+                    {{ product.quantity }} szt. ×
+                    {{ formatPrice(product.price) }} zł
+                  </div>
+                </div>
+                <div class="">
+                  {{ formatPrice(product.price * product.quantity) }} zł
+                </div>
+              </div>
+            </div>
+
+            <div class="border-t border-gray-200 py-6">
+              <div class="flex justify-between items-center">
+                <div>Wartość produktów</div>
+                <div>{{ formatPrice(orderMetadata?.subtotal || 0) }} zł</div>
+              </div>
+
+              <div
+                v-if="orderMetadata?.vatAmount"
+                class="flex justify-between items-center text-sm"
+              >
+                <div>VAT ({{ orderMetadata.vatRate }}%)</div>
+                <div>{{ formatPrice(orderMetadata.vatAmount) }} zł</div>
+              </div>
+
+              <div
+                v-if="orderMetadata?.quantityDiscount"
+                class="flex justify-between items-center"
+              >
+                <div>Rabat ilościowy</div>
+                <div>-{{ formatPrice(orderMetadata.quantityDiscount) }} zł</div>
+              </div>
+
+              <div
+                v-if="orderMetadata?.couponDiscount"
+                class="flex justify-between items-center"
+              >
+                <div>Rabat dodatkowy</div>
+                <div>-{{ formatPrice(orderMetadata.couponDiscount) }} zł</div>
+              </div>
+
+              <div class="flex justify-between items-center pt-6 font-bold">
+                <div>Suma</div>
+                <div>{{ formatPrice(orderMetadata?.total || 0) }} zł</div>
+              </div>
+            </div>
+
+            <!-- Customer Details -->
+            <div v-if="orderMetadata">
+              <!-- Dane klienta -->
+              <div class="border-t border-gray-200 py-6">
+                <div class="grid grid-cols-1">
+                  <div class="flex">
+                    <span class="text-gray-800">{{
+                      orderMetadata.customerName
+                    }}</span>
+                  </div>
+                  <div class="flex">
+                    <span class="text-gray-800">{{
+                      orderMetadata.customerEmail
+                    }}</span>
+                  </div>
+                  <div v-if="orderMetadata.customerPhone" class="flex">
+                    <span class="text-gray-800">{{
+                      orderMetadata.customerPhone
+                    }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Adres wysyłki -->
+              <div class="border-t border-gray-200 py-6">
+                <div class="grid grid-cols-1">
+                  <div class="flex">
+                    <span class="text-gray-800">{{
+                      orderMetadata.shippingAddress
+                    }}</span>
+                  </div>
+                  <div class="flex">
+                    <span class="text-gray-800"
+                      >{{ orderMetadata.shippingPostalCode }}
+                      {{ orderMetadata.shippingCity }},
+                      {{ orderMetadata.shippingCountry }}</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-4">
+              <p class="text-gray-600">
+                Dodatkowe podsumowanie zamówienia oraz kod rabatowy na następne
+                zakupy wysłaliśmy na wskazany przez Ciebie adres email.
               </p>
             </div>
-
-            <!-- Order Details -->
-            <div
-              class="max-w-lg mx-auto px-6 py-10 bg-white font-roboto-mono text-black space-y-8"
-            >
-              <!-- Order Number and Date -->
-              <div class="bg-gray-100 p-4 rounded">
-                <div class="flex justify-between items-center mb-2">
-                  <div class="text-sm text-gray-600">Numer zamówienia</div>
-                  <div class="text-sm text-gray-600">Data zamówienia</div>
-                </div>
-                <div class="flex justify-between items-center">
-                  <div class="font-medium">{{ orderNumber }}</div>
-                  <div class="font-medium">{{ orderTimestamp }}</div>
-                </div>
-              </div>
-
-              <!-- Products List -->
-              <div class="bg-gray-100 p-4 rounded space-y-4">
-                <h3 class="font-medium mb-2">Zamówienie</h3>
-                <div v-if="orderMetadata?.products" class="space-y-2">
-                  <div
-                    v-for="product in orderMetadata.products"
-                    :key="product.id"
-                    class="flex justify-between items-center text-sm border-b border-gray-200 pb-2"
-                  >
-                    <div class="flex-1">
-                      <div>{{ product.name }}</div>
-                      <div class="text-gray-600">
-                        {{ product.quantity }} szt. ×
-                        {{ formatPrice(product.price) }} zł
-                      </div>
-                    </div>
-                    <div class="font-medium">
-                      {{ formatPrice(product.price * product.quantity) }} zł
-                    </div>
-                  </div>
-                </div>
-
-                <div class="border-t border-gray-300 mt-4 pt-4 space-y-2">
-                  <div class="flex justify-between items-center text-sm">
-                    <div>Wartość produktów</div>
-                    <div>
-                      {{ formatPrice(orderMetadata?.subtotal || 0) }} zł
-                    </div>
-                  </div>
-
-                  <div
-                    v-if="orderMetadata?.vatAmount"
-                    class="flex justify-between items-center text-sm"
-                  >
-                    <div>VAT ({{ orderMetadata.vatRate }}%)</div>
-                    <div>{{ formatPrice(orderMetadata.vatAmount) }} zł</div>
-                  </div>
-
-                  <div
-                    v-if="orderMetadata?.quantityDiscount"
-                    class="flex justify-between items-center text-sm text-green-600"
-                  >
-                    <div>Rabat ilościowy</div>
-                    <div>
-                      -{{ formatPrice(orderMetadata.quantityDiscount) }} zł
-                    </div>
-                  </div>
-
-                  <div
-                    v-if="orderMetadata?.couponDiscount"
-                    class="flex justify-between items-center text-sm text-green-600"
-                  >
-                    <div>Rabat kuponowy</div>
-                    <div>
-                      -{{ formatPrice(orderMetadata.couponDiscount) }} zł
-                    </div>
-                  </div>
-
-                  <div
-                    class="flex justify-between items-center font-medium pt-2 border-t border-gray-300"
-                  >
-                    <div>Do zapłaty</div>
-                    <div>{{ formatPrice(orderMetadata?.total || 0) }} zł</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Customer Details -->
-              <div
-                v-if="orderMetadata"
-                class="space-y-6 bg-gray-50 rounded-xl p-6 mb-8"
-              >
-                <!-- Dane klienta -->
-                <div class="border-b border-gray-200 pb-4">
-                  <h3 class="text-md font-medium text-gray-700 mb-3">
-                    Dane klienta
-                  </h3>
-                  <div class="grid grid-cols-1 gap-2 text-sm">
-                    <div class="flex">
-                      <span class="text-gray-500 w-32">Imię i nazwisko:</span>
-                      <span class="text-gray-800 font-medium">{{
-                        orderMetadata.customerName
-                      }}</span>
-                    </div>
-                    <div class="flex">
-                      <span class="text-gray-500 w-32">Email:</span>
-                      <span class="text-gray-800 font-medium">{{
-                        orderMetadata.customerEmail
-                      }}</span>
-                    </div>
-                    <div v-if="orderMetadata.customerPhone" class="flex">
-                      <span class="text-gray-500 w-32">Telefon:</span>
-                      <span class="text-gray-800 font-medium">{{
-                        orderMetadata.customerPhone
-                      }}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Adres wysyłki -->
-                <div>
-                  <h3 class="text-md font-medium text-gray-700 mb-3">
-                    Adres wysyłki
-                  </h3>
-                  <div class="grid grid-cols-1 gap-2 text-sm">
-                    <div class="flex">
-                      <span class="text-gray-500 w-32">Adres:</span>
-                      <span class="text-gray-800 font-medium">{{
-                        orderMetadata.shippingAddress
-                      }}</span>
-                    </div>
-                    <div class="flex">
-                      <span class="text-gray-500 w-32">Kod pocztowy:</span>
-                      <span class="text-gray-800 font-medium">{{
-                        orderMetadata.shippingPostalCode
-                      }}</span>
-                    </div>
-                    <div class="flex">
-                      <span class="text-gray-500 w-32">Miejscowość:</span>
-                      <span class="text-gray-800 font-medium">{{
-                        orderMetadata.shippingCity
-                      }}</span>
-                    </div>
-                    <div class="flex">
-                      <span class="text-gray-500 w-32">Kraj:</span>
-                      <span class="text-gray-800 font-medium">{{
-                        orderMetadata.shippingCountry
-                      }}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="space-y-4 text-center">
-                <p class="text-gray-600">
-                  Potwierdzenie zamówienia zostało wysłane na Twój adres email.
-                </p>
-                <p class="text-gray-600">
-                  Status zamówienia możesz sprawdzić używając numeru zamówienia.
-                </p>
-              </div>
-            </div>
-
-            <div class="bg-gray-50 px-8 py-6">
-              <div class="flex justify-center">
-                <NuxtLink
-                  to="/shop"
-                  class="inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
-                >
-                  Wróć do sklepu
-                </NuxtLink>
-              </div>
-            </div>
           </div>
+
+          <!-- <div class="bg-gray-50 px-8 py-6">
+            <div class="flex justify-center">
+              <NuxtLink
+                to="/shop"
+                class="inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+              >
+                Wróć do sklepu
+              </NuxtLink>
+            </div>
+          </div> -->
         </div>
       </div>
     </div>
