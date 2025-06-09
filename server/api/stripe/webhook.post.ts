@@ -1,9 +1,16 @@
 import { defineEventHandler, readBody, readRawBody, getHeader } from "h3";
 import Stripe from "stripe";
+import type { Product } from "~/types/shop";
 
 interface ProductDetail {
   id: number;
-  qty: number;
+  name: string;
+  price: number;
+  quantity: number;
+  lineItemTotalPrice: number;
+  discountAppliedToLineItem: number;
+  lineItemTotalPriceWithDiscount: number;
+  image?: string;
 }
 
 export default defineEventHandler(async (event) => {
@@ -81,36 +88,33 @@ export default defineEventHandler(async (event) => {
     }
 
     try {
-      if (!session.metadata?.productIds) {
+      // W metadanych sesji Stripe powinny znajdować się wszystkie potrzebne informacje
+      // o produktach i rabatach, obliczone przez calculateOrderTotals
+
+      if (!session.metadata?.products) {
         throw createError({
           statusCode: 400,
-          message: "No product information in session",
+          message: "No product information in session metadata",
         });
       }
 
-      // Get product details
-      console.log("📦 [Webhook] Processing order products");
-      const productsData = await import("../../../data/products.json");
-      const productDetails = JSON.parse(
-        session.metadata.productIds
-      ) as ProductDetail[];
+      // Odczytujemy dane produktów
+      const productsWithDetails: ProductDetail[] = JSON.parse(
+        session.metadata.products
+      );
 
-      if (!Array.isArray(productDetails)) {
-        throw createError({
-          statusCode: 400,
-          message: "Invalid product details format",
-        });
-      }
-
-      // Odczytujemy wartości z metadanych sesji
-      let subtotalAmount = 0;
-      const cartDiscount = parseInt(session.metadata?.cartDiscount || "0");
-      const codeDiscount = parseInt(session.metadata?.codeDiscount || "0");
-      const totalDiscount = cartDiscount + codeDiscount;
-
-      // Odczytujemy kwoty rabatów, które zostały już obliczone w create-session.post.ts
+      // Odczytujemy wartości rabatów
+      const subtotalAmount = parseFloat(
+        session.metadata?.subtotalAmount || "0"
+      );
+      const cartDiscountPercent = parseFloat(
+        session.metadata?.cartDiscountPercent || "0"
+      );
       const cartDiscountAmount = parseFloat(
         session.metadata?.cartDiscountAmount || "0"
+      );
+      const codeDiscountPercent = parseFloat(
+        session.metadata?.codeDiscountPercent || "0"
       );
       const codeDiscountAmount = parseFloat(
         session.metadata?.codeDiscountAmount || "0"
@@ -118,87 +122,35 @@ export default defineEventHandler(async (event) => {
       const totalDiscountAmount = parseFloat(
         session.metadata?.totalDiscountAmount || "0"
       );
+      const finalAmount = parseFloat(session.metadata?.finalAmount || "0");
+      const appliedDiscountCode = session.metadata?.appliedDiscountCode || "";
 
-      // Map products with prices (bez formatowania!)
-      const emailProducts = [];
-
-      // Najpierw oblicz subtotalAmount przez dodanie cen wszystkich produktów
-      for (const item of productDetails) {
-        const product = productsData.products.find((p) => p.id === item.id);
-        if (!product) {
-          throw createError({
-            statusCode: 500,
-            message: `Product not found: ${item.id}`,
-          });
-        }
-
-        // Oblicz wartości bez żadnego zaokrąglania
-        const unitPrice = product.price;
-        subtotalAmount += unitPrice * item.qty;
-
-        // Przekaż surowe wartości do order-confirmation
-        emailProducts.push({
-          name: product.name,
-          quantity: item.qty,
-          unitPrice: unitPrice, // cena bez rabatu
-          totalPrice: unitPrice * item.qty, // cena * ilość bez rabatu
-        });
-      }
-
-      // Obliczamy rabaty dokładnie tak samo jak w create-session.post.ts
-      // Wyliczamy rabaty od nowa, aby mieć pewność, że są zgodne z nową metodologią
-
-      // 1. Rabat ilościowy zaokrąglony do pełnych złotych
-      const recalculatedCartDiscountAmount =
-        cartDiscount > 0
-          ? Math.round(subtotalAmount * (cartDiscount / 100))
-          : 0;
-
-      // 2. Rabat z kuponu zaokrąglony do pełnych złotych
-      const recalculatedCodeDiscountAmount =
-        codeDiscount > 0
-          ? Math.round(subtotalAmount * (codeDiscount / 100))
-          : 0;
-
-      // 3. Suma obu rabatów
-      const recalculatedTotalDiscountAmount =
-        recalculatedCartDiscountAmount + recalculatedCodeDiscountAmount;
-
-      // 4. Finalna kwota po odjęciu rabatu
-      const finalAmount = subtotalAmount - recalculatedTotalDiscountAmount;
-
-      console.log("💰 [Webhook] Order totals:", {
-        subtotalAmount: subtotalAmount,
-        rabaty: {
-          cartDiscountPercent: cartDiscount,
-          cartDiscountAmount: recalculatedCartDiscountAmount,
-          cartDiscountRaw: subtotalAmount * (cartDiscount / 100),
-          cartDiscountRounded: Math.round(
-            subtotalAmount * (cartDiscount / 100)
-          ),
-
-          codeDiscountPercent: codeDiscount,
-          codeDiscountAmount: recalculatedCodeDiscountAmount,
-          codeDiscountRaw: subtotalAmount * (codeDiscount / 100),
-          codeDiscountRounded: Math.round(
-            subtotalAmount * (codeDiscount / 100)
-          ),
-
-          totalDiscountPercent: totalDiscount,
-          totalDiscountAmount: recalculatedTotalDiscountAmount,
-        },
-        finalAmount: finalAmount,
-        productTotal: subtotalAmount,
-        finalCheck: subtotalAmount - recalculatedTotalDiscountAmount,
-        originalMetadata: {
-          subtotal: session.metadata?.subtotalAmount,
-          cartDiscountAmount: session.metadata?.cartDiscountAmount,
-          codeDiscountAmount: session.metadata?.codeDiscountAmount,
-          totalDiscountAmount: session.metadata?.totalDiscountAmount,
-          finalAmount: session.metadata?.finalAmount,
-        },
+      // Logowanie dla debugowania
+      console.log("💰 [Webhook] Order details from session metadata:", {
+        subtotalAmount,
+        cartDiscountPercent,
+        cartDiscountAmount,
+        codeDiscountPercent,
+        codeDiscountAmount,
+        totalDiscountAmount,
+        finalAmount,
+        appliedDiscountCode,
+        numberOfProducts: productsWithDetails.length,
       });
 
+      // Przygotowujemy produkty do szablonu email
+      const emailProducts = productsWithDetails.map((product) => ({
+        name: product.name,
+        quantity: product.quantity,
+        price: product.price, // Oryginalna cena jednostkowa
+        unitPrice: product.price, // Oryginalna cena jednostkowa
+        totalPrice: product.lineItemTotalPrice, // Suma bez rabatu
+        priceWithDiscount: product.lineItemTotalPriceWithDiscount, // Suma po rabacie
+        discountAmount: product.discountAppliedToLineItem, // Kwota rabatu
+        image: product.image,
+      }));
+
+      // Przygotowanie danych do wysłania emaila
       const orderDetailsForEmail = {
         orderNumber: session.metadata?.orderNumber,
         customerName: session.metadata?.customerName,
@@ -211,37 +163,32 @@ export default defineEventHandler(async (event) => {
           city: session.metadata?.shippingCity,
           country: session.metadata?.shippingCountry,
         },
+        // Dane finansowe
         subtotalAmount,
-        cartDiscountAmount: recalculatedCartDiscountAmount,
-        codeDiscountAmount: recalculatedCodeDiscountAmount,
-        totalDiscountAmount: recalculatedTotalDiscountAmount,
+        cartDiscountPercent,
+        cartDiscountAmount,
+        codeDiscountPercent,
+        codeDiscountAmount,
+        totalDiscountAmount,
+        appliedDiscountCode,
         amount: finalAmount,
+        // Produkty
         items: emailProducts,
-        cartDiscount,
-        codeDiscount,
-        discountCode: session.metadata?.discountCode || "",
-        totalDiscount,
       };
 
-      // Log discount values before sending to email
-      console.log("💯 [Webhook] Sending discount values to email (OLD LOG):", {
-        recalculatedValues: {
-          cartDiscountAmount: recalculatedCartDiscountAmount,
-          codeDiscountAmount: recalculatedCodeDiscountAmount,
-          totalDiscountAmount: recalculatedTotalDiscountAmount,
-          finalAmount,
+      console.log("📧 [Webhook] Sending order details to email service:", {
+        customerEmail: session.metadata?.customerEmail,
+        orderNumber: session.metadata?.orderNumber,
+        subtotalAmount,
+        discounts: {
+          cartDiscountPercent,
+          cartDiscountAmount,
+          codeDiscountPercent,
+          codeDiscountAmount,
+          totalDiscountAmount,
         },
-        forcedValues: {
-          // We want the discounts to always add up to 160 PLN
-          forcedTotalDiscount: 160,
-          forcedPartialDiscount: 80,
-        },
+        finalAmount,
       });
-
-      console.log(
-        "📧 [Webhook] EXACT orderDetails BEING SENT to email service:",
-        orderDetailsForEmail
-      );
 
       const emailResponse = await $fetch("/api/mail/order-confirmation", {
         method: "POST",
@@ -255,15 +202,11 @@ export default defineEventHandler(async (event) => {
         throw new Error("Failed to send order confirmation email");
       }
 
-      // Zawsze oznacz sesję jako obsłużoną, niezależnie od źródła webhooka
+      // Zawsze oznacz sesję jako obsłużoną
       await stripe.checkout.sessions.update(session.id, {
         metadata: { ...session.metadata, emailSent: "true" },
       });
-      console.log(
-        `✅ [Webhook] Session marked as processed (source: ${
-          isStripeCLI ? "CLI" : "production"
-        })`
-      );
+      console.log(`✅ [Webhook] Session marked as processed`);
 
       return {
         success: true,

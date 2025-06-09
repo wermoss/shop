@@ -54,18 +54,41 @@
               </div>
 
               <div
-                v-if="orderMetadata?.quantityDiscount"
+                v-if="
+                  orderMetadata?.quantityDiscount &&
+                  orderMetadata.quantityDiscount > 0
+                "
                 class="flex justify-between items-center"
               >
-                <div>Rabat ilościowy</div>
+                <div>
+                  Rabat ilościowy ({{
+                    orderMetadata.cartDiscountPercent || 10
+                  }}%)
+                </div>
                 <div>-{{ formatPrice(orderMetadata.quantityDiscount) }} zł</div>
               </div>
 
               <div
-                v-if="orderMetadata?.couponDiscount"
+                v-if="
+                  orderMetadata?.couponDiscount &&
+                  orderMetadata.couponDiscount > 0
+                "
                 class="flex justify-between items-center"
               >
-                <div>Rabat dodatkowy</div>
+                <div>
+                  Rabat dodatkowy
+                  {{
+                    orderMetadata.codeDiscountPercent &&
+                    orderMetadata.codeDiscountPercent > 0
+                      ? "(" + orderMetadata.codeDiscountPercent + "%)"
+                      : ""
+                  }}
+                  {{
+                    orderMetadata.appliedDiscountCode
+                      ? " (kod: " + orderMetadata.appliedDiscountCode + ")"
+                      : ""
+                  }}
+                </div>
                 <div>-{{ formatPrice(orderMetadata.couponDiscount) }} zł</div>
               </div>
 
@@ -142,8 +165,9 @@
 </template>
 
 <script setup lang="ts">
-import { useCartStore } from "~/stores/shop/cart";
+import { useCartStore, CART_DISCOUNT_TIERS } from "~/stores/shop/cart";
 import type { OrderMetadata } from "~/types/shop";
+import discountsData from "~/data/discounts.json";
 
 const route = useRoute();
 const cartStore = useCartStore();
@@ -168,6 +192,8 @@ const formatPrice = (price: number) => {
     maximumFractionDigits: 2,
   }).format(price);
 };
+
+// Używamy bezpośrednio wartości total i rabatu z orderMetadata, bez ponownego obliczania
 
 console.log("Success page loaded");
 console.log("Route:", route.fullPath);
@@ -199,9 +225,10 @@ onMounted(() => {
 
       if (storedData) {
         try {
-          orderMetadata.value = JSON.parse(storedData);
-          console.log("Sparsowane dane zamówienia:", orderMetadata.value);
-          if (!orderMetadata.value.products) {
+          const parsedData = JSON.parse(storedData);
+          orderMetadata.value = parsedData;
+          console.log("Sparsowane dane zamówienia:", parsedData);
+          if (!parsedData.products) {
             console.warn("Brak produktów w danych zamówienia!");
           }
         } catch (e) {

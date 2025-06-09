@@ -4,7 +4,7 @@ export default defineNuxtConfig({
   ssr: false,
 
   nitro: {
-    compatibilityDate: "2025-06-08",
+    compatibilityDate: "2025-06-09", // Updated to fix compatibility warning
     preset: "vercel",
   },
 

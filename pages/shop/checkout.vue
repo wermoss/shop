@@ -389,6 +389,7 @@ const handlePayment = async () => {
           id: item.id,
           quantity: item.quantity,
         })),
+        appliedDiscountCode: cartStore.appliedDiscountCode, // Dodanie kodu rabatowego do żądania
         customer: {
           name: formData.value.name,
           email: formData.value.email,
@@ -446,8 +447,13 @@ const handlePayment = async () => {
       subtotal: cartStore.subtotalPrice,
       vatAmount: 0, // Placeholder, jeśli VAT nie jest jeszcze obliczony
       vatRate: 0, // Placeholder
-      quantityDiscount: cartStore.cartDiscountAmount,
-      couponDiscount: cartStore.codeDiscountAmount,
+      quantityDiscount:
+        cartStore.cartDiscount > 0 ? cartStore.cartDiscountAmount : 0,
+      couponDiscount:
+        cartStore.codeDiscount > 0 ? cartStore.codeDiscountAmount : 0,
+      cartDiscountPercent: cartStore.cartDiscount,
+      codeDiscountPercent: cartStore.codeDiscount,
+      appliedDiscountCode: cartStore.appliedDiscountCode,
       total: totalPrice.value,
     };
 
@@ -463,29 +469,45 @@ const handlePayment = async () => {
     );
 
     // Teraz wyślij powiadomienie o przejściu do płatności z numerem zamówienia
-    await $fetch("/api/mail/cart-notification", {
-      method: "POST",
-      body: {
-        cartDetails: {
-          orderNumber: responseData.orderNumber,
-          items: cartItems.value,
-          totalPrice: totalPrice.value,
-          cartDiscountPercent: cartStore.cartDiscount,
-          codeDiscountPercent: cartStore.codeDiscount,
-          discountCode: cartStore.appliedDiscountCode,
-          customerEmail: formData.value.email,
-          customerName: formData.value.name,
-          customerPhone: formData.value.phone,
-          shippingAddress: {
-            street: formData.value.street,
-            houseNumber: formData.value.houseNumber,
-            postalCode: formData.value.postalCode,
-            city: formData.value.city,
-            country: formData.value.country,
+    console.log(
+      "CheckoutPage: Sending cart notification email to",
+      formData.value.email
+    );
+
+    try {
+      const emailResult = await $fetch("/api/mail/cart-notification", {
+        method: "POST",
+        body: {
+          cartDetails: {
+            orderNumber: responseData.orderNumber,
+            items: cartItems.value,
+            totalPrice: totalPrice.value,
+            cartDiscountPercent: cartStore.cartDiscount,
+            codeDiscountPercent: cartStore.codeDiscount,
+            discountCode: cartStore.appliedDiscountCode,
+            customerEmail: formData.value.email, // Upewnij się że to pole jest wypełnione
+            customerName: formData.value.name,
+            customerPhone: formData.value.phone,
+            cartUrl: `${window.location.origin}/shop/checkout`, // Dodaj adres powrotu do koszyka
+            shippingAddress: {
+              street: formData.value.street,
+              houseNumber: formData.value.houseNumber,
+              postalCode: formData.value.postalCode,
+              city: formData.value.city,
+              country: formData.value.country,
+            },
           },
         },
-      },
-    });
+      });
+
+      console.log("CheckoutPage: Cart notification email result:", emailResult);
+    } catch (emailError) {
+      console.error(
+        "CheckoutPage: Error sending cart notification:",
+        emailError
+      );
+      // Nie przerywamy procesu zamówienia, jeśli email nie został wysłany
+    }
 
     // Zapisz ten numer zamówienia jako autoryzowany dla tej sesji
     let authorizedOrders: string[] = [];

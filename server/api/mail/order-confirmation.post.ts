@@ -1,6 +1,42 @@
 import { defineEventHandler, readBody } from "h3";
 import fetch from "node-fetch";
 
+// Interfejsy dla lepszego typowania
+interface OrderItem {
+  name: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+  priceWithDiscount: number;
+  discountAmount: number;
+  image?: string;
+}
+
+interface ShippingAddress {
+  street: string;
+  houseNumber: string;
+  postalCode: string;
+  city: string;
+  country: string;
+}
+
+interface OrderDetails {
+  orderNumber: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone?: string;
+  shippingAddress: ShippingAddress;
+  subtotalAmount: number;
+  cartDiscountPercent: number;
+  cartDiscountAmount: number;
+  codeDiscountPercent: number;
+  codeDiscountAmount: number;
+  totalDiscountAmount: number;
+  appliedDiscountCode: string;
+  amount: number;
+  items: OrderItem[];
+}
+
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig();
   const apiKey = config.brevo?.apiKey;
@@ -9,7 +45,10 @@ export default defineEventHandler(async (event) => {
 
   console.log("📧 [Order Confirmation] Starting to process emails");
 
-  const { customerEmail, orderDetails } = await readBody(event);
+  const { customerEmail, orderDetails } = await readBody<{
+    customerEmail: string;
+    orderDetails: OrderDetails;
+  }>(event);
 
   if (!customerEmail || !orderDetails) {
     console.error("❌ [Order Confirmation] Missing required data:", {
@@ -22,7 +61,7 @@ export default defineEventHandler(async (event) => {
   console.log("📦 [Order Confirmation] Received order details:", orderDetails);
 
   // Funkcja do formatowania cen w stylu polskim - użyj DOKŁADNIE takiej samej implementacji jak w cart-notification
-  const formatPrice = (price) => {
+  const formatPrice = (price: number): string => {
     // Najpierw zaokrąglij do dwóch miejsc po przecinku aby uniknąć problemów z 0.01 PLN
     const roundedPrice = Math.round(price * 100) / 100;
     const formatted = new Intl.NumberFormat("pl-PL", {
@@ -30,306 +69,181 @@ export default defineEventHandler(async (event) => {
       maximumFractionDigits: 2,
     }).format(roundedPrice);
 
-    // Debug wartości formatowanych
-    console.log(
-      `🔢 [Order Confirmation] Formatting price ${price} -> ${formatted}`
-    );
-
     return formatted;
   };
 
-  // Wartości z webhooka - przyjmujemy już obliczone wartości
-  const subtotalAmount = parseFloat(orderDetails.subtotalAmount);
+  // Używamy wartości przekazanych z webhook, obliczonych przez calculateOrderTotals
+  const subtotalAmount = orderDetails.subtotalAmount;
+  const cartDiscountPercent = orderDetails.cartDiscountPercent;
+  const cartDiscountAmount = orderDetails.cartDiscountAmount;
+  const codeDiscountPercent = orderDetails.codeDiscountPercent;
+  const codeDiscountAmount = orderDetails.codeDiscountAmount;
+  const totalDiscountAmount = orderDetails.totalDiscountAmount;
+  const finalAmount = orderDetails.amount;
+  const appliedDiscountCode = orderDetails.appliedDiscountCode;
 
-  // Pobieramy rzeczywiste kwoty rabatów z orderDetails
-  const cartDiscountAmount = parseFloat(orderDetails.cartDiscountAmount || "0");
-  const codeDiscountAmount = parseFloat(orderDetails.codeDiscountAmount || "0");
-  const totalDiscountAmount = cartDiscountAmount + codeDiscountAmount; // Suma rzeczywistych rabatów
-
-  // Oryginalną wartość podajemy tylko dla celów debugowania (teraz to te same wartości)
-  const originalCartDiscountAmount = cartDiscountAmount;
-  const originalCodeDiscountAmount = codeDiscountAmount;
-  const originalTotalDiscountAmount = totalDiscountAmount;
-
-  const totalAmount = parseFloat(orderDetails.amount);
-
-  // Dodajemy szczegółową informację o kwotach dla debugowania
-  console.log(
-    "🔢 [Order Confirmation] Wartości z webhooka i nasze stałe wartości:",
-    {
-      subtotalAmount,
-      // Wartości stałe które używamy
-      forcedValues: {
-        cartDiscountAmount,
-        codeDiscountAmount,
-        totalDiscountAmount,
-      },
-      // Oryginalne wartości (tylko do debugowania)
-      originalValues: {
-        originalCartDiscountAmount,
-        originalCodeDiscountAmount,
-        originalTotalDiscountAmount,
-      },
-      totalAmount,
-      wspolczynniki: {
-        cartDiscount: orderDetails.cartDiscount,
-        codeDiscount: orderDetails.codeDiscount,
-        totalDiscount: orderDetails.totalDiscount,
-      },
-    }
-  );
-
-  // Rabaty z webhooka
-  const cartDiscount = parseInt(orderDetails.cartDiscount || "0");
-  const codeDiscount = parseInt(orderDetails.codeDiscount || "0");
-  const totalDiscount = cartDiscount + codeDiscount;
-
-  interface OrderItem {
-    name: string;
-    quantity: number;
-    unitPrice: number;
-    totalPrice: number;
-  }
-
-  // Logowanie szczegółów dla debugowania
-  console.log("💰 [Order Confirmation] Using values from webhook:", {
-    subtotal: subtotalAmount,
-    // Nasze stałe wartości rabatów
-    discountValues: {
-      cartDiscountAmount,
-      codeDiscountAmount,
-      totalDiscountAmount,
-      formatted: {
-        cartDiscount: formatPrice(cartDiscountAmount),
-        codeDiscount: formatPrice(codeDiscountAmount),
-        totalDiscount: formatPrice(totalDiscountAmount),
-      },
-    },
-    total: totalAmount,
-    discountPercents: {
-      cartDiscount,
-      codeDiscount,
-      totalDiscount,
-    },
+  // Logowanie wartości rabatów dla celów diagnostycznych
+  console.log("💰 [Order Confirmation] Using discount values from webhook:", {
+    subtotalAmount,
+    cartDiscountPercent,
+    cartDiscountAmount,
+    codeDiscountPercent,
+    codeDiscountAmount,
+    totalDiscountAmount,
+    finalAmount,
+    appliedDiscountCode,
   });
 
-  // Dla każdego produktu dodajemy informacje o cenie jednostkowej i rabacie
-  const enhancedProducts = orderDetails.items.map((item: OrderItem) => {
-    // WAŻNE: Pamiętaj o dokładnie tej samej metodologii co w cart-notification
-    // Dla produktu "Betonowe dłonie z mchem" (199.99 PLN) z ilością 2 szt. i rabatem 20%
-    // Oczekujemy dokładnie 159.99 PLN za sztukę po rabacie
+  // Przygotuj adres wysyłki w czytelnej formie
+  const formattedShippingAddress = `${orderDetails.shippingAddress.street} ${orderDetails.shippingAddress.houseNumber}, ${orderDetails.shippingAddress.postalCode} ${orderDetails.shippingAddress.city}, ${orderDetails.shippingAddress.country}`;
 
-    // Stała wartość dla znanego produktu
-    let unitPriceWithDiscount = 0;
-    let totalPriceWithDiscount = 0;
-
-    // Wykonujemy obliczenia DOKŁADNIE tak samo jak w cart-notification.post.ts
-    // Najpierw obliczamy całkowitą wartość przed rabatem
-    const itemTotalBeforeDiscount = item.unitPrice * item.quantity;
-
-    // Obliczamy DOKŁADNIE tak samo jak w cart-notification.post.ts
-    // Wyliczenie rabatu procentowo dla każdego produktu
-    const itemDiscountAmount = itemTotalBeforeDiscount * (totalDiscount / 100);
-
-    // Całkowita cena za wszystkie sztuki po rabacie
-    totalPriceWithDiscount =
-      itemTotalBeforeDiscount - Math.round(itemDiscountAmount);
-
-    // Cena jednostkowa po rabacie (wyliczamy dzieląc całkowitą cenę po rabacie przez ilość)
-    unitPriceWithDiscount = totalPriceWithDiscount / item.quantity;
-
-    console.log(`🧮 [Order Confirmation] Calculation for ${item.name}:`, {
-      itemTotalBeforeDiscount,
-      discountPercent: totalDiscount,
-      itemDiscountAmount,
-      itemDiscountAmountRounded: Math.round(itemDiscountAmount),
-      totalPriceWithDiscount,
-      unitPriceWithDiscount,
-    });
-
-    // Dla debugowania - loguj każdy produkt i jego ceny
-    console.log(`📝 [Order Confirmation] Product ${item.name} calculations:`, {
-      specialCase:
-        item.unitPrice === 199.99 &&
-        item.quantity === 2 &&
-        totalDiscount === 20,
-      originalPrice: item.unitPrice,
-      quantity: item.quantity,
-      totalPriceWithDiscount: totalPriceWithDiscount,
-      discountedUnitPrice: unitPriceWithDiscount,
-    });
-
-    return {
-      name: item.name,
-      quantity: item.quantity,
-      price: formatPrice(totalPriceWithDiscount),
-      unitPrice: formatPrice(item.unitPrice),
-      unitPriceWithDiscount: formatPrice(unitPriceWithDiscount),
-      discountPercent: totalDiscount,
-    };
-  });
-
-  // KRYTYCZNE:
-  // 1. Używamy dokładnie tej samej funkcji formatPrice jak w cart-notification.post.ts
-  // 2. Stosujemy dokładnie tę samą metodologię obliczania rabatów dla produktów
-  // 3. Używamy stałych wartości liczbowych dla rabatów: 80 + 80 = 160
-  // 4. Stosujemy formatPrice(160) i formatPrice(80) zamiast ręcznych stringów "160,00"
-
-  console.log(
-    "📊 [Order Confirmation] Potwierdzone wartości rabatu po formatowaniu:",
-    {
-      totalDiscountAmount: formatPrice(totalDiscountAmount), // Powinno być "160,00"
-      cartDiscountAmount: formatPrice(cartDiscountAmount), // Powinno być "80,00"
-      codeDiscountAmount: formatPrice(codeDiscountAmount), // Powinno być "80,00"
-      rawValues: {
-        totalDiscountAmount, // 160
-        cartDiscountAmount, // 80
-        codeDiscountAmount, // 80
-      },
-    }
-  );
-
-  // Upewniamy się, że używamy dokładnie takich samych formatowań jak w pierwszym mailu
-  const params = {
-    ORDER_NUMBER: orderDetails.orderNumber,
-    CUSTOMER_NAME: orderDetails.customerName,
-    CUSTOMER_EMAIL: orderDetails.customerEmail,
-    CUSTOMER_PHONE: orderDetails.customerPhone || "Nie podano",
-    SHIPPING_STREET: orderDetails.shippingAddress?.street || "",
-    SHIPPING_HOUSE_NUMBER: orderDetails.shippingAddress?.houseNumber || "",
-    SHIPPING_POSTAL_CODE: orderDetails.shippingAddress?.postalCode || "",
-    SHIPPING_CITY: orderDetails.shippingAddress?.city || "",
-    SHIPPING_COUNTRY: orderDetails.shippingAddress?.country || "",
-    TOTAL_PRICE: formatPrice(totalAmount),
-    SUBTOTAL_PRICE: formatPrice(subtotalAmount),
-    // Używamy dynamicznie przekazanych i zsumowanych wartości rabatów
-    DISCOUNT_AMOUNT: formatPrice(totalDiscountAmount),
-    CART_DISCOUNT_AMOUNT: formatPrice(cartDiscountAmount),
-    CODE_DISCOUNT_AMOUNT: formatPrice(codeDiscountAmount),
-    CART_DISCOUNT: cartDiscount,
-    CODE_DISCOUNT: codeDiscount,
-    TOTAL_DISCOUNT: totalDiscount,
-    DISCOUNT_CODE: orderDetails.discountCode || "",
-    PRODUCTS: enhancedProducts,
-  };
-
-  // Debug: pokazujemy wszystkie parametry z formatowaniem przed wysłaniem maila
-  console.log("🧾 [Order Confirmation] Final email parameters:", {
-    SUBTOTAL_PRICE: params.SUBTOTAL_PRICE,
-    TOTAL_PRICE: params.TOTAL_PRICE,
-    DISCOUNT_AMOUNT: params.DISCOUNT_AMOUNT, // Powinno być "160,00"
-    CART_DISCOUNT_AMOUNT: params.CART_DISCOUNT_AMOUNT, // Powinno być "80,00"
-    CODE_DISCOUNT_AMOUNT: params.CODE_DISCOUNT_AMOUNT, // Powinno być "80,00"
-    CART_DISCOUNT: params.CART_DISCOUNT,
-    CODE_DISCOUNT: params.CODE_DISCOUNT,
-    TOTAL_DISCOUNT: params.TOTAL_DISCOUNT,
-  });
-
-  // Mail do klienta
-  const customerEmailData = {
-    templateId: 16,
-    sender: {
-      email: "services@lexxo.pl",
-    },
-    to: [{ email: customerEmail }],
-    params,
-    subject: `Zakończenie zamówienia - ${orderDetails.orderNumber}`,
-  };
-
-  // Mail do administratora (kopia)
-  const adminEmailData = {
-    templateId: 16,
-    sender: {
-      email: "services@lexxo.pl",
-    },
-    to: [{ email: adminEmail }],
-    params,
-    subject: `Zakończenie zamówienia - ${orderDetails.orderNumber}`,
-  };
-
+  // Email z potwierdzeniem zamówienia - dla klienta
   try {
     console.log(
-      "📤 [Order Confirmation] Sending email to customer:",
-      customerEmail
+      `📧 [Order Confirmation] Sending email to customer: ${customerEmail}`
     );
 
-    // Wysyłka do klienta
-    const customerResponse = await fetch(url, {
+    // Przygotowanie szczegółów koszyka dla emaila
+    const emailData = {
+      sender: {
+        name: "NuxtShop",
+        email: "services@lexxo.pl", // Użyj zweryfikowanego adresu email
+      },
+      to: [
+        {
+          email: customerEmail,
+          name: orderDetails.customerName || customerEmail,
+        },
+      ],
+      subject: `Potwierdzenie zamówienia #${orderDetails.orderNumber}`,
+      htmlContent: `
+        <html>
+          <body style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+              <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="color: #000;">Dziękujemy za zamówienie!</h1>
+              </div>
+              
+              <p>Witaj ${orderDetails.customerName || ""},</p>
+              
+              <p>Twoje zamówienie zostało przyjęte do realizacji. Poniżej znajdziesz szczegółowy wykaz zamówionych produktów.</p>
+              
+              <div style="margin: 30px 0; border: 1px solid #eee; padding: 20px;">
+                <h2 style="margin-top: 0;">Numer zamówienia: #${
+                  orderDetails.orderNumber
+                }</h2>
+                
+                ${orderDetails.items
+                  .map(
+                    (product) => `
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+                      <div>
+                        <strong>${product.name}</strong><br>
+                        <span>Ilość: ${product.quantity} x ${formatPrice(
+                      product.unitPrice
+                    )} zł</span>
+                        ${
+                          product.discountAmount > 0
+                            ? `<br><span style="color: #4CAF50;">Rabat: -${formatPrice(
+                                product.discountAmount
+                              )} zł</span>`
+                            : ""
+                        }
+                      </div>
+                      <div style="text-align: right;">
+                        <strong>${formatPrice(
+                          product.priceWithDiscount
+                        )} zł</strong>
+                      </div>
+                    </div>
+                  `
+                  )
+                  .join("")}
+                
+                <div style="margin-top: 20px; text-align: right;">
+                  <p>Wartość produktów: <strong>${formatPrice(
+                    subtotalAmount
+                  )} zł</strong></p>
+                  
+                  ${
+                    cartDiscountAmount > 0
+                      ? `<p style="color: #4CAF50;">Rabat ilościowy (${cartDiscountPercent}%): -<strong>${formatPrice(
+                          cartDiscountAmount
+                        )} zł</strong></p>`
+                      : ""
+                  }
+                  
+                  ${
+                    codeDiscountAmount > 0
+                      ? `<p style="color: #4CAF50;">Rabat z kodu ${appliedDiscountCode} (${codeDiscountPercent}%): -<strong>${formatPrice(
+                          codeDiscountAmount
+                        )} zł</strong></p>`
+                      : ""
+                  }
+                  
+                  <p style="font-size: 18px; font-weight: bold;">Do zapłaty: ${formatPrice(
+                    finalAmount
+                  )} zł</p>
+                </div>
+              </div>
+              
+              <div style="margin: 30px 0; border: 1px solid #eee; padding: 20px;">
+                <h2 style="margin-top: 0;">Dane dostawy</h2>
+                <p>
+                  ${orderDetails.customerName}<br>
+                  ${formattedShippingAddress}<br>
+                  ${
+                    orderDetails.customerPhone
+                      ? orderDetails.customerPhone + "<br>"
+                      : ""
+                  }
+                  ${orderDetails.customerEmail}
+                </p>
+              </div>
+              
+              <p>Dziękujemy za zakupy w naszym sklepie!</p>
+              
+              <p>Pozdrawiamy,<br>Zespół NuxtShop</p>
+            </div>
+          </body>
+        </html>
+      `,
+    };
+
+    // Send email through Brevo
+    const response = await fetch(url, {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "Content-Type": "application/json",
         "api-key": apiKey,
-        "content-type": "application/json",
       },
-      body: JSON.stringify(customerEmailData),
+      body: JSON.stringify(emailData),
     });
 
-    const customerResponseData = await customerResponse
-      .json()
-      .catch(() => null);
-
-    if (!customerResponse.ok) {
-      console.error("❌ [Order Confirmation] Customer email failed:", {
-        status: customerResponse.status,
-        response: customerResponseData,
-      });
-    } else {
-      console.log("✅ [Order Confirmation] Customer email sent successfully");
-    }
-
-    console.log("📤 [Order Confirmation] Sending email to admin:", adminEmail);
-
-    // Wysyłka do admina
-    const adminResponse = await fetch(url, {
-      method: "POST",
-      headers: {
-        accept: "application/json",
-        "api-key": apiKey,
-        "content-type": "application/json",
-      },
-      body: JSON.stringify(adminEmailData),
-    });
-
-    const adminResponseData = await adminResponse.json().catch(() => null);
-
-    if (!adminResponse.ok) {
-      console.error("❌ [Order Confirmation] Admin email failed:", {
-        status: adminResponse.status,
-        response: adminResponseData,
-      });
-    } else {
-      console.log("✅ [Order Confirmation] Admin email sent successfully");
-    }
-
-    // Verify discount values
-    console.log("📊 [Order Confirmation] Final discount values sent:", {
-      DISCOUNT_AMOUNT: params.DISCOUNT_AMOUNT,
-      CART_DISCOUNT_AMOUNT: params.CART_DISCOUNT_AMOUNT,
-      CODE_DISCOUNT_AMOUNT: params.CODE_DISCOUNT_AMOUNT,
-      valuesUsed: {
-        totalDiscountAmount,
-        cartDiscountAmount,
-        codeDiscountAmount,
-      },
-    });
-
-    if (!customerResponse.ok || !adminResponse.ok) {
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error(
+        `❌ [Order Confirmation] Failed to send customer email:`,
+        errorData
+      );
       return {
         success: false,
-        error: "Failed to send one or both confirmation emails",
+        error: "Failed to send customer email",
+        details: errorData,
+        recipient: customerEmail,
       };
     }
 
-    console.log("✅ [Order Confirmation] All emails sent successfully");
+    console.log(
+      `✅ [Order Confirmation] Email sent successfully to ${customerEmail}`
+    );
     return { success: true };
-  } catch (error) {
-    console.error("❌ [Order Confirmation] Unexpected error:", error);
+  } catch (error: unknown) {
+    console.error(`❌ [Order Confirmation] Error sending email:`, error);
     return {
       success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Unexpected error while sending emails",
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+      recipient: customerEmail || "undefined_email",
     };
   }
 });

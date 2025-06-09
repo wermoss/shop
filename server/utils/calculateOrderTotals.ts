@@ -1,8 +1,6 @@
-\
-// filepath: /Users/konrad/Wooboo/Projects/nuxtshop/server/utils/calculateOrderTotals.ts
-import type { CartItem, Product } from \'~/types/shop\';
-import productsData from \'../../data/products.json\';
-import discountsData from \'../../data/discounts.json\';
+import type { CartItem, Product } from "~/types/shop";
+import productsData from "../../data/products.json";
+import discountsData from "../../data/discounts.json";
 
 const CART_DISCOUNT_TIERS = discountsData.cartDiscountTiers;
 const DISCOUNT_CODES = discountsData.discountCodes;
@@ -17,13 +15,15 @@ interface OrderTotals {
   finalAmount: number;
   totalQuantity: number;
   appliedDiscountCode?: string | null;
-  productsWithCalculatedPrices: Array<Product & {
-    quantity: number;
-    lineItemTotalPrice: number; // Total price for this line item (unit price * quantity) BEFORE any cart/code discount
-    unitPriceWithDiscount: number; // Unit price AFTER cart/code discount applied proportionally
-    lineItemTotalPriceWithDiscount: number; // Total price for this line item AFTER cart/code discount
-    discountAppliedToLineItem: number; // The amount of discount applied to this line item
-  }>;
+  productsWithCalculatedPrices: Array<
+    Product & {
+      quantity: number;
+      lineItemTotalPrice: number; // Total price for this line item (unit price * quantity) BEFORE any cart/code discount
+      unitPriceWithDiscount: number; // Unit price AFTER cart/code discount applied proportionally
+      lineItemTotalPriceWithDiscount: number; // Total price for this line item AFTER cart/code discount
+      discountAppliedToLineItem: number; // The amount of discount applied to this line item
+    }
+  >;
 }
 
 export function calculateOrderTotals(
@@ -31,10 +31,11 @@ export function calculateOrderTotals(
   appliedDiscountCode?: string | null
 ): OrderTotals {
   let subtotalAmount = 0;
-  const productsWithCalculatedPrices: OrderTotals[\'productsWithCalculatedPrices\'] = [];
+  const productsWithCalculatedPrices: OrderTotals["productsWithCalculatedPrices"] =
+    [];
 
-  cartItems.forEach(item => {
-    const product = productsData.products.find(p => p.id === item.product.id);
+  cartItems.forEach((item) => {
+    const product = productsData.products.find((p) => p.id === item.product.id);
     if (!product) {
       // Or handle this error more gracefully
       throw new Error(`Product with ID ${item.product.id} not found.`);
@@ -46,7 +47,7 @@ export function calculateOrderTotals(
       quantity: item.quantity,
       lineItemTotalPrice,
       // Placeholder, will be calculated later
-      unitPriceWithDiscount: product.price, 
+      unitPriceWithDiscount: product.price,
       lineItemTotalPriceWithDiscount: lineItemTotalPrice,
       discountAppliedToLineItem: 0,
     });
@@ -74,40 +75,52 @@ export function calculateOrderTotals(
 
   // Calculate discount amounts based on percentages
   // These are rounded to the nearest PLN (or cent, depending on currency precision)
-  const cartDiscountAmount = cartDiscountPercent > 0 ? Math.round(subtotalAmount * (cartDiscountPercent / 100)) : 0;
-  const codeDiscountAmount = codeDiscountPercent > 0 ? Math.round(subtotalAmount * (codeDiscountPercent / 100)) : 0;
-  
+  const cartDiscountAmount =
+    cartDiscountPercent > 0
+      ? Math.round(subtotalAmount * (cartDiscountPercent / 100))
+      : 0;
+  const codeDiscountAmount =
+    codeDiscountPercent > 0
+      ? Math.round(subtotalAmount * (codeDiscountPercent / 100))
+      : 0;
+
   // Total discount is the sum of the two, but ensure it doesn't exceed subtotal
   let totalDiscountAmount = cartDiscountAmount + codeDiscountAmount;
   if (totalDiscountAmount > subtotalAmount) {
     totalDiscountAmount = subtotalAmount;
   }
-  
+
   const finalAmount = subtotalAmount - totalDiscountAmount;
 
   // Distribute the totalDiscountAmount proportionally across products
   if (subtotalAmount > 0 && totalDiscountAmount > 0) {
-    productsWithCalculatedPrices.forEach(p => {
+    productsWithCalculatedPrices.forEach((p) => {
       const proportionOfSubtotal = p.lineItemTotalPrice / subtotalAmount;
-      const discountForThisLineItem = Math.round(totalDiscountAmount * proportionOfSubtotal * 100) / 100; // round to 2 decimal places
-      
+      const discountForThisLineItem =
+        Math.round(totalDiscountAmount * proportionOfSubtotal * 100) / 100; // round to 2 decimal places
+
       p.discountAppliedToLineItem = discountForThisLineItem;
-      p.lineItemTotalPriceWithDiscount = p.lineItemTotalPrice - discountForThisLineItem;
+      p.lineItemTotalPriceWithDiscount =
+        p.lineItemTotalPrice - discountForThisLineItem;
       p.unitPriceWithDiscount = p.lineItemTotalPriceWithDiscount / p.quantity;
     });
 
     // Due to rounding, the sum of distributed discounts might not exactly match totalDiscountAmount.
     // Adjust the discount on the last item to ensure the sum is correct.
-    const sumOfDistributedDiscounts = productsWithCalculatedPrices.reduce((sum, p) => sum + p.discountAppliedToLineItem, 0);
+    const sumOfDistributedDiscounts = productsWithCalculatedPrices.reduce(
+      (sum, p) => sum + p.discountAppliedToLineItem,
+      0
+    );
     const roundingDifference = totalDiscountAmount - sumOfDistributedDiscounts;
     if (roundingDifference !== 0 && productsWithCalculatedPrices.length > 0) {
-        const lastProduct = productsWithCalculatedPrices[productsWithCalculatedPrices.length -1];
-        lastProduct.discountAppliedToLineItem += roundingDifference;
-        lastProduct.lineItemTotalPriceWithDiscount -= roundingDifference;
-        lastProduct.unitPriceWithDiscount = lastProduct.lineItemTotalPriceWithDiscount / lastProduct.quantity;
+      const lastProduct =
+        productsWithCalculatedPrices[productsWithCalculatedPrices.length - 1];
+      lastProduct.discountAppliedToLineItem += roundingDifference;
+      lastProduct.lineItemTotalPriceWithDiscount -= roundingDifference;
+      lastProduct.unitPriceWithDiscount =
+        lastProduct.lineItemTotalPriceWithDiscount / lastProduct.quantity;
     }
   }
-
 
   return {
     subtotalAmount,
@@ -122,4 +135,3 @@ export function calculateOrderTotals(
     productsWithCalculatedPrices,
   };
 }
-\'

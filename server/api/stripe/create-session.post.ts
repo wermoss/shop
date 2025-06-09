@@ -1,17 +1,13 @@
 import Stripe from "stripe";
-import { CartItem } from "~/types/shop";
+import { CartItem, Product } from "~/types/shop";
 import productsData from "../../../data/products.json";
 import { generateOrderNumber } from "~/utils/orderNumber";
-// Import discount tiers and codes directly from the JSON file since we can't use the store on the server
-import discountsData from "../../../data/discounts.json";
-
-const CART_DISCOUNT_TIERS = discountsData.cartDiscountTiers;
-const DISCOUNT_CODES = discountsData.discountCodes;
+import { calculateOrderTotals } from "../../utils/calculateOrderTotals";
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig();
   const stripe = new Stripe(config.stripeSecretKey, {
-    apiVersion: "2023-10-16",
+    apiVersion: "2025-05-28.basil", // Zaktualizowano do tej samej wersji co w webhook.post.ts
   });
 
   try {
@@ -28,77 +24,33 @@ export default defineEventHandler(async (event) => {
     const orderNumber = generateOrderNumber();
     const orderTimestamp = Date.now().toString();
 
-    // Oblicz całkowitą liczbę produktów w koszyku
-    const totalQuantity = cartItems.reduce(
-      (total: number, item: CartItem) => total + item.quantity,
-      0
-    );
-
-    // Oblicz rabat dla całego koszyka na podstawie łącznej liczby produktów
-    const discountTier = [...CART_DISCOUNT_TIERS]
-      .sort((a, b) => b.quantity - a.quantity)
-      .find((tier) => totalQuantity >= tier.quantity);
-
-    const cartDiscount = discountTier?.discount || 0;
-
-    // Oblicz rabat z kodu rabatowego (jeśli został zastosowany)
-    let codeDiscount = 0;
-    let discountCodeInfo = null;
-
-    if (appliedDiscountCode) {
-      discountCodeInfo = DISCOUNT_CODES.find(
-        (code: any) =>
-          code.code.toUpperCase() === appliedDiscountCode.toUpperCase()
-      );
-
-      if (discountCodeInfo) {
-        codeDiscount = discountCodeInfo.discount;
-      }
-    }
-
-    // Oblicz łączny rabat (suma rabatu ilościowego i kodowego)
-    const totalDiscount = cartDiscount + codeDiscount;
-
-    // Oblicz łączną wartość zamówienia z uwzględnieniem rabatu
-    let subtotalAmount = 0;
-    const items = cartItems.map((item: CartItem) => {
+    // Przygotowanie danych produktów dla calculateOrderTotals
+    const cartItemsForCalc = cartItems.map((item: CartItem) => {
       const product = productsData.products.find((p) => p.id === item.id);
-      if (!product) throw new Error("Product not found");
-
-      // Najpierw sumujemy cenę bez rabatu
-      const itemSubtotal = product.price * item.quantity;
-      subtotalAmount += itemSubtotal;
+      if (!product)
+        throw new Error(`Produkt o ID ${item.id} nie został znaleziony`);
 
       return {
         id: item.id,
-        qty: item.quantity,
+        quantity: item.quantity,
+        product: product,
       };
     });
 
-    // Obliczenie rabatów według nowej metody:
-    // 1. Najpierw obliczamy wartość produktów (już mamy w subtotalAmount)
-    // 2. Obliczamy rabat ilościowy i zaokrąglamy do pełnych złotych
-    const cartDiscountAmount =
-      cartDiscount > 0 ? Math.round(subtotalAmount * (cartDiscount / 100)) : 0;
+    // Użycie zunifikowanej funkcji do obliczenia rabatów i sum
+    const orderDetails = calculateOrderTotals(
+      cartItemsForCalc,
+      appliedDiscountCode
+    );
 
-    // 3. Obliczamy rabat z kuponu i zaokrąglamy do pełnych złotych
-    const codeDiscountAmount =
-      codeDiscount > 0 ? Math.round(subtotalAmount * (codeDiscount / 100)) : 0;
-
-    // 4. Suma rabatów
-    const totalDiscountAmount = cartDiscountAmount + codeDiscountAmount;
-
-    // 5. Finalna kwota po odjęciu rabatów
-    const finalAmount = subtotalAmount - totalDiscountAmount;
-
-    console.log("💰 [Create Session] Cart values:", {
-      subtotalAmount,
-      cartDiscount: `${cartDiscount}%`,
-      cartDiscountAmount,
-      codeDiscount: `${codeDiscount}%`,
-      codeDiscountAmount,
-      totalDiscountAmount,
-      finalAmount,
+    console.log("💰 [Create Session] Calculated order details:", {
+      subtotalAmount: orderDetails.subtotalAmount,
+      cartDiscountPercent: orderDetails.cartDiscountPercent,
+      cartDiscountAmount: orderDetails.cartDiscountAmount,
+      codeDiscountPercent: orderDetails.codeDiscountPercent,
+      codeDiscountAmount: orderDetails.codeDiscountAmount,
+      totalDiscountAmount: orderDetails.totalDiscountAmount,
+      finalAmount: orderDetails.finalAmount,
     });
 
     // Przygotuj pojedynczy wiersz z łączną kwotą zamówienia
@@ -109,10 +61,12 @@ export default defineEventHandler(async (event) => {
           product_data: {
             name: "Zamówienie w NuxtShop",
             description:
-              totalDiscount > 0
-                ? `Zawiera rabat ilościowy ${cartDiscount}%${
-                    discountCodeInfo
-                      ? ` oraz rabat z kodu ${discountCodeInfo.code} (${codeDiscount}%)`
+              orderDetails.totalDiscountAmount > 0
+                ? `Zawiera rabat ilościowy ${
+                    orderDetails.cartDiscountPercent
+                  }%${
+                    orderDetails.appliedDiscountCode
+                      ? ` oraz rabat z kodu ${orderDetails.appliedDiscountCode} (${orderDetails.codeDiscountPercent}%)`
                       : ""
                   }`
                 : undefined,
@@ -121,13 +75,27 @@ export default defineEventHandler(async (event) => {
             },
           },
           // Przekształcamy kwotę na grosze
-          unit_amount: Math.round(finalAmount * 100),
+          unit_amount: Math.round(orderDetails.finalAmount * 100),
         },
         quantity: 1,
       },
     ];
 
-    // Zapisz informacje o produktach w metadanych
+    // Przygotuj pełne dane produktów dla metadanych
+    const productsWithDetails = orderDetails.productsWithCalculatedPrices.map(
+      (p) => ({
+        id: p.id,
+        name: p.name,
+        price: p.price, // Oryginalna cena jednostkowa
+        quantity: p.quantity,
+        lineItemTotalPrice: p.lineItemTotalPrice, // Wartość produktów przed rabatem
+        discountAppliedToLineItem: p.discountAppliedToLineItem, // Kwota rabatu
+        lineItemTotalPriceWithDiscount: p.lineItemTotalPriceWithDiscount, // Wartość produktów po rabacie
+        image: p.image, // Dodajemy obraz dla wyświetlenia w potwierdzeniu
+      })
+    );
+
+    // Zapisz wszystkie istotne informacje w metadanych
     const metadata = {
       orderNumber,
       customerName: customer.name,
@@ -138,16 +106,20 @@ export default defineEventHandler(async (event) => {
       shippingPostalCode: customer.address.postalCode,
       shippingCity: customer.address.city,
       shippingCountry: customer.address.country,
-      cartDiscount: cartDiscount.toString(),
-      codeDiscount: codeDiscount.toString(),
-      totalDiscount: totalDiscount.toString(),
-      discountCode: appliedDiscountCode || "",
-      productIds: JSON.stringify(items),
-      subtotalAmount: subtotalAmount.toString(),
-      cartDiscountAmount: cartDiscountAmount.toString(),
-      codeDiscountAmount: codeDiscountAmount.toString(),
-      totalDiscountAmount: totalDiscountAmount.toString(),
-      finalAmount: finalAmount.toString(),
+
+      // Wszystkie istotne wartości z orderDetails
+      subtotalAmount: orderDetails.subtotalAmount.toString(),
+      cartDiscountPercent: orderDetails.cartDiscountPercent.toString(),
+      cartDiscountAmount: orderDetails.cartDiscountAmount.toString(),
+      codeDiscountPercent: orderDetails.codeDiscountPercent.toString(),
+      codeDiscountAmount: orderDetails.codeDiscountAmount.toString(),
+      totalDiscountAmount: orderDetails.totalDiscountAmount.toString(),
+      finalAmount: orderDetails.finalAmount.toString(),
+      appliedDiscountCode: orderDetails.appliedDiscountCode || "",
+      totalQuantity: orderDetails.totalQuantity.toString(),
+
+      // Szczegółowe dane produktów w formacie JSON
+      products: JSON.stringify(productsWithDetails),
     };
 
     // Podstawowa konfiguracja sesji
@@ -164,35 +136,7 @@ export default defineEventHandler(async (event) => {
       success_url: `${baseUrl}/shop/success?order=${orderNumber}&timestamp=${orderTimestamp}`,
       cancel_url: `${baseUrl}/shop/cart`,
       customer_email: customer?.email,
-      // Zapisujemy dane o produktach w metadanych
-      metadata: {
-        orderNumber,
-        customerName: customer?.name,
-        customerEmail: customer?.email,
-        customerPhone: customer?.phone,
-        shippingStreet: customer?.address?.street,
-        shippingHouseNumber: customer?.address?.houseNumber,
-        shippingPostalCode: customer?.address?.postalCode,
-        shippingCity: customer?.address?.city,
-        shippingCountry: customer?.address?.country,
-        cartDiscount: cartDiscount.toString(),
-        codeDiscount: codeDiscount.toString(),
-        totalDiscount: totalDiscount.toString(),
-        cartDiscountAmount: cartDiscountAmount.toString(),
-        codeDiscountAmount: codeDiscountAmount.toString(),
-        totalDiscountAmount: totalDiscountAmount.toString(),
-        discountCode: discountCodeInfo?.code || "",
-        totalQuantity: totalQuantity.toString(),
-        finalAmount: finalAmount.toFixed(2),
-        subtotalAmount: subtotalAmount.toString(),
-        productIds: JSON.stringify(
-          cartItems.map((item: CartItem) => ({
-            id: item.id,
-            qty: item.quantity,
-          }))
-        ),
-      },
-      // Ukrywamy szczegóły produktów, pokazujemy tylko łączną kwotę
+      metadata: metadata,
       billing_address_collection: "auto",
     };
 

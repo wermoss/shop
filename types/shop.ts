@@ -40,5 +40,8 @@ export interface OrderMetadata {
   vatRate?: number;
   quantityDiscount?: number;
   couponDiscount?: number;
+  cartDiscountPercent?: number;
+  codeDiscountPercent?: number;
+  appliedDiscountCode?: string | null;
   total: number;
 }

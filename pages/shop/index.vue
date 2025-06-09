@@ -8,10 +8,12 @@
       />
     </div>
   </div>
+  <Features />
 </template>
 
 <script setup lang="ts">
 import ProductCard from "~/components/shop/ProductCard.vue";
+import Features from "~/components/shop/Features.vue";
 import { useProductsStore } from "~/stores/shop/products";
 
 const productsStore = useProductsStore();
