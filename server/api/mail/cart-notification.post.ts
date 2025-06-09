@@ -123,7 +123,7 @@ export default defineEventHandler(async (event) => {
       itemCount: cartDetails.items?.length || 0,
     });
 
-    // Przygotowanie szczegółów koszyka dla emaila
+    // Przygotowanie szczegółów koszyka dla emaila - wysyłamy tylko do administratora
     const emailData = {
       sender: {
         name: "NuxtShop",
@@ -131,22 +131,37 @@ export default defineEventHandler(async (event) => {
       },
       to: [
         {
-          email: cartDetails.customerEmail,
-          name: cartDetails.customerName || cartDetails.customerEmail,
+          email: adminEmail,
+          name: "Administrator NuxtShop",
         },
       ],
-      subject: "Twój koszyk w NuxtShop czeka",
+      subject: `Nowy koszyk porzucony - Klient: ${
+        cartDetails.customerName || cartDetails.customerEmail
+      }`,
       htmlContent: `
         <html>
           <body style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
             <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
               <div style="text-align: center; margin-bottom: 30px;">
-                <h1 style="color: #000;">Dziękujemy za odwiedzenie naszego sklepu!</h1>
+                <h1 style="color: #000;">Powiadomienie o porzuconym koszyku</h1>
               </div>
               
-              <p>Witaj ${cartDetails.customerName || ""},</p>
+              <p>Klient ${cartDetails.customerName || ""} (${
+        cartDetails.customerEmail
+      }) rozpoczął proces zakupu, ale go nie dokończył.</p>
               
-              <p>Zauważyliśmy, że zacząłeś zakupy w naszym sklepie, ale ich nie dokończyłeś. Twój koszyk wciąż na Ciebie czeka!</p>
+              <p>Szczegóły kontaktowe klienta:</p>
+              <ul>
+                <li>Email: ${cartDetails.customerEmail}</li>
+                <li>Telefon: ${cartDetails.customerPhone || "Nie podano"}</li>
+                ${
+                  cartDetails.shippingAddress
+                    ? `<li>Adres: ${cartDetails.shippingAddress.street} ${cartDetails.shippingAddress.houseNumber}, ${cartDetails.shippingAddress.postalCode} ${cartDetails.shippingAddress.city}, ${cartDetails.shippingAddress.country}</li>`
+                    : ""
+                }
+              </ul>
+              
+              <p>Zawartość koszyka:</p>
               
               <div style="margin: 30px 0; border: 1px solid #eee; padding: 20px;">
                 <h2 style="margin-top: 0;">Zawartość Twojego koszyka:</h2>
@@ -203,12 +218,12 @@ export default defineEventHandler(async (event) => {
               <div style="text-align: center; margin: 30px 0;">
                 <a href="${
                   cartDetails.cartUrl || "https://nuxtshop.vercel.app/shop/cart"
-                }" style="background-color: #000; color: #fff; padding: 12px 25px; text-decoration: none; font-weight: bold;">DOKOŃCZ ZAKUPY</a>
+                }" style="background-color: #000; color: #fff; padding: 12px 25px; text-decoration: none; font-weight: bold;">SPRAWDŹ SZCZEGÓŁY</a>
               </div>
               
-              <p>Jeśli masz jakiekolwiek pytania dotyczące zamówienia, skontaktuj się z nami odpowiadając na tego e-maila.</p>
+              <p>To jest automatyczne powiadomienie o porzuconym koszyku. Możesz skontaktować się z klientem w celu pomocy z finalizacją zamówienia.</p>
               
-              <p>Pozdrawiamy,<br>Zespół NuxtShop</p>
+              <p>Pozdrawiamy,<br>System powiadomień NuxtShop</p>
             </div>
           </body>
         </html>
@@ -240,7 +255,7 @@ export default defineEventHandler(async (event) => {
     }
 
     console.log(
-      `✅ [Cart Notification] Email sent successfully to ${cartDetails.customerEmail}`
+      `✅ [Cart Notification] Email sent successfully to administrator: ${adminEmail}`
     );
     return { success: true };
   } catch (error: unknown) {
@@ -248,7 +263,7 @@ export default defineEventHandler(async (event) => {
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error occurred",
-      recipient: cartDetails.customerEmail || "undefined_email",
+      recipient: adminEmail || "undefined_admin_email",
     };
   }
 });

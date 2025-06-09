@@ -100,10 +100,10 @@ export default defineEventHandler(async (event) => {
   // Email z potwierdzeniem zamówienia - dla klienta
   try {
     console.log(
-      `📧 [Order Confirmation] Sending email to customer: ${customerEmail}`
+      `📧 [Order Confirmation] Sending email to customer: ${customerEmail} and admin: ${adminEmail}`
     );
 
-    // Przygotowanie szczegółów koszyka dla emaila
+    // Przygotowanie szczegółów koszyka dla emaila - wysyłamy zarówno do klienta jak i admina
     const emailData = {
       sender: {
         name: "NuxtShop",
@@ -113,6 +113,10 @@ export default defineEventHandler(async (event) => {
         {
           email: customerEmail,
           name: orderDetails.customerName || customerEmail,
+        },
+        {
+          email: adminEmail,
+          name: "Administrator NuxtShop",
         },
       ],
       subject: `Potwierdzenie zamówienia #${orderDetails.orderNumber}`,
@@ -235,7 +239,7 @@ export default defineEventHandler(async (event) => {
     }
 
     console.log(
-      `✅ [Order Confirmation] Email sent successfully to ${customerEmail}`
+      `✅ [Order Confirmation] Email sent successfully to customer: ${customerEmail} and administrator: ${adminEmail}`
     );
     return { success: true };
   } catch (error: unknown) {
@@ -243,7 +247,7 @@ export default defineEventHandler(async (event) => {
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error occurred",
-      recipient: customerEmail || "undefined_email",
+      recipients: { customer: customerEmail, admin: adminEmail },
     };
   }
 });
