@@ -74,14 +74,31 @@
             <div class="flex items-center space-x-2 mt-2">
               <button
                 @click="cartStore.decrementQuantity(item.id)"
-                class="px-2 py-1 bg-gray-100 rounded"
+                :disabled="!cartStore.canDecreaseQuantity(item.id)"
+                :class="[
+                  'px-2 py-1 rounded',
+                  cartStore.canDecreaseQuantity(item.id)
+                    ? 'bg-gray-100 hover:bg-gray-200'
+                    : 'bg-gray-200 text-gray-400 cursor-not-allowed',
+                ]"
               >
                 -
               </button>
               <span>{{ item.quantity }}</span>
               <button
                 @click="cartStore.incrementQuantity(item.id)"
-                class="px-2 py-1 bg-gray-100 rounded"
+                :disabled="!cartStore.canIncreaseQuantity(item.id)"
+                :class="[
+                  'px-2 py-1 rounded',
+                  cartStore.canIncreaseQuantity(item.id)
+                    ? 'bg-gray-100 hover:bg-gray-200'
+                    : 'bg-gray-200 text-gray-400 cursor-not-allowed',
+                ]"
+                :title="
+                  !cartStore.canIncreaseQuantity(item.id)
+                    ? `Maksymalny limit: ${item.product?.orderLimit}`
+                    : ''
+                "
               >
                 +
               </button>

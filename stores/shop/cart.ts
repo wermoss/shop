@@ -150,22 +150,35 @@ export const useCartStore = defineStore("cart", {
 
     // Increment quantity
     incrementQuantity(productId: number) {
+      const productsStore = useProductsStore();
+      const product = productsStore.getProduct(productId);
       const item = this.items.find((item) => item.id === productId);
-      if (item) {
-        item.quantity += 1;
+
+      if (item && product) {
+        // Sprawdź limit zamówienia przed zwiększeniem ilości
+        if (item.quantity < product.orderLimit) {
+          item.quantity += 1;
+        } else {
+          // Opcjonalnie: Możesz tu dodać powiadomienie o limicie
+          console.warn(
+            `Osiągnięto limit zamówienia (${product.orderLimit}) dla produktu ${product.name}`
+          );
+        }
       }
     },
 
     // Decrement quantity
     decrementQuantity(productId: number) {
       const item = this.items.find((item) => item.id === productId);
-      if (item) {
-        if (item.quantity > 1) {
-          item.quantity -= 1;
-        } else {
-          this.removeFromCart(productId);
-        }
+      if (item && item.quantity > 1) {
+        item.quantity -= 1;
       }
+    },
+
+    // Sprawdzenie czy można zmniejszyć ilość
+    canDecreaseQuantity(productId: number): boolean {
+      const item = this.items.find((item) => item.id === productId);
+      return item ? item.quantity > 1 : false;
     },
 
     // Sprawdzanie dostępności limitu
