@@ -39,6 +39,46 @@
           "colorCode": "#006400"
         }
       ]
+    },
+    {
+      "id": 3,
+      "name": "Betonowe dłonie z mchem",
+      "description": "Betonowe dłonie z mchem - Dark Green. To jest przykładowy opis produktu",
+      "price": 200.0,
+      "image": "/products/phone.jpg",
+      "orderLimit": 20,
+      "features": [
+        {
+          "name": "beton",
+          "value": "biały",
+          "colorCode": "#FFFFFF"
+        },
+        {
+          "name": "mech",
+          "value": "spring green",
+          "colorCode": "#00FF7F"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Betonowe dłonie z mchem",
+      "description": "Betonowe dłonie z mchem - Dark Green. To jest przykładowy opis produktu",
+      "price": 200.0,
+      "image": "/products/phone.jpg",
+      "orderLimit": 20,
+      "features": [
+        {
+          "name": "beton",
+          "value": "biały",
+          "colorCode": "#FFFFFF"
+        },
+        {
+          "name": "mech",
+          "value": "dark green",
+          "colorCode": "#006400"
+        }
+      ]
     }
   ]
 }

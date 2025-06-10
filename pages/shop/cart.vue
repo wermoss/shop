@@ -1,6 +1,5 @@
 <template>
   <div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-8">Koszyk</h1>
     <div
       v-if="cartItems.length > 0"
       class="grid grid-cols-1 lg:grid-cols-3 gap-8"
@@ -15,7 +14,7 @@
           <img
             :src="item.product?.image"
             :alt="item.product?.name"
-            class="w-24 h-24 object-cover rounded"
+            class="w-24 h-24 object-cover rounded bg-gray-200"
           />
           <div class="flex-1">
             <h3 class="text-lg font-semibold">{{ item.product?.name }}</h3>
@@ -45,30 +44,33 @@
             </div>
 
             <!-- Price information with discounts -->
-            <div class="mt-1">
+            <div class="mt-1 flex items-center bg-amber-500">
               <!-- Original price when there's a discount -->
               <p
                 v-if="getTotalDiscount > 0"
-                class="text-gray-400 line-through text-sm"
+                class="text-gray-400 line-through mr-4"
               >
-                {{ item.product?.price.toFixed(2) }} zł/szt
+                {{ item.product?.price.toFixed(2) }} zł
               </p>
 
               <!-- Discounted price or regular price -->
-              <p class="text-gray-800 font-semibold">
+              <p
+                class="text-gray-800 font-semibold bg-green-200 flex items-center"
+              >
                 <template v-if="getTotalDiscount > 0">
                   <span
                     class="bg-black text-white px-1 py-0.5 text-xs rounded mr-1"
                     >-{{ getTotalDiscount }}%</span
                   >
-                  {{ calculateDiscountedUnitPrice(item).toFixed(2) }} zł/szt
+                  {{ calculateDiscountedUnitPrice(item).toFixed(2) }} zł
                 </template>
                 <template v-else>
-                  {{ item.product?.price.toFixed(2) }} zł/szt
+                  {{ item.product?.price.toFixed(2) }} zł
                 </template>
               </p>
             </div>
-
+          </div>
+          <div>
             <div class="flex items-center space-x-2 mt-2">
               <button
                 @click="cartStore.decrementQuantity(item.id)"
@@ -85,7 +87,7 @@
               </button>
             </div>
           </div>
-          <div class="flex flex-col items-end">
+          <div class="flex flex-col items-end bg-pink-100">
             <div class="mb-2 font-semibold text-lg">
               <!-- Suma za wszystkie sztuki danego produktu -->
               <span>
@@ -107,18 +109,56 @@
             </button>
           </div>
         </div>
-      </div>
 
-      <!-- Cart Summary -->
-      <div class="lg:col-span-1">
-        <div class="bg-white p-6 rounded-lg shadow sticky">
-          <h2 class="text-xl font-semibold mb-4">Podsumowanie</h2>
+        <!-- Quantity Discount Info - przeniesione pod listę produktów -->
+        <div
+          class="flex flex-col md:flex-row justify-between items-center mt-10"
+        >
+          <div class="">
+            <!-- Discount notification with black left bar and message -->
+            <div
+              v-if="nextDiscountTier || cartStore.cartDiscount > 0"
+              class="flex"
+            >
+              <!-- Left sidebar with discount percentage - changes to green when discount active -->
+              <div
+                :class="
+                  cartStore.cartDiscount > 0 ? 'bg-green-600' : 'bg-black'
+                "
+                class="text-white py-3 px-5 flex items-center justify-center font-bold text-xl rounded-l-md"
+              >
+                <span
+                  >-
+                  {{
+                    cartStore.cartDiscount > 0
+                      ? cartStore.cartDiscount
+                      : nextDiscountTier?.discount
+                  }}%</span
+                >
+              </div>
 
-          <!-- Discount Code Section -->
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              Kod rabatowy
-            </label>
+              <!-- Right side with message -->
+              <div class="bg-gray-100 flex items-center py-3 px-6 text-sm">
+                <div v-if="cartStore.cartDiscount > 0" class="text-gray-700">
+                  Gratulacje! Otrzymujesz {{ cartStore.cartDiscount }}% rabatu
+                  na całą wartość swojego koszyka.
+                </div>
+                <div v-else-if="nextDiscountTier" class="text-gray-700">
+                  Dodaj jeszcze
+                  {{ nextDiscountTier.quantity - cartStore.totalQuantity }}
+                  {{
+                    nextDiscountTier.quantity - cartStore.totalQuantity === 1
+                      ? "produkt"
+                      : "produkty"
+                  }}
+                  do swojego koszyka, aby otrzymać rabat.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Discount Code Section - przeniesione pod powiadomienie o rabacie -->
+          <div>
             <!-- Applied discount code -->
             <div
               v-if="cartStore.appliedDiscountCode"
@@ -152,75 +192,67 @@
                 </svg>
               </button>
             </div>
-            <!-- Discount code input -->
-            <div v-else class="flex space-x-2">
-              <input
-                v-model="cartStore.discountCode"
-                type="text"
-                placeholder="Wpisz kod"
-                class="flex-1 p-2 border rounded uppercase"
-              />
-              <button
-                @click="cartStore.applyDiscountCode()"
-                class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                :disabled="!cartStore.discountCodeValid"
-              >
-                Zastosuj
-              </button>
+
+            <!-- "Mam kod rabatowy" link and hidden input -->
+            <div v-else>
+              <div v-if="!showDiscountCodeInput">
+                <button
+                  @click="showDiscountCodeInput = true"
+                  class="text-blue-600 hover:text-blue-800 text-sm"
+                >
+                  Mam kod rabatowy
+                </button>
+              </div>
+
+              <div v-if="showDiscountCodeInput" class="flex space-x-2">
+                <input
+                  v-model="cartStore.discountCode"
+                  type="text"
+                  placeholder="Wpisz kod"
+                  class="flex-1 p-2 border rounded uppercase"
+                />
+                <button
+                  @click="cartStore.applyDiscountCode()"
+                  class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  :disabled="!cartStore.discountCodeValid"
+                >
+                  Zastosuj
+                </button>
+              </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Cart Summary -->
+      <div class="lg:col-span-1">
+        <div class="bg-white p-6 rounded-lg shadow sticky">
+          <h2 class="text-xl font-semibold mb-4">Podsumowanie</h2>
 
           <!-- Cart Info -->
           <div class="space-y-4">
-            <!-- Products Summary -->
-            <div class="text-sm text-gray-600">
-              Liczba produktów: {{ cartStore.totalQuantity }}
-            </div>
-            <!-- Quantity Discount Info -->
-            <div class="space-y-1">
-              <div
-                v-if="cartStore.cartDiscount > 0"
-                class="text-sm bg-green-50 p-2 border border-green-200 rounded text-green-700"
-              >
-                <span class="font-semibold">Rabat ilościowy:</span> Otrzymujesz
-                {{ cartStore.cartDiscount }}% rabatu za zakup
-                {{ cartStore.totalQuantity }} sztuk!
-                <div class="text-xs text-green-600 mt-1">
-                  Cena produktów obniżona o
-                  {{ cartStore.cartDiscountAmount.toFixed(2) }} zł
-                </div>
-              </div>
-              <template v-else>
-                <div
-                  v-if="nextDiscountTier"
-                  class="text-sm text-gray-500 bg-gray-50 p-2 border border-gray-200 rounded"
-                >
-                  <span class="font-medium">Rabat ilościowy:</span> Dodaj
-                  jeszcze
-                  {{ nextDiscountTier.quantity - cartStore.totalQuantity }}
-                  {{
-                    nextDiscountTier.quantity - cartStore.totalQuantity === 1
-                      ? "sztukę"
-                      : "sztuk"
-                  }}
-                  aby otrzymać {{ nextDiscountTier.discount }}% rabatu!
-                </div>
-              </template>
-            </div>
-
-            <!-- Coupon Discount Info został usunięty, ponieważ informacja wyświetla się już w sekcji zastosowanego kodu rabatowego -->
-
             <!-- Price Summary -->
             <div class="space-y-2">
+              <div class="flex justify-between">
+                <span>Liczba produktów:</span>
+                <span>{{ cartStore.totalQuantity }} szt.</span>
+              </div>
               <div class="flex justify-between">
                 <span>Wartość produktów:</span>
                 <span>{{ cartStore.subtotalPrice.toFixed(2) }} zł</span>
               </div>
-
+              <div class="flex justify-between">
+                <span>Wartość VAT:</span>
+                <span>0.00 zł</span>
+              </div>
+              <div class="flex justify-between">
+                <span>Koszt wysyłki:</span>
+                <span>0.00 zł</span>
+              </div>
               <!-- Cart Quantity Discount -->
               <div
                 v-if="cartStore.cartDiscount > 0"
-                class="flex justify-between text-green-600"
+                class="flex justify-between"
               >
                 <span>Rabat ilościowy ({{ cartStore.cartDiscount }}%):</span>
                 <span>-{{ cartStore.cartDiscountAmount.toFixed(2) }} zł</span>
@@ -273,6 +305,9 @@ import { useProductsStore } from "~/stores/shop/products";
 
 const cartStore = useCartStore();
 const productsStore = useProductsStore();
+
+// Reference for toggling discount code input visibility
+const showDiscountCodeInput = ref(false);
 
 const cartItems = computed(() => cartStore.itemsWithDiscounts);
 const cartDiscountTiers = CART_DISCOUNT_TIERS.sort(
