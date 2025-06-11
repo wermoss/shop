@@ -18,7 +18,31 @@
           "value": "spring green",
           "colorCode": "#00FF7F"
         }
-      ]
+      ],
+      "slider": {
+        "title": "Betonowe dłonie",
+        "subtitle": "z mchem chrobotkiem",
+        "description": "Eleganckie dłonie z naturalnym mchem w odcieniu wiosennej zieleni. Idealny element dekoracji dla miłośników natury w domu.",
+        "price": 200.0,
+        "image": "/images/hands1.png",
+        "features": [
+          {
+            "name": "Beton",
+            "value": "Szary",
+            "colorCode": "#808080"
+          },
+          {
+            "name": "Mech",
+            "value": "Spring green",
+            "colorCode": "#00FF7F"
+          },
+          {
+            "name": "Wysyłka",
+            "value": "Bezpłatna",
+            "colorCode": null
+          }
+        ]
+      }
     },
     {
       "id": 2,
@@ -38,7 +62,36 @@
           "value": "dark green",
           "colorCode": "#006400"
         }
-      ]
+      ],
+      "slider": {
+        "title": "Betonowe dłonie",
+        "subtitle": "Ciemny mech",
+        "description": "Surowe dłonie wykończone głębokim, ciemnym mchem. Doskonały dodatek do wnętrz w stylu industrialnym i nowoczesnym.",
+        "price": 200.0,
+        "image": "/images/hands1.png",
+        "features": [
+          {
+            "name": "materiał",
+            "value": "beton architektoniczny",
+            "colorCode": "#808080"
+          },
+          {
+            "name": "botanika",
+            "value": "mech leśny",
+            "colorCode": "#006400"
+          },
+          {
+            "name": "wymiary",
+            "value": "20cm x 15cm",
+            "colorCode": null
+          },
+          {
+            "name": "pielęgnacja",
+            "value": "mały natrysk co 2 tyg.",
+            "colorCode": null
+          }
+        ]
+      }
     },
     {
       "id": 3,
@@ -58,7 +111,36 @@
           "value": "spring green",
           "colorCode": "#00FF7F"
         }
-      ]
+      ],
+      "slider": {
+        "title": "Białe dłonie",
+        "subtitle": "Wiosenny akcent",
+        "description": "Minimalistyczne białe dłonie z kontrastującym żywym mchem. Idealne do jasnych, skandynawskich wnętrz.",
+        "price": 200.0,
+        "image": "/images/hands1.png",
+        "features": [
+          {
+            "name": "materiał",
+            "value": "beton biały",
+            "colorCode": "#FFFFFF"
+          },
+          {
+            "name": "botanika",
+            "value": "mech wiosenny",
+            "colorCode": "#00FF7F"
+          },
+          {
+            "name": "styl",
+            "value": "skandynawski",
+            "colorCode": null
+          },
+          {
+            "name": "produkcja",
+            "value": "ręczna",
+            "colorCode": null
+          }
+        ]
+      }
     },
     {
       "id": 4,
@@ -78,7 +160,36 @@
           "value": "dark green",
           "colorCode": "#006400"
         }
-      ]
+      ],
+      "slider": {
+        "title": "Białe dłonie",
+        "subtitle": "Głęboka zieleń",
+        "description": "Eleganckie białe dłonie z głębokim, ciemnym mchem tworzącym naturalny kontrast. Idealne jako główny element ozdobny lub prezent.",
+        "price": 200.0,
+        "image": "/images/hands1.png",
+        "features": [
+          {
+            "name": "materiał",
+            "value": "beton premium",
+            "colorCode": "#FFFFFF"
+          },
+          {
+            "name": "botanika",
+            "value": "mech górski",
+            "colorCode": "#006400"
+          },
+          {
+            "name": "trwałość",
+            "value": "5+ lat",
+            "colorCode": null
+          },
+          {
+            "name": "zastosowanie",
+            "value": "wewnątrz/na zewnątrz",
+            "colorCode": null
+          }
+        ]
+      }
     }
   ]
 }

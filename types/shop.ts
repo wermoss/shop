@@ -4,6 +4,15 @@ export interface ProductFeature {
   colorCode?: string; // Opcjonalny kod koloru dla cech typu kolor
 }
 
+export interface SliderData {
+  title: string;
+  subtitle: string;
+  description: string;
+  price: number;
+  image: string;
+  features: ProductFeature[];
+}
+
 export interface Product {
   id: number;
   name: string;
@@ -12,6 +21,7 @@ export interface Product {
   image: string;
   orderLimit: number;
   features?: ProductFeature[]; // Opcjonalna tablica cech produktu
+  slider?: SliderData; // Opcjonalne dane do wyświetlenia w sliderze
 }
 
 export interface CartItem {

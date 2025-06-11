@@ -1,8 +1,10 @@
 <template>
-  <div class="absolute w-full h-[50px] z-20">
-    <div class="container mx-auto flex justify-between">
-      <p>wermoss</p>
-      <p>Zamknij</p>
+  <div class="absolute w-full z-20 bg-white lg:bg-transparent">
+    <div
+      class="container mx-auto flex justify-between items-center h-[60px] px-10"
+    >
+      <p class="font-bold text-3xl">wermoss</p>
+      <p>Wróc do sklepu</p>
     </div>
   </div>
 

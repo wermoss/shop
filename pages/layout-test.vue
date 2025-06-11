@@ -17,14 +17,14 @@
 
     <!-- Background extensions -->
     <div
-      class="absolute top-0 lg:bottom-0 left-0 right-1/3 -z-10 bg-green-100 lg:bg-green-500 content-height lg:min-h-screen xl:min-h-screen 2xl:min-h-screen"
+      class="absolute top-0 lg:bottom-0 left-0 right-1/3 -z-10 bg-[#EBEBEB] lg:[#EBEBEB] content-height lg:min-h-screen xl:min-h-screen 2xl:min-h-screen"
     ></div>
     <div
-      class="absolute top-0 lg:bottom-0 left-2/3 right-0 -z-10 bg-pink-100 lg:bg-pink-500 content-height lg:min-h-screen xl:min-h-screen 2xl:min-h-screen"
+      class="absolute top-0 lg:bottom-0 left-2/3 right-0 -z-10 bg-[#EBEBEB] lg:bg-white content-height lg:min-h-screen xl:min-h-screen 2xl:min-h-screen"
     ></div>
 
     <!-- Content -->
-    <div class="container mx-auto relative z-10 pt-[50px]">
+    <div class="container mx-auto relative z-10 pt-[60px]">
       <div class="grid grid-cols-12">
         <div
           class="col-span-12 lg:col-span-8 bg-[#EBEBEB] p-10"
@@ -33,34 +33,52 @@
           <div class="border-t border-b border-gray-300 py-6 tracking-wider">
             <!-- Uproszczony układ wykorzystujący tylko Tailwind CSS -->
             <div
-              class="space-y-4 lg:space-y-0 lg:flex lg:items-center lg:gap-4"
+              class="space-y-4 lg:space-y-0 lg:flex lg:items-center lg:gap-8"
             >
               <!-- Wizerunek produktu -->
               <div
-                class="aspect-square w-20 mx-auto lg:mx-0 lg:h-20 lg:w-20 bg-gray-100 flex items-center justify-center"
+                class="aspect-square w-20 mx-auto lg:mx-0 lg:h-28 lg:w-28 bg-gray-100 flex items-center justify-center"
               >
                 1
               </div>
 
               <!-- Informacje o produkcie -->
-              <div class="text-sm lg:flex-1">
+              <div class="text-sm lg:text-[16px] lg:flex-1">
                 <p class="font-semibold">Betonowe dłonie z mchem</p>
                 <p>Beton: Szary Mech: Spring Green</p>
                 <p>100,00 zł / szt</p>
               </div>
 
               <!-- Ilość produktu -->
-              <div class="inline-block w-1/2 lg:w-24 text-sm text-left">
-                - 2 +
+              <div class="inline-block w-1/2 lg:w-32 text-sm text-left">
+                <div class="flex">
+                  <div
+                    class="px-4 py-2 border-b border-t border-l border-gray-300 rounded-l-md"
+                  >
+                    -
+                  </div>
+                  <div class="px-4 py-2 border border-gray-300">2</div>
+                  <div
+                    class="px-4 py-2 border-b border-t border-r border-gray-300 rounded-r-md"
+                  >
+                    +
+                  </div>
+                </div>
               </div>
 
               <!-- Cena produktu -->
-              <div class="inline-block w-1/2 lg:w-24 text-sm text-right">
+              <div
+                class="inline-block w-1/2 lg:w-24 text-[16px] font-medium text-right"
+              >
                 200,00 zł
               </div>
 
               <!-- Przycisk usunięcia -->
-              <div class="hidden lg:block w-8 text-center">x</div>
+              <div
+                class="hidden lg:flex w-8 h-8 items-center justify-center text-center bg-gray-300 text-white rounded-full leading-none"
+              >
+                x
+              </div>
             </div>
           </div>
         </div>
@@ -119,7 +137,7 @@ onMounted(() => {
       const bgElements = document.querySelectorAll(".content-height");
 
       if (leftColumn && bgElements.length) {
-        const height = leftColumn.offsetHeight + 50; // 50px to padding-top
+        const height = leftColumn.offsetHeight + 60; // 50px to padding-top
         bgElements.forEach((el) => {
           el.style.height = `${height}px`;
           el.style.bottom = "auto";
