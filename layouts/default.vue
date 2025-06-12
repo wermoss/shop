@@ -12,6 +12,16 @@
             >Sklep</NuxtLink
           >
           <NuxtLink
+            to="/shop"
+            class="text-white px-4 py-2 rounded-md hover:bg-gray-700"
+            >O nas</NuxtLink
+          >
+          <NuxtLink
+            to="/shop"
+            class="text-white px-4 py-2 rounded-md hover:bg-gray-700"
+            >Kontakt</NuxtLink
+          >
+          <NuxtLink
             to="/shop/cart"
             class="text-white px-4 py-2 rounded-md hover:bg-gray-700 relative"
           >
