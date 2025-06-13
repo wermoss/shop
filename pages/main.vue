@@ -170,48 +170,105 @@
       </swiper>
 
       <!-- Dolny pasek z przyciskami -->
-      <div class="grid grid-cols-12 gap-4 pb-10">
+      <div class="grid grid-cols-12 pb-10">
         <!-- Paginacja (zastąpienie "A") -->
-        <div class="col-span-3 flex items-center justify-start px-4">
+        <div class="col-span-3 flex items-end justify-start">
           <div class="swiper-pagination"></div>
         </div>
 
         <!-- Social icons -->
-        <div class="col-span-6 flex items-center justify-center gap-4">
-          <img
-            src="/icons/facebook_dark.svg"
-            alt="Social Icons"
-            class="h-4 w-auto"
-          />
-          <img
-            src="/icons/instagram_dark.svg"
-            alt="Social Icons"
-            class="h-4 w-auto"
-          />
-          <img
-            src="/icons/linkedin_dark.svg"
-            alt="Social Icons"
-            class="h-4 w-auto"
-          />
+        <div class="col-span-6 flex items-end justify-center gap-2">
+          <div class="px-2 cursor-pointer group">
+            <a
+              href="https://facebook.com"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img
+                src="/icons/facebook_dark.svg"
+                alt="Facebook"
+                class="h-4 w-auto transform transition-all duration-300 group-hover:-translate-y-2"
+              />
+            </a>
+          </div>
+
+          <div class="px-2 cursor-pointer group">
+            <a
+              href="https://instagram.com"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img
+                src="/icons/instagram_dark.svg"
+                alt="Instagram"
+                class="h-4 w-auto transform transition-all duration-300 group-hover:-translate-y-2"
+              />
+            </a>
+          </div>
+
+          <div class="px-2 cursor-pointer group">
+            <a
+              href="https://linkedin.com"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img
+                src="/icons/linkedin_dark.svg"
+                alt="LinkedIn"
+                class="h-4 w-auto transform transition-all duration-300 group-hover:-translate-y-2"
+              />
+            </a>
+          </div>
         </div>
 
         <!-- Przycisk dodawania do koszyka -->
-        <div class="col-span-3 flex items-center justify-end px-4">
-          <button
-            class="w-[70px] h-[70px] bg-black hover:opacity-80 opacity-100 text-white rounded-full transition-all flex items-center justify-center relative group cursor-pointer"
-            @click="addOneToCart"
+        <div class="col-span-3 flex items-center justify-end">
+          <!-- Komunikat o osiągniętym limicie produktów -->
+          <div
+            v-if="isLimitReached"
+            class="mr-4 text-sm text-red-600 whitespace-nowrap font-medium"
           >
+            Limit {{ currentProduct?.orderLimit || 0 }} szt.
+          </div>
+          <button
+            class="w-[70px] h-[70px] text-white rounded-full transition-all flex items-center justify-center relative group"
+            :class="{
+              'bg-black hover:opacity-80 opacity-100 cursor-pointer':
+                canAddToCart,
+              'bg-gray-400 cursor-not-allowed': !canAddToCart,
+            }"
+            @click="canAddToCart && addOneToCart()"
+          >
+            <!-- Znak plus z animacją Tailwind -->
             <div
-              class="relative w-5 h-5 group-hover:rotate-90 transition-transform duration-300"
+              class="absolute inset-0 flex items-center justify-center transition-opacity duration-300 ease-in-out"
+              :class="showAddedToCartCheck ? 'opacity-0' : 'opacity-100'"
             >
-              <!-- Pozioma linia plusa -->
               <div
-                class="w-[20px] h-[1px] bg-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-              ></div>
-              <!-- Pionowa linia plusa -->
-              <div
-                class="h-[20px] w-[1px] bg-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-              ></div>
+                class="relative w-5 h-5 transition-all duration-300 ease-in-out"
+                :class="{ 'group-hover:rotate-90': canAddToCart }"
+              >
+                <!-- Pozioma linia plusa -->
+                <div
+                  class="w-[20px] h-[1px] bg-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+                ></div>
+                <!-- Pionowa linia plusa -->
+                <div
+                  class="h-[20px] w-[1px] bg-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+                ></div>
+              </div>
+            </div>
+
+            <!-- Ikona potwierdzenia dodania do koszyka (check) z efektem fade używając Tailwind -->
+            <div
+              class="absolute inset-0 flex items-center justify-center transition-opacity duration-300 ease-in-out"
+              :class="showAddedToCartCheck ? 'opacity-100' : 'opacity-0'"
+            >
+              <img
+                src="/icons/check.svg"
+                alt="Dodano do koszyka"
+                class="w-5 h-5 text-white"
+              />
             </div>
           </button>
         </div>
@@ -252,6 +309,23 @@ const products = ref<Product[]>(
 // Aktualnie wyświetlany produkt
 const currentProduct = ref<Product | undefined>(products.value[0]);
 const activeIndex = ref(0);
+const showAddedToCartCheck = ref(false); // Flaga do pokazywania ikony potwierdzenia
+
+// Sprawdzamy czy osiągnięto limit produktu w koszyku
+const isLimitReached = computed(() => {
+  if (!currentProduct.value) return false;
+  const cartItem = cartStore.items.find(
+    (item) => item.id === currentProduct.value?.id
+  );
+  return (
+    cartItem && cartItem.quantity >= (currentProduct.value?.orderLimit || 0)
+  );
+});
+
+// Sprawdzamy czy można dodać produkt do koszyka (limit nie jest osiągnięty i nie trwa animacja)
+const canAddToCart = computed(
+  () => !isLimitReached.value && !showAddedToCartCheck.value
+);
 
 const formatPrice = (price: number): string => {
   return new Intl.NumberFormat("pl-PL", {
@@ -285,9 +359,18 @@ const getSliderFeatureColor = (name: string): string => {
 };
 
 const addOneToCart = () => {
-  if (currentProduct.value) {
-    cartStore.addToCart(currentProduct.value.id, 1); // Dodajemy zawsze 1 produkt
-    // Optional: dodaj tutaj notyfikację o dodaniu do koszyka
+  if (currentProduct.value && !isLimitReached.value) {
+    const success = cartStore.addToCart(currentProduct.value.id);
+
+    if (success) {
+      // Płynna animacja: pokazujemy ikonę check
+      showAddedToCartCheck.value = true;
+
+      // Po 2 sekundach płynnie przywracamy znak plus
+      setTimeout(() => {
+        showAddedToCartCheck.value = false;
+      }, 2000);
+    }
   }
 };
 
@@ -324,7 +407,7 @@ const onSlideChange = (swiper: any) => {
 
 .swiper-pagination-bullet {
   width: 48px;
-  height: 2px;
+  height: 5px;
   background-color: #d1d5db; /* gray-300 z Tailwind */
   border-radius: 0;
   opacity: 1;
@@ -335,7 +418,7 @@ const onSlideChange = (swiper: any) => {
 .swiper-pagination-bullet-active {
   background-color: #000000; /* Czarny */
   opacity: 1;
-  height: 6px; /* Zwiększona wysokość kreski aktywnego slajdu */
+  height: 5px; /* Zwiększona wysokość kreski aktywnego slajdu */
 }
 
 /* Ukrywamy przyciski nawigacji */
