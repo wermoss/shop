@@ -304,13 +304,20 @@
     </div>
 
     <div v-else class="text-center py-12">
-      <p class="text-xl text-gray-600 mb-4">Twój koszyk jest pusty</p>
-      <NuxtLink
+      <img
+        src="/images/empty-cart.png"
+        alt="Empty Cart"
+        class="mx-auto w-[450px] h-auto mb-6"
+      />
+      <p class="text-3xl text-gray-600 mb-4 tracking-wide">
+        Twój koszyk jest pusty
+      </p>
+      <!-- <NuxtLink
         to="/shop"
         class="inline-block px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700"
       >
         Wróć do sklepu
-      </NuxtLink>
+      </NuxtLink> -->
     </div>
   </div>
 </template>

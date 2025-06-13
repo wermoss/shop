@@ -33,7 +33,7 @@
                 >
                   {{ product.slider.subtitle }}
                 </p>
-                <p class="my-6 text-left text-lg">
+                <p class="my-8 text-left text-lg">
                   {{ product.slider.description }}
                 </p>
                 <p class="font-semibold text-3xl text-right">
@@ -73,8 +73,8 @@
                     style="
                       display: table-cell;
                       padding: 24px;
-                      border-right: 1px solid black;
-                      border-bottom: 1px solid black;
+                      border-right: 1px solid #cfcfcf;
+                      border-bottom: 1px solid #cfcfcf;
                       width: 50%;
                     "
                   >
@@ -103,7 +103,7 @@
                     style="
                       display: table-cell;
                       padding-left: 24px;
-                      border-bottom: 1px solid black;
+                      border-bottom: 1px solid #cfcfcf;
                       width: 50%;
                     "
                   >
@@ -135,7 +135,7 @@
                     style="
                       display: table-cell;
                       padding: 24px;
-                      border-right: 1px solid black;
+                      border-right: 1px solid #cfcfcf;
                       width: 50%;
                     "
                   >
@@ -177,8 +177,22 @@
         </div>
 
         <!-- Social icons -->
-        <div class="col-span-6 flex items-center justify-center">
-          <p>social icons</p>
+        <div class="col-span-6 flex items-center justify-center gap-4">
+          <img
+            src="/icons/facebook_dark.svg"
+            alt="Social Icons"
+            class="h-4 w-auto"
+          />
+          <img
+            src="/icons/instagram_dark.svg"
+            alt="Social Icons"
+            class="h-4 w-auto"
+          />
+          <img
+            src="/icons/linkedin_dark.svg"
+            alt="Social Icons"
+            class="h-4 w-auto"
+          />
         </div>
 
         <!-- Przycisk dodawania do koszyka -->

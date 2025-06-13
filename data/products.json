@@ -9,14 +9,14 @@
       "orderLimit": 20,
       "features": [
         {
-          "name": "beton",
-          "value": "szary",
+          "name": "Beton",
+          "value": "Szary",
           "colorCode": "#808080"
         },
         {
-          "name": "mech",
-          "value": "spring green",
-          "colorCode": "#00FF7F"
+          "name": "Mech",
+          "value": "Spring Green",
+          "colorCode": "#599806"
         }
       ],
       "slider": {
@@ -33,8 +33,8 @@
           },
           {
             "name": "Mech",
-            "value": "Spring green",
-            "colorCode": "#00FF7F"
+            "value": "Spring Green",
+            "colorCode": "#599806"
           },
           {
             "name": "Wysyłka",
@@ -53,41 +53,36 @@
       "orderLimit": 20,
       "features": [
         {
-          "name": "beton",
-          "value": "szary",
+          "name": "Beton",
+          "value": "Szary",
           "colorCode": "#808080"
         },
         {
-          "name": "mech",
-          "value": "dark green",
+          "name": "Mech",
+          "value": "Dark Green",
           "colorCode": "#006400"
         }
       ],
       "slider": {
         "title": "Betonowe dłonie",
-        "subtitle": "Ciemny mech",
+        "subtitle": "z mchem chrobotkiem",
         "description": "Surowe dłonie wykończone głębokim, ciemnym mchem. Doskonały dodatek do wnętrz w stylu industrialnym i nowoczesnym.",
         "price": 200.0,
         "image": "/images/hands1.png",
         "features": [
           {
-            "name": "materiał",
-            "value": "beton architektoniczny",
-            "colorCode": "#808080"
+            "name": "Beton",
+            "value": "Biały",
+            "colorCode": "#FFFFFF"
           },
           {
-            "name": "botanika",
-            "value": "mech leśny",
+            "name": "Mech",
+            "value": "Dark Green",
             "colorCode": "#006400"
           },
           {
-            "name": "wymiary",
-            "value": "20cm x 15cm",
-            "colorCode": null
-          },
-          {
-            "name": "pielęgnacja",
-            "value": "mały natrysk co 2 tyg.",
+            "name": "Wysyłka",
+            "value": "Bezpłatna",
             "colorCode": null
           }
         ]

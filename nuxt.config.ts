@@ -12,6 +12,8 @@ export default defineNuxtConfig({
     layoutTransition: { name: "layout", mode: "out-in" },
   },
 
+  css: ["~/assets/css/hamburgers.css"],
+
   modules: [
     "@pinia/nuxt",
     "@vueuse/nuxt",
