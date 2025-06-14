@@ -16,26 +16,26 @@
       <!-- Lista menu -->
       <div class="container mx-auto px-8 py-12 flex-grow flex flex-col">
         <div
-          class="flex flex-col space-y-8 text-2xl uppercase tracking-[0.2em] font-normal"
+          class="flex flex-col space-y-0 text-sm uppercase tracking-[0.2em] font-normal"
         >
           <NuxtLink
             to="/shop"
             @click="close"
-            class="block border-b border-gray-300 pb-2"
+            class="block border-b border-gray-300 py-4"
           >
             Sklep
           </NuxtLink>
           <NuxtLink
             to="/main"
             @click="close"
-            class="block border-b border-gray-300 pb-2"
+            class="block border-b border-gray-300 py-4"
           >
             O nas
           </NuxtLink>
           <NuxtLink
             to="/main"
             @click="close"
-            class="block border-b border-gray-300 pb-2"
+            class="block border-b border-gray-300 py-4"
           >
             Kontakt
           </NuxtLink>

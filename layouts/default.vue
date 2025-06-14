@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen flex flex-col">
-    <header class="bg-[#EBEBEB] h-[60px] flex items-end relative z-30">
+    <header class="bg-[#EBEBEB] h-[60px] flex items-end relative z-30 px-8">
       <nav class="container mx-auto grid grid-cols-12 items-center">
         <div class="col-span-6 lg:col-span-3 flex justify-start">
           <NuxtLink

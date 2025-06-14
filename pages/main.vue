@@ -19,21 +19,25 @@
           :key="product.id"
           class="h-full"
         >
-          <div class="grid grid-cols-12 h-full items-center">
+          <div class="grid grid-cols-12 h-full items-center px-9">
             <!-- Kolumna z opisem produktu -->
             <div
               class="col-span-12 lg:col-span-3 h-full flex flex-col justify-center order-2 lg:order-1"
             >
               <div v-if="product && product.slider">
-                <p class="font-semibold text-5xl text-left tracking-wide">
+                <p
+                  class="font-semibold text-3xl lg:text-5xl text-left tracking-wide"
+                >
                   {{ product.slider.title }}
                 </p>
                 <p
-                  class="text-[0.9em] text-gray-600 mt-2 text-left uppercase tracking-[0.2em]"
+                  class="text-[12px] lg:text-[0.9em] text-gray-600 mt-1 lg:mt-2 text-left uppercase tracking-[0.2em]"
                 >
                   {{ product.slider.subtitle }}
                 </p>
-                <p class="my-8 text-left text-lg">
+                <p
+                  class="my-6 text-left text-[15px] lg:text-lg tracking-wider text-gray-500"
+                >
                   {{ product.slider.description }}
                 </p>
                 <p class="font-semibold text-3xl text-right">
@@ -60,107 +64,74 @@
             <div
               class="col-span-12 lg:col-span-3 h-full hidden lg:flex flex-col justify-center order-3"
             >
-              <!-- Tabela 2x2 z cechami produktu -->
+              <!-- Grid 2x2 z cechami produktu -->
               <div
-                class="w-full border-collapse"
-                style="display: table"
+                class="w-full grid grid-cols-12 gap-0"
                 v-if="product && product.slider"
               >
-                <!-- Pierwszy wiersz -->
-                <div style="display: table-row">
-                  <!-- Komórka 1 (góra-lewo): Pierwsza cecha (zazwyczaj BETON) -->
+                <!-- Komórka 1 (góra-lewo): Pierwsza cecha (zazwyczaj BETON) -->
+                <div class="col-span-5 p-6 border-r border-b border-[#cfcfcf]">
                   <div
-                    style="
-                      display: table-cell;
-                      padding: 24px;
-                      border-right: 1px solid #cfcfcf;
-                      border-bottom: 1px solid #cfcfcf;
-                      width: 50%;
-                    "
+                    class="text-gray-500 text-sm text-left uppercase tracking-widest pb-1"
                   >
-                    <div
-                      class="text-gray-500 text-sm text-left uppercase tracking-widest pb-1"
-                    >
-                      {{ product.slider.features[0]?.name || "BETON" }}
-                    </div>
-                    <div class="flex items-center mt-2">
-                      <div
-                        v-if="product.slider.features[0]?.colorCode"
-                        class="w-5 h-5 rounded-full mr-3"
-                        :style="{
-                          backgroundColor:
-                            product.slider.features[0]?.colorCode,
-                        }"
-                      ></div>
-                      <span>{{
-                        product.slider.features[0]?.value || "Szary"
-                      }}</span>
-                    </div>
+                    {{ product.slider.features[0]?.name || "BETON" }}
                   </div>
-
-                  <!-- Komórka 2 (góra-prawo): Druga cecha (zazwyczaj MECH) -->
-                  <div
-                    style="
-                      display: table-cell;
-                      padding-left: 24px;
-                      border-bottom: 1px solid #cfcfcf;
-                      width: 50%;
-                    "
-                  >
+                  <div class="flex items-center mt-2">
                     <div
-                      class="text-gray-500 text-sm text-left uppercase tracking-widest pb-1"
-                    >
-                      {{ product.slider.features[1]?.name || "MECH" }}
-                    </div>
-                    <div class="flex items-center mt-2">
-                      <div
-                        v-if="product.slider.features[1]?.colorCode"
-                        class="w-5 h-5 rounded-full mr-3"
-                        :style="{
-                          backgroundColor:
-                            product.slider.features[1]?.colorCode,
-                        }"
-                      ></div>
-                      <span>{{
-                        product.slider.features[1]?.value || "Spring green"
-                      }}</span>
-                    </div>
+                      v-if="product.slider.features[0]?.colorCode"
+                      class="w-4 h-4 rounded-full mr-3 aspect-square flex-shrink-0"
+                      :style="{
+                        backgroundColor: product.slider.features[0]?.colorCode,
+                      }"
+                    ></div>
+                    <span class="text-sm tracking-wider">{{
+                      product.slider.features[0]?.value || "Szary"
+                    }}</span>
                   </div>
                 </div>
 
-                <!-- Drugi wiersz -->
-                <div style="display: table-row">
-                  <!-- Komórka 3 (dół-lewo): Trzecia cecha (zazwyczaj WYSYŁKA) -->
+                <!-- Komórka 2 (góra-prawo): Druga cecha (zazwyczaj MECH) -->
+                <div class="col-span-7 pl-6 py-6 border-b border-[#cfcfcf]">
                   <div
-                    style="
-                      display: table-cell;
-                      padding: 24px;
-                      border-right: 1px solid #cfcfcf;
-                      width: 50%;
-                    "
+                    class="text-gray-500 text-sm text-left uppercase tracking-widest pb-1"
                   >
-                    <div
-                      class="text-gray-500 text-sm text-left uppercase tracking-widest pb-1"
-                    >
-                      {{ product.slider.features[2]?.name || "WYSYŁKA" }}
-                    </div>
-                    <div class="mt-2 text-left">
-                      {{ product.slider.features[2]?.value || "Bezpłatna" }}
-                    </div>
+                    {{ product.slider.features[1]?.name || "MECH" }}
                   </div>
-
-                  <!-- Komórka 4 (dół-prawo): Czwarta cecha (zazwyczaj PŁATNOŚĆ) -->
-                  <div style="display: table-cell; padding: 24px; width: 50%">
+                  <div class="flex items-center mt-2">
                     <div
-                      class="text-gray-500 text-sm text-left uppercase tracking-widest pb-1"
-                    >
-                      {{ product.slider.features[3]?.name || "PŁATNOŚĆ" }}
-                    </div>
-                    <div class="mt-2 text-left">
-                      {{
-                        product.slider.features[3]?.value || "Płatności ikony"
-                      }}
-                    </div>
+                      v-if="product.slider.features[1]?.colorCode"
+                      class="w-4 h-4 rounded-full mr-3 aspect-square flex-shrink-0"
+                      :style="{
+                        backgroundColor: product.slider.features[1]?.colorCode,
+                      }"
+                    ></div>
+                    <span class="text-sm tracking-wider">{{
+                      product.slider.features[1]?.value || "Spring green"
+                    }}</span>
+                  </div>
+                </div>
+
+                <!-- Komórka 3 (dół-lewo): Trzecia cecha (zazwyczaj WYSYŁKA) -->
+                <div class="col-span-5 p-6 border-r border-[#cfcfcf]">
+                  <div
+                    class="text-gray-500 text-sm text-left uppercase tracking-widest pb-1"
+                  >
+                    {{ product.slider.features[2]?.name || "WYSYŁKA" }}
+                  </div>
+                  <div class="mt-2 text-left text-sm tracking-wider">
+                    {{ product.slider.features[2]?.value || "Bezpłatna" }}
+                  </div>
+                </div>
+
+                <!-- Komórka 4 (dół-prawo): Czwarta cecha (zazwyczaj PŁATNOŚĆ) -->
+                <div class="col-span-7 p-6">
+                  <div
+                    class="text-gray-500 text-sm text-left uppercase tracking-widest pb-1"
+                  >
+                    {{ product.slider.features[3]?.name || "PŁATNOŚĆ" }}
+                  </div>
+                  <div class="mt-2 text-left text-sm tracking-wider">
+                    {{ product.slider.features[3]?.value || "Płatności ikony" }}
                   </div>
                 </div>
               </div>
@@ -170,7 +141,7 @@
       </swiper>
 
       <!-- Dolny pasek z przyciskami -->
-      <div class="grid grid-cols-12 pb-10">
+      <div class="grid grid-cols-12 pb-10 px-8">
         <!-- Paginacja (zastąpienie "A") -->
         <div class="col-span-3 flex items-end justify-start">
           <div class="swiper-pagination"></div>
