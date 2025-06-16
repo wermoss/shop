@@ -246,9 +246,11 @@
       </div>
     </div>
   </section>
+  <ContactForm />
 </template>
 
 <script setup lang="ts">
+import ContactForm from "~/components/ContactForm.vue";
 import { useProductsStore } from "~/stores/shop/products";
 import { useCartStore } from "~/stores/shop/cart";
 import type { Product } from "~/types/shop";

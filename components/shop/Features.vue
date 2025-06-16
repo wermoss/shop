@@ -23,12 +23,14 @@
   <section class="mt-20">
     <div class="container mx-auto grid grid-cols-12 gap-4">
       <div class="col-span-8 bg-gray-300">
-        <div class="">Imię</div>
-        <div class="">Nazwisko</div>
-        <div class="">Email</div>
-        <div class="">Telefon</div>
-        <div class="">Temat wiadomości</div>
-        <div class="">Wiadomość</div>
+        <div class="grid grid-cols-12">
+          <div class="col-span-6">Imię</div>
+          <div class="col-span-6">Nazwisko</div>
+          <div class="col-span-6">Email</div>
+          <div class="col-span-6">Telefon</div>
+          <div class="col-span-12">Temat wiadomości</div>
+          <div class="col-span-12">Wiadomość</div>
+        </div>
       </div>
       <div class="col-span-4 bg-gray-300">2</div>
     </div>
