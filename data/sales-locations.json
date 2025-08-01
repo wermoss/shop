@@ -1,0 +1,76 @@
+{
+  "locations": [
+    {
+      "name": "Warszawa",
+      "country": "Polska",
+      "coordinates": [21.0122, 52.2297],
+      "sales": 256
+    },
+    {
+      "name": "New York",
+      "country": "USA",
+      "coordinates": [-74.006, 40.7128],
+      "sales": 189
+    },
+    {
+      "name": "London",
+      "country": "UK",
+      "coordinates": [-0.1278, 51.5074],
+      "sales": 142
+    },
+    {
+      "name": "Berlin",
+      "country": "Niemcy",
+      "coordinates": [13.405, 52.52],
+      "sales": 98
+    },
+    {
+      "name": "Paris",
+      "country": "Francja",
+      "coordinates": [2.3522, 48.8566],
+      "sales": 87
+    },
+    {
+      "name": "Tokyo",
+      "country": "Japonia",
+      "coordinates": [139.6503, 35.6762],
+      "sales": 76
+    },
+    {
+      "name": "Sydney",
+      "country": "Australia",
+      "coordinates": [151.2093, -33.8688],
+      "sales": 64
+    },
+    {
+      "name": "Dubai",
+      "country": "ZEA",
+      "coordinates": [55.2708, 25.2048],
+      "sales": 58
+    },
+    {
+      "name": "São Paulo",
+      "country": "Brazylia",
+      "coordinates": [-46.6333, -23.5505],
+      "sales": 53
+    },
+    {
+      "name": "Mumbai",
+      "country": "Indie",
+      "coordinates": [72.8777, 19.076],
+      "sales": 45
+    },
+    {
+      "name": "Toronto",
+      "country": "Kanada",
+      "coordinates": [-79.3832, 43.6532],
+      "sales": 42
+    },
+    {
+      "name": "Cape Town",
+      "country": "RPA",
+      "coordinates": [18.4241, -33.9249],
+      "sales": 36
+    }
+  ]
+}

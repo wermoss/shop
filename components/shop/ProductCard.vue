@@ -1,11 +1,28 @@
 <template>
-  <div class="border border-gray-200 rounded-lg p-4 max-w-sm">
-    <img
-      :src="product.image"
-      :alt="product.name"
-      class="w-full h-48 object-cover rounded-md"
-    />
-    <h3 class="text-xl font-semibold mt-4">{{ product.name }}</h3>
+  <div class="bg-[#EBEBEB] rounded-lg p-10 relative">
+    <!-- Discount badge - absolute positioned in top right corner -->
+    <div
+      v-if="showDiscount"
+      class="absolute top-3 right-3 z-10 bg-black text-white px-1.5 py-0.5 text-xs rounded"
+    >
+      -{{ getTotalDisplayDiscount }}%
+    </div>
+
+    <NuxtLink :to="`/shop/product/${product.id}`" class="block">
+      <div class="w-full aspect-square rounded-md overflow-hidden p-8">
+        <div
+          class="w-full h-full bg-center bg-cover transition-transform duration-300 ease-in-out hover:scale-110"
+          :style="{ backgroundImage: `url(${product.image})` }"
+          :aria-label="product.name"
+        ></div>
+      </div>
+    </NuxtLink>
+    <NuxtLink
+      :to="`/shop/product/${product.id}`"
+      class="block hover:text-green-600 transition-colors"
+    >
+      <h3 class="text-xl font-semibold mt-4">{{ product.name }}</h3>
+    </NuxtLink>
 
     <!-- Cechy produktu -->
     <div
@@ -19,7 +36,7 @@
           class="inline-flex items-center text-sm text-gray-700"
         >
           <span class="font-medium">{{ feature.name }}:</span>
-          <span class="ml-1">{{ feature.value }}</span>
+          <!-- <span class="ml-1">{{ feature.value }}</span> -->
           <!-- Kolorowe kółko dla cech z kolorem -->
           <span
             v-if="feature.colorCode"
@@ -30,46 +47,35 @@
         </div>
       </div>
     </div>
-
-    <div class="my-3">
-      <!-- If there's a quantity discount available, show original and discounted price -->
-      <div v-if="showDiscount" class="flex flex-col">
-        <div class="flex items-center">
-          <span class="text-lg text-gray-400 line-through mr-2">{{
-            formatPrice(product.price)
-          }}</span>
-          <span class="bg-black text-white px-1.5 py-0.5 text-xs rounded"
-            >-{{ getDiscountPercent }}%</span
-          >
+    <div class="flex justify-between items-center">
+      <div>
+        <div class="space-y-2 mt-4">
+          <div class="mt-4">
+            <button
+              @click="addToCart"
+              :disabled="!canAddToCart"
+              class="w-full bg-black text-white px-10 py-3 rounded-full hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            >
+              {{ addToCartButtonText }}
+            </button>
+          </div>
+          <div v-if="isLimitReached" class="mt-2 text-sm text-red-600">
+            Osiągnięto limit {{ product.orderLimit }} szt.
+          </div>
         </div>
-        <p class="text-2xl font-bold text-gray-900 mt-1">
-          {{ formatPrice(discountedPrice) }}
-        </p>
       </div>
-      <!-- Otherwise just show the normal price -->
-      <p v-else class="text-2xl font-bold text-gray-900">
-        {{ formatPrice(product.price) }}
-      </p>
-    </div>
-    <div class="space-y-2 mt-4">
-      <div class="mt-4">
-        <button
-          @click="addToCart"
-          :disabled="!canAddToCart"
-          class="w-full bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-        >
-          {{ addToCartButtonText }}
-        </button>
+      <div>
+        <div class="my-3">
+          <!-- Show either discounted price or normal price -->
+          <p class="text-2xl font-bold text-gray-900">
+            {{
+              showDiscount
+                ? formatPrice(discountedPrice)
+                : formatPrice(product.price)
+            }}
+          </p>
+        </div>
       </div>
-      <div v-if="isLimitReached" class="mt-2 text-sm text-red-600">
-        Osiągnięto limit {{ product.orderLimit }} szt.
-      </div>
-      <NuxtLink
-        :to="`/shop/product/${product.id}`"
-        class="block w-full py-2 px-4 text-center border border-gray-300 rounded-md hover:bg-gray-50"
-      >
-        Zobacz szczegóły
-      </NuxtLink>
     </div>
   </div>
 </template>
@@ -127,21 +133,57 @@ const getDiscountPercent = computed(() => {
     if (!isNaN(discountValue)) return discountValue;
   }
 
+  // Get quantity of this product in cart
+  const cartItem = cartStore.items.find((item) => item.id === props.product.id);
+  const productQuantityInCart = cartItem ? cartItem.quantity : 0;
+
   // Otherwise see if there's a cart discount based on quantity
   const discountTier = CART_DISCOUNT_TIERS.sort(
     (a: any, b: any) => b.quantity - a.quantity
-  ).find((tier: any) => 1 >= tier.quantity); // Assume minimum 1 item
+  ).find((tier: any) => productQuantityInCart >= tier.quantity);
 
-  return discountTier?.discount || 0;
+  // Also check the general cart discount which applies based on total items
+  const cartDiscountValue = cartStore.cartDiscount;
+
+  // Return the higher discount (product-specific custom discount or cart discount)
+  return Math.max(discountTier?.discount || 0, cartDiscountValue || 0);
 });
 
-// Show discount if there's any discount percentage to apply
-const showDiscount = computed(() => getDiscountPercent.value > 0);
+// Show discount if there's any discount percentage to apply (either quantity-based or coupon-based)
+const showDiscount = computed(
+  () =>
+    getDiscountPercent.value > 0 ||
+    (cartStore.appliedDiscountCode && cartStore.codeDiscount > 0)
+);
+
+// Calculate the total combined discount for display
+const getTotalDisplayDiscount = computed(() => {
+  let totalDiscount = getDiscountPercent.value;
+
+  if (cartStore.appliedDiscountCode) {
+    totalDiscount += cartStore.codeDiscount;
+  }
+
+  return totalDiscount;
+});
 
 // Calculate discounted price
 const discountedPrice = computed(() => {
   const price = props.product.price;
-  const discountMultiplier = 1 - getDiscountPercent.value / 100;
+
+  // Get the quantity-based discount
+  let quantityDiscountPercent = getDiscountPercent.value;
+
+  // Get the coupon-based discount
+  let couponDiscountPercent = 0;
+  if (cartStore.appliedDiscountCode) {
+    couponDiscountPercent = cartStore.codeDiscount;
+  }
+
+  // Calculate the total discount percentage (both discounts apply)
+  const totalDiscountPercent = quantityDiscountPercent + couponDiscountPercent;
+
+  const discountMultiplier = 1 - totalDiscountPercent / 100;
   return price * discountMultiplier;
 });
 

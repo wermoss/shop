@@ -5,7 +5,7 @@
       "name": "Betonowe dłonie z mchem",
       "description": "Betonowe dłonie z mchem - Spring Green. To jest przykładowy opis produktu",
       "price": 200.0,
-      "image": "/products/phone.jpg",
+      "image": "/images/hands1.png",
       "orderLimit": 20,
       "features": [
         {

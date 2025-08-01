@@ -12,7 +12,7 @@ export default defineNuxtConfig({
     layoutTransition: { name: "layout", mode: "out-in" },
   },
 
-  css: ["~/assets/css/hamburgers.css"],
+  css: ["~/assets/css/hamburgers.css", "mapbox-gl/dist/mapbox-gl.css"],
 
   modules: [
     "@pinia/nuxt",
@@ -74,6 +74,7 @@ export default defineNuxtConfig({
         process.env.USE_TEST_KEYS === "true"
           ? process.env.STRIPE_TEST_PUBLIC_KEY
           : process.env.STRIPE_LIVE_PUBLIC_KEY,
+      mapboxToken: process.env.NUXT_PUBLIC_MAPBOX_TOKEN,
     },
   },
 });
