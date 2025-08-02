@@ -1,6 +1,6 @@
 <template>
   <section class="">
-    <div class="container mx-auto">
+    <div class="container mx-auto px-8">
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
         <div class="flex flex-col items-center py-20">
           <img src="/images/pack.png" alt="Delivery Icon" class="mb-4" />

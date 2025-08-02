@@ -3,9 +3,14 @@
     {
       "id": 1,
       "name": "Betonowe dłonie z mchem",
-      "description": "Betonowe dłonie z mchem - Spring Green. To jest przykładowy opis produktu",
+      "description": "Betonowe dłonie z mchem - Spring Green. To jest przykładowy opis produktu. lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
       "price": 200.0,
       "image": "/images/hands1.png",
+      "additionalImages": [
+        "/images/hands.png",
+        "/images/hands1.png",
+        "/images/pack.png"
+      ],
       "orderLimit": 20,
       "features": [
         {
@@ -50,6 +55,11 @@
       "description": "Betonowe dłonie z mchem - Dark Green. To jest przykładowy opis produktu",
       "price": 200.0,
       "image": "/images/hands1.png",
+      "additionalImages": [
+        "/images/hands.png",
+        "/images/ribbon.png",
+        "/images/pack.png"
+      ],
       "orderLimit": 20,
       "features": [
         {
@@ -94,6 +104,11 @@
       "description": "Betonowe dłonie z mchem - Dark Green. To jest przykładowy opis produktu",
       "price": 200.0,
       "image": "/images/hands1.png",
+      "additionalImages": [
+        "/images/ribbon.png",
+        "/images/pack.png",
+        "/images/hands.png"
+      ],
       "orderLimit": 20,
       "features": [
         {

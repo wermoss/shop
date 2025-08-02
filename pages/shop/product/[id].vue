@@ -1,12 +1,55 @@
 <template>
   <div class="container mx-auto px-4 py-8">
-    <div v-if="product" class="grid grid-cols-1 md:grid-cols-2 gap-8">
-      <div>
+    <div v-if="product" class="grid grid-cols-1 md:grid-cols-2 gap-20">
+      <div class="space-y-4">
+        <!-- Main image -->
         <img
-          :src="product.image"
+          :src="selectedImage || product.image"
           :alt="product.name"
           class="w-full h-auto rounded-lg shadow-lg"
         />
+
+        <!-- Thumbnail gallery -->
+        <div
+          v-if="product.additionalImages && product.additionalImages.length > 0"
+          class="flex flex-wrap gap-2"
+        >
+          <!-- Main product image thumbnail -->
+          <div
+            class="w-20 h-20 cursor-pointer rounded-md overflow-hidden border-2"
+            :class="
+              selectedImage === null
+                ? 'border-green-500'
+                : 'border-gray-200 hover:border-green-300'
+            "
+            @click="selectedImage = null"
+          >
+            <img
+              :src="product.image"
+              :alt="product.name"
+              class="w-full h-full object-cover"
+            />
+          </div>
+
+          <!-- Additional images thumbnails -->
+          <div
+            v-for="(img, index) in product.additionalImages"
+            :key="index"
+            class="w-20 h-20 cursor-pointer rounded-md overflow-hidden border-2"
+            :class="
+              selectedImage === img
+                ? 'border-green-500'
+                : 'border-gray-200 hover:border-green-300'
+            "
+            @click="selectedImage = img"
+          >
+            <img
+              :src="img"
+              :alt="`${product.name} - zdjęcie ${index + 1}`"
+              class="w-full h-full object-cover"
+            />
+          </div>
+        </div>
       </div>
       <div class="space-y-6">
         <h1 class="text-3xl font-bold">{{ product.name }}</h1>
@@ -98,6 +141,9 @@ const productsStore = useProductsStore();
 const product = computed(() => {
   return productsStore.getProduct(Number(route.params.id));
 });
+
+// Track the selected image, null means show the main product image
+const selectedImage = ref<string | null>(null);
 
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat("pl-PL", {

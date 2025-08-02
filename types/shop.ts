@@ -19,6 +19,7 @@ export interface Product {
   description: string;
   price: number;
   image: string;
+  additionalImages?: string[]; // Tablica dodatkowych zdjęć produktu
   orderLimit: number;
   features?: ProductFeature[]; // Opcjonalna tablica cech produktu
   slider?: SliderData; // Opcjonalne dane do wyświetlenia w sliderze
