@@ -39,6 +39,20 @@
           >
             Kontakt
           </NuxtLink>
+          <NuxtLink
+            to="/regulamin"
+            @click="close"
+            class="block border-b border-gray-300 py-4"
+          >
+            Regulamin
+          </NuxtLink>
+          <NuxtLink
+            to="/polityka"
+            @click="close"
+            class="block border-b border-gray-300 py-4"
+          >
+            Polityka cookies
+          </NuxtLink>
         </div>
 
         <!-- Ikony social media -->

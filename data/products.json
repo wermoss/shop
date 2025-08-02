@@ -49,7 +49,7 @@
       "name": "Betonowe dłonie z mchem",
       "description": "Betonowe dłonie z mchem - Dark Green. To jest przykładowy opis produktu",
       "price": 200.0,
-      "image": "/products/phone.jpg",
+      "image": "/images/hands1.png",
       "orderLimit": 20,
       "features": [
         {
@@ -93,7 +93,7 @@
       "name": "Betonowe dłonie z mchem",
       "description": "Betonowe dłonie z mchem - Dark Green. To jest przykładowy opis produktu",
       "price": 200.0,
-      "image": "/products/phone.jpg",
+      "image": "/images/hands1.png",
       "orderLimit": 20,
       "features": [
         {
@@ -142,7 +142,105 @@
       "name": "Betonowe dłonie z mchem",
       "description": "Betonowe dłonie z mchem - Dark Green. To jest przykładowy opis produktu",
       "price": 200.0,
-      "image": "/products/phone.jpg",
+      "image": "/images/hands1.png",
+      "orderLimit": 20,
+      "features": [
+        {
+          "name": "beton",
+          "value": "biały",
+          "colorCode": "#FFFFFF"
+        },
+        {
+          "name": "mech",
+          "value": "dark green",
+          "colorCode": "#006400"
+        }
+      ],
+      "slider": {
+        "title": "Białe dłonie",
+        "subtitle": "Głęboka zieleń",
+        "description": "Eleganckie białe dłonie z głębokim, ciemnym mchem tworzącym naturalny kontrast. Idealne jako główny element ozdobny lub prezent.",
+        "price": 200.0,
+        "image": "/images/hands1.png",
+        "features": [
+          {
+            "name": "materiał",
+            "value": "beton premium",
+            "colorCode": "#FFFFFF"
+          },
+          {
+            "name": "botanika",
+            "value": "mech górski",
+            "colorCode": "#006400"
+          },
+          {
+            "name": "trwałość",
+            "value": "5+ lat",
+            "colorCode": null
+          },
+          {
+            "name": "zastosowanie",
+            "value": "wewnątrz/na zewnątrz",
+            "colorCode": null
+          }
+        ]
+      }
+    },
+    {
+      "id": 5,
+      "name": "Betonowe dłonie z mchem",
+      "description": "Betonowe dłonie z mchem - Dark Green. To jest przykładowy opis produktu",
+      "price": 200.0,
+      "image": "/images/hands1.png",
+      "orderLimit": 20,
+      "features": [
+        {
+          "name": "beton",
+          "value": "biały",
+          "colorCode": "#FFFFFF"
+        },
+        {
+          "name": "mech",
+          "value": "dark green",
+          "colorCode": "#006400"
+        }
+      ],
+      "slider": {
+        "title": "Białe dłonie",
+        "subtitle": "Głęboka zieleń",
+        "description": "Eleganckie białe dłonie z głębokim, ciemnym mchem tworzącym naturalny kontrast. Idealne jako główny element ozdobny lub prezent.",
+        "price": 200.0,
+        "image": "/images/hands1.png",
+        "features": [
+          {
+            "name": "materiał",
+            "value": "beton premium",
+            "colorCode": "#FFFFFF"
+          },
+          {
+            "name": "botanika",
+            "value": "mech górski",
+            "colorCode": "#006400"
+          },
+          {
+            "name": "trwałość",
+            "value": "5+ lat",
+            "colorCode": null
+          },
+          {
+            "name": "zastosowanie",
+            "value": "wewnątrz/na zewnątrz",
+            "colorCode": null
+          }
+        ]
+      }
+    },
+    {
+      "id": 6,
+      "name": "Betonowe dłonie z mchem",
+      "description": "Betonowe dłonie z mchem - Dark Green. To jest przykładowy opis produktu",
+      "price": 200.0,
+      "image": "/images/hands1.png",
       "orderLimit": 20,
       "features": [
         {

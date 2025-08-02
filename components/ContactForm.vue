@@ -1,9 +1,17 @@
 <template>
   <section class="my-20">
-    <div class="container mx-auto grid grid-cols-12 gap-8">
+    <div class="container mx-auto max-w-6xl gap-8 px-8">
       <!-- Formularz kontaktowy -->
-      <div class="col-span-12 lg:col-span-8">
-        <h2 class="text-3xl font-semibold mb-6">Skontaktuj się z nami</h2>
+      <div>
+        <div class="text-center mb-20">
+          <h2 class="text-3xl font-semibold mb-6">Skontaktuj się z nami</h2>
+          <p class="text-lg">
+            Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ab,
+            obcaecati perferendis unde deleniti fugit earum optio delectus odio
+            nemo placeat nostrum aut aspernatur dolore? Minima modi nihil non
+            quis! Accusantium.
+          </p>
+        </div>
 
         <!-- Komunikat błędu -->
         <div
@@ -206,36 +214,6 @@
             </div>
           </div>
         </VeeForm>
-      </div>
-
-      <!-- Dane kontaktowe -->
-      <div class="col-span-12 lg:col-span-4">
-        <div class="bg-gray-100 p-6 rounded-md h-full">
-          <h3 class="text-xl font-semibold mb-4">Dane kontaktowe</h3>
-
-          <div class="space-y-4">
-            <div>
-              <p class="font-medium">Adres</p>
-              <p>ul. Przykładowa 123</p>
-              <p>00-000 Warszawa</p>
-            </div>
-
-            <div>
-              <p class="font-medium">Telefon</p>
-              <p>+48 123 456 789</p>
-            </div>
-
-            <div>
-              <p class="font-medium">Email</p>
-              <p>kontakt@nazwafirmy.pl</p>
-            </div>
-
-            <div>
-              <p class="font-medium">Godziny pracy</p>
-              <p>Poniedziałek - Piątek: 9:00 - 17:00</p>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   </section>
