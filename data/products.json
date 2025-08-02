@@ -7,9 +7,19 @@
       "price": 200.0,
       "image": "/images/hands1.png",
       "additionalImages": [
+        "/images/hands1.png",
+        "/images/ribbon.png",
+        "/images/pack.png",
         "/images/hands.png",
         "/images/hands1.png",
-        "/images/pack.png"
+        "/images/hands1.png",
+        "/images/hands1.png",
+        "/images/hands1.png",
+        "/images/hands1.png",
+        "/images/hands1.png",
+
+        "/images/hands1.png",
+        "/images/hands1.png"
       ],
       "orderLimit": 20,
       "features": [
