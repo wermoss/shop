@@ -6,7 +6,7 @@
         <img
           :src="selectedImage || product.image"
           :alt="product.name"
-          class="w-full h-auto rounded-lg shadow-lg"
+          class="w-full h-auto select-none"
         />
 
         <!-- Thumbnail gallery with Swiper -->
@@ -15,80 +15,86 @@
             product.additionalImages &&
             (product.additionalImages.length > 0 || product.image)
           "
-          class="relative mt-4"
+          class="mt-4 select-none"
         >
-          <swiper
-            :modules="[Navigation]"
-            :slides-per-view="4"
-            :space-between="10"
-            :navigation="{
-              nextEl: '.swiper-button-next',
-              prevEl: '.swiper-button-prev',
-            }"
-            :breakpoints="{
-              // when window width is >= 320px
-              320: {
-                slidesPerView: 2,
-                spaceBetween: 8,
-              },
-              // when window width is >= 480px
-              480: {
-                slidesPerView: 3,
-                spaceBetween: 10,
-              },
-              // when window width is >= 640px
-              640: {
-                slidesPerView: 4,
-                spaceBetween: 10,
-              },
-            }"
-            class="thumb-swiper"
-          >
-            <!-- Main product image thumbnail -->
-            <swiper-slide>
-              <div
-                class="w-full h-24 cursor-pointer rounded-md overflow-hidden border-2"
-                :class="
-                  selectedImageIndex === -1
-                    ? 'border-green-500'
-                    : 'border-gray-200'
-                "
-                @click="selectImage(-1)"
-              >
-                <img
-                  :src="product.image"
-                  :alt="product.name"
-                  class="w-full h-full object-cover"
-                />
-              </div>
-            </swiper-slide>
-
-            <!-- Additional images thumbnails -->
-            <swiper-slide
-              v-for="(img, index) in product.additionalImages"
-              :key="index"
+          <!-- Gallery navigation wrapper with arrow positioning -->
+          <div class="gallery-navigation-wrapper px-12 relative">
+            <!-- Swiper container -->
+            <swiper
+              :modules="[Navigation]"
+              :slides-per-view="4"
+              :space-between="10"
+              :navigation="{
+                nextEl: '.swiper-button-next',
+                prevEl: '.swiper-button-prev',
+              }"
+              :breakpoints="{
+                // when window width is >= 320px
+                320: {
+                  slidesPerView: 2,
+                  spaceBetween: 8,
+                },
+                // when window width is >= 480px
+                480: {
+                  slidesPerView: 3,
+                  spaceBetween: 10,
+                },
+                // when window width is >= 640px
+                640: {
+                  slidesPerView: 4,
+                  spaceBetween: 10,
+                },
+              }"
+              class="thumb-swiper px-10"
             >
-              <div
-                class="w-full h-24 cursor-pointer rounded-md overflow-hidden border-2"
-                :class="
-                  selectedImageIndex === index
-                    ? 'border-green-500'
-                    : 'border-gray-200'
-                "
-                @click="selectImage(index)"
-              >
-                <img
-                  :src="img"
-                  :alt="`${product.name} - zdjęcie ${index + 1}`"
-                  class="w-full h-full object-cover"
-                />
-              </div>
-            </swiper-slide>
-          </swiper>
+              <!-- Main product image thumbnail -->
+              <swiper-slide>
+                <div
+                  class="w-full h-24 cursor-pointer rounded-md overflow-hidden border-2 select-none"
+                  :class="
+                    selectedImageIndex === -1
+                      ? 'border-green-500'
+                      : 'border-gray-200'
+                  "
+                  @click="selectImage(-1)"
+                >
+                  <img
+                    :src="product.image"
+                    :alt="product.name"
+                    class="w-full h-full object-cover select-none"
+                    draggable="false"
+                  />
+                </div>
+              </swiper-slide>
 
-          <!-- Navigation arrows -->
-          <div class="swiper-button-prev"></div>
-          <div class="swiper-button-next"></div>
+              <!-- Additional images thumbnails -->
+              <swiper-slide
+                v-for="(img, index) in product.additionalImages"
+                :key="index"
+              >
+                <div
+                  class="w-full h-24 cursor-pointer rounded-md overflow-hidden border-2 select-none"
+                  :class="
+                    selectedImageIndex === index
+                      ? 'border-green-500'
+                      : 'border-gray-200'
+                  "
+                  @click="selectImage(index)"
+                >
+                  <img
+                    :src="img"
+                    :alt="`${product.name} - zdjęcie ${index + 1}`"
+                    class="w-full h-full object-cover select-none"
+                    draggable="false"
+                  />
+                </div>
+              </swiper-slide>
+            </swiper>
+
+            <!-- Navigation arrows -->
+            <div class="swiper-button-prev"></div>
+            <div class="swiper-button-next"></div>
+          </div>
         </div>
       </div>
       <div class="space-y-6">
@@ -279,32 +285,55 @@ const addToCart = () => {
 <style scoped>
 /* Styling for thumbnail carousel */
 .thumb-swiper {
-  padding: 0 30px;
   position: relative;
+}
+
+.gallery-navigation-wrapper {
+  position: relative;
+  width: 100%;
 }
 
 :deep(.swiper-button-prev),
 :deep(.swiper-button-next) {
   width: 30px;
   height: 30px;
-  color: black;
+  color: white;
   opacity: 0.7;
-  background-color: rgba(255, 255, 255, 0.7);
+  background-color: rgba(0, 0, 0, 0.5);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  position: absolute;
+  top: 50px;
+  z-index: 10;
+}
+
+:deep(.swiper-button-prev) {
+  left: 0;
+}
+
+:deep(.swiper-button-next) {
+  right: 0;
 }
 
 :deep(.swiper-button-prev):hover,
 :deep(.swiper-button-next):hover {
   opacity: 1;
-  background-color: rgba(255, 255, 255, 0.9);
+  background-color: rgba(0, 0, 0, 0.7);
 }
 
 :deep(.swiper-button-prev)::after,
 :deep(.swiper-button-next)::after {
   font-size: 16px;
   font-weight: bold;
+}
+
+/* Prevent any text or image selection */
+.select-none {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 </style>

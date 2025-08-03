@@ -1,6 +1,6 @@
 <template>
   <div class="container max-w-7xl mx-auto px-8 py-8">
-    <div class="grid grid-cols-12">
+    <div class="grid grid-cols-12 gap-20">
       <div
         class="col-span-12 md:col-span-4 md:w-full aspect-square rounded-full bg-pink-200"
       ></div>

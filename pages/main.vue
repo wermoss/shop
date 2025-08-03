@@ -247,12 +247,14 @@
     </div>
   </section>
   <ContactForm />
+  <about />
   <Footer />
 </template>
 
 <script setup lang="ts">
 import ContactForm from "~/components/ContactForm.vue";
 import Footer from "~/components/Footer.vue";
+import about from "~/components/AboutMe.vue"; // Importujemy dane z pliku JSON
 import { useProductsStore } from "~/stores/shop/products";
 import { useCartStore } from "~/stores/shop/cart";
 import type { Product } from "~/types/shop";
