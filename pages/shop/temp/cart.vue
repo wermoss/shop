@@ -25,6 +25,8 @@
 
     <!-- Content -->
     <div class="container mx-auto relative z-10 pt-[60px]">
+      <!-- Logo and Title -->
+
       <div v-if="cartItems.length > 0" class="grid grid-cols-12">
         <div
           class="col-span-12 lg:col-span-8 bg-[#EBEBEB] p-10"
