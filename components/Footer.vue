@@ -85,6 +85,19 @@
             class="h-5 ml-2 opacity-70"
           />
         </div>
+        <div class="text-center md:text-right">
+          <NuxtLink
+            to="/regulamin"
+            class="text-gray-600 hover:text-green-600 transition"
+          >
+            Regulamin sklepu
+          </NuxtLink>
+        </div>
+      </div>
+
+      <div
+        class="flex flex-col md:flex-row md:justify-between space-y-4 md:space-y-0 text-sm tracking-widest mt-4"
+      >
         <div class="flex flex-col md:flex-row items-center">
           <p class="mb-2 md:mb-0 md:mr-2">Dostępne formy płatności:</p>
           <div class="flex flex-row">
