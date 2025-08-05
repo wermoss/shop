@@ -81,45 +81,24 @@ export default defineEventHandler(async (event) => {
       },
     ];
 
-    // Przygotuj pełne dane produktów dla metadanych
+    // Przygotuj skrócone dane produktów dla metadanych - zredukowane do minimum, aby zmieścić się w limicie 500 znaków
     const productsWithDetails = orderDetails.productsWithCalculatedPrices.map(
       (p) => ({
         id: p.id,
-        name: p.name,
-        price: p.price, // Oryginalna cena jednostkowa
-        quantity: p.quantity,
-        lineItemTotalPrice: p.lineItemTotalPrice, // Wartość produktów przed rabatem
-        discountAppliedToLineItem: p.discountAppliedToLineItem, // Kwota rabatu
-        lineItemTotalPriceWithDiscount: p.lineItemTotalPriceWithDiscount, // Wartość produktów po rabacie
-        image: p.image, // Dodajemy obraz dla wyświetlenia w potwierdzeniu
+        qty: p.quantity,
+        // Eliminujemy większość pól, aby zmieścić się w limicie metadanych Stripe (500 znaków)
       })
     );
 
-    // Zapisz wszystkie istotne informacje w metadanych
+    // Zapisz tylko najważniejsze informacje w metadanych (limit 500 znaków)
     const metadata = {
       orderNumber,
-      customerName: customer.name,
       customerEmail: customer.email,
-      customerPhone: customer.phone,
-      shippingStreet: customer.address.street,
-      shippingHouseNumber: customer.address.houseNumber,
-      shippingPostalCode: customer.address.postalCode,
-      shippingCity: customer.address.city,
-      shippingCountry: customer.address.country,
 
-      // Wszystkie istotne wartości z orderDetails
-      subtotalAmount: orderDetails.subtotalAmount.toString(),
-      cartDiscountPercent: orderDetails.cartDiscountPercent.toString(),
-      cartDiscountAmount: orderDetails.cartDiscountAmount.toString(),
-      codeDiscountPercent: orderDetails.codeDiscountPercent.toString(),
-      codeDiscountAmount: orderDetails.codeDiscountAmount.toString(),
-      totalDiscountAmount: orderDetails.totalDiscountAmount.toString(),
-      finalAmount: orderDetails.finalAmount.toString(),
-      appliedDiscountCode: orderDetails.appliedDiscountCode || "",
-      totalQuantity: orderDetails.totalQuantity.toString(),
-
-      // Szczegółowe dane produktów w formacie JSON
-      products: JSON.stringify(productsWithDetails),
+      // Minimalna ilość danych o zamówieniu
+      total: orderDetails.finalAmount.toString(),
+      discount: orderDetails.totalDiscountAmount.toString(),
+      items: JSON.stringify(productsWithDetails),
     };
 
     // Podstawowa konfiguracja sesji

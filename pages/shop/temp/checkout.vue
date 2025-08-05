@@ -28,72 +28,71 @@
       <!-- Logo and Title -->
 
       <div class="grid grid-cols-12">
-        <div
-          class="col-span-12 lg:col-span-8 bg-[#EBEBEB] p-10"
-          id="left-column"
-        >
+        <!-- Formularz zamówienia - Start -->
+        <div class="col-span-12 lg:col-span-8 bg-[#EBEBEB]" id="left-column">
           <VeeForm
+            id="checkoutForm"
             @submit="handlePayment"
             :validation-schema="schema"
             v-slot="{ errors, meta }"
-            class="bg-white rounded-lg p-6 shadow"
+            class="rounded-lg px-8 py-12"
           >
             <div class="space-y-6">
               <div class="space-y-4">
                 <div>
                   <label
                     for="name"
-                    class="block text-sm font-medium text-gray-700"
+                    class="block text-xs md:text-sm tracking-wider font-medium text-gray-500"
                     >Imię i nazwisko</label
                   >
                   <VeeField
                     name="name"
                     type="text"
                     v-model="formData.name"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                    class="block w-full border-stone-300 border-b-1 py-2 outline-none"
                     :class="{ 'border-red-300': errors.name }"
                   />
                   <VeeErrorMessage
                     name="name"
-                    class="text-sm text-red-500 mt-1"
+                    class="text-xs tracking-wider text-red-500 mt-1"
                   />
                 </div>
 
                 <div>
                   <label
                     for="email"
-                    class="block text-sm font-medium text-gray-700"
+                    class="block text-xs md:text-sm tracking-wider font-medium text-gray-500"
                     >Email</label
                   >
                   <VeeField
                     name="email"
                     type="email"
                     v-model="formData.email"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                    class="block w-full border-stone-300 border-b-1 py-2 outline-none"
                     :class="{ 'border-red-300': errors.email }"
                   />
                   <VeeErrorMessage
                     name="email"
-                    class="text-sm text-red-500 mt-1"
+                    class="text-xs tracking-wider text-red-500 mt-1"
                   />
                 </div>
 
                 <div>
                   <label
                     for="phone"
-                    class="block text-sm font-medium text-gray-700"
+                    class="block text-xs md:text-sm tracking-wider font-medium text-gray-500"
                     >Telefon</label
                   >
                   <VeeField
                     name="phone"
                     type="tel"
                     v-model="formData.phone"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                    class="block w-full border-stone-300 border-b-1 py-2 outline-none"
                     :class="{ 'border-red-300': errors.phone }"
                   />
                   <VeeErrorMessage
                     name="phone"
-                    class="text-sm text-red-500 mt-1"
+                    class="text-xs tracking-wider text-red-500 mt-1"
                   />
                 </div>
 
@@ -101,38 +100,38 @@
                   <div>
                     <label
                       for="street"
-                      class="block text-sm font-medium text-gray-700"
+                      class="block text-xs md:text-sm tracking-wider font-medium text-gray-500"
                       >Ulica</label
                     >
                     <VeeField
                       name="street"
                       type="text"
                       v-model="formData.street"
-                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                      class="block w-full border-stone-300 border-b-1 py-2 outline-none"
                       :class="{ 'border-red-300': errors.street }"
                     />
                     <VeeErrorMessage
                       name="street"
-                      class="text-sm text-red-500 mt-1"
+                      class="text-xs tracking-wider text-red-500 mt-1"
                     />
                   </div>
 
                   <div>
                     <label
                       for="houseNumber"
-                      class="block text-sm font-medium text-gray-700"
-                      >Numer domu/mieszkania</label
+                      class="block text-xs md:text-sm tracking-wider font-medium text-gray-500"
+                      >Numer domu / mieszkania</label
                     >
                     <VeeField
                       name="houseNumber"
                       type="text"
                       v-model="formData.houseNumber"
-                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                      class="block w-full border-stone-300 border-b-1 py-2 outline-none"
                       :class="{ 'border-red-300': errors.houseNumber }"
                     />
                     <VeeErrorMessage
                       name="houseNumber"
-                      class="text-sm text-red-500 mt-1"
+                      class="text-xs tracking-wider text-red-500 mt-1"
                     />
                   </div>
                 </div>
@@ -141,38 +140,38 @@
                   <div>
                     <label
                       for="postalCode"
-                      class="block text-sm font-medium text-gray-700"
+                      class="block text-xs md:text-sm tracking-wider font-medium text-gray-500"
                       >Kod pocztowy</label
                     >
                     <VeeField
                       name="postalCode"
                       type="text"
                       v-model="formData.postalCode"
-                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                      class="block w-full border-stone-300 border-b-1 py-2 outline-none"
                       :class="{ 'border-red-300': errors.postalCode }"
                     />
                     <VeeErrorMessage
                       name="postalCode"
-                      class="text-sm text-red-500 mt-1"
+                      class="text-xs tracking-wider text-red-500 mt-1"
                     />
                   </div>
 
                   <div>
                     <label
                       for="city"
-                      class="block text-sm font-medium text-gray-700"
+                      class="block text-xs md:text-sm tracking-wider font-medium text-gray-500"
                       >Miejscowość</label
                     >
                     <VeeField
                       name="city"
                       type="text"
                       v-model="formData.city"
-                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                      class="block w-full border-stone-300 border-b-1 py-2 outline-none"
                       :class="{ 'border-red-300': errors.city }"
                     />
                     <VeeErrorMessage
                       name="city"
-                      class="text-sm text-red-500 mt-1"
+                      class="text-xs tracking-wider text-red-500 mt-1"
                     />
                   </div>
                 </div>
@@ -180,17 +179,17 @@
                 <div>
                   <label
                     for="country"
-                    class="block text-sm font-medium text-gray-700"
+                    class="block text-xs md:text-sm tracking-wider font-medium text-gray-500"
                     >Kraj</label
                   >
                   <VeeField
                     name="country"
-                    as="select"
+                    type="text"
                     v-model="formData.country"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                  >
-                    <option value="PL">Polska</option>
-                  </VeeField>
+                    value="Polska"
+                    disabled
+                    class="block w-full border-stone-300 border-b-1 py-2 outline-none"
+                  />
                 </div>
 
                 <div class="flex items-center">
@@ -216,17 +215,18 @@
                 {{ errorMessage }}
               </div>
 
-              <button
-                type="submit"
-                :disabled="submitting || cartItems.length === 0 || !meta.valid"
-                class="w-full bg-black text-white py-4 rounded-full hover:opacity-100 opacity-90 transition-all mt-4 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              <!-- <NuxtLink
+                to="/shop/cart"
+                class="block w-full border border-gray-300 text-black py-4 rounded-full hover:bg-gray-50 transition-all mt-4 cursor-pointer text-center"
               >
-                {{ submitting ? "Przetwarzanie..." : "Przejdź do płatności" }}
-              </button>
+                Wróć do koszyka
+              </NuxtLink> -->
             </div>
           </VeeForm>
         </div>
+        <!-- Formularz zamówienia - End -->
 
+        <!-- Podsumowanie zamówienia - Start -->
         <div class="col-span-12 lg:col-span-4 bg-white p-10">
           <p class="text-2xl tracking-wider">Podsumowanie</p>
           <div
@@ -324,13 +324,16 @@
             <p class="text-right">{{ formatPrice(totalPrice) }}</p>
           </div>
 
-          <NuxtLink
-            to="/shop/cart"
-            class="block w-full border border-gray-300 text-black py-4 rounded-full hover:bg-gray-50 transition-all mt-8 mb-4 cursor-pointer text-center"
+          <button
+            type="submit"
+            form="checkoutForm"
+            :disabled="submitting || cartItems.length === 0 || !isFormValid"
+            class="w-full bg-black text-white py-4 rounded-full hover:opacity-100 opacity-90 transition-all mt-8 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Wróć do koszyka
-          </NuxtLink>
+            {{ submitting ? "Przetwarzanie..." : "Przejdź do płatności" }}
+          </button>
         </div>
+        <!-- Podsumowanie zamówienia - End -->
       </div>
     </div>
   </div>
@@ -339,7 +342,7 @@
 <script setup lang="ts">
 definePageMeta({
   middleware: ["check-cart"],
-  layout: "clean",
+  layout: "laytest",
 });
 
 import { useCartStore } from "~/stores/shop/cart";
@@ -348,6 +351,7 @@ import { useStripe } from "~/composables/useStripe";
 import { z } from "zod";
 import { toTypedSchema } from "@vee-validate/zod";
 import type { CartItem, Product } from "~/types/shop";
+import { useForm } from "vee-validate";
 
 const schema = toTypedSchema(
   z.object({
@@ -357,28 +361,28 @@ const schema = toTypedSchema(
       .max(40, "Podaj poprawne imię i nazwisko")
       .regex(/^[^\d]+$/, "Podaj poprawne imię i nazwisko")
       .regex(/^.+\s.+$/, "Podaj poprawne imię i nazwisko"),
-    email: z.string().email("Nieprawidłowy format adresu email"),
+    email: z.string().email("Podaj poprawny adres email"),
     phone: z
       .string()
-      .regex(/^\+?[\d\s-]{9,}$/, "Nieprawidłowy format numeru telefonu"),
+      .regex(/^\+?[\d\s-]{9,}$/, "Podaj poprawny numer telefonu"),
     street: z
       .string()
       .min(4, "Podaj poprawną nazwę ulicy")
       .max(40, "Podaj poprawną nazwę ulicy"),
     houseNumber: z
       .string()
-      .min(1, "Podaj poprawne dane")
-      .max(10, "Podaj poprawne dane"),
+      .min(1, "Podaj poprawny numer domu")
+      .max(10, "Podaj poprawny numer domu"),
     postalCode: z
       .string()
-      .regex(/^\d{2}-\d{3}$/, "Nieprawidłowy format kodu pocztowego (XX-XXX)"),
+      .regex(/^\d{2}-\d{3}$/, "Podaj poprawny kod pocztowy (XX-XXX)"),
     city: z
       .string()
       .min(5, "Podaj poprawną nazwę miejscowości")
       .max(40, "Podaj poprawną nazwę miejscowości"),
     country: z.string().min(2, "Wybierz kraj"),
     terms: z.boolean().refine((val) => val === true, {
-      message: "Musisz zaakceptować regulamin sklepu",
+      message: "Akceptacja regulaminu jest wymagana.",
     }),
   })
 );
@@ -397,7 +401,7 @@ const formData = ref({
   houseNumber: "",
   postalCode: "",
   city: "",
-  country: "PL",
+  country: "Polska",
   terms: false,
 });
 
@@ -414,7 +418,6 @@ const totalPrice = computed<number>(() => cartStore.totalPrice);
 const discountValue = computed<number>(() => {
   return cartStore.subtotalPrice - cartStore.totalPrice;
 });
-
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat("pl-PL", {
     style: "currency",
@@ -422,8 +425,58 @@ const formatPrice = (price: number) => {
   }).format(price);
 };
 
+// Computed property to check if all form fields are filled correctly
+const isFormValid = computed(() => {
+  // Basic presence check
+  const hasAllFields =
+    formData.value.name &&
+    formData.value.email &&
+    formData.value.phone &&
+    formData.value.street &&
+    formData.value.houseNumber &&
+    formData.value.postalCode &&
+    formData.value.city &&
+    formData.value.terms;
+
+  if (!hasAllFields) return false;
+
+  // Additional format validations
+  const nameValid =
+    formData.value.name.length >= 6 &&
+    formData.value.name.length <= 40 &&
+    /^[^\d]+$/.test(formData.value.name) &&
+    /^.+\s.+$/.test(formData.value.name);
+
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.value.email);
+
+  const phoneValid = /^\+?[\d\s-]{9,}$/.test(formData.value.phone);
+
+  const postalCodeValid = /^\d{2}-\d{3}$/.test(formData.value.postalCode);
+
+  return nameValid && emailValid && phoneValid && postalCodeValid;
+});
+
 const handlePayment = async () => {
-  if (cartItems.value.length === 0) return;
+  // Check if there are items in the cart
+  if (cartItems.value.length === 0) {
+    errorMessage.value = "Twój koszyk jest pusty";
+    return;
+  }
+
+  // Simple form validation
+  if (
+    !formData.value.name ||
+    !formData.value.email ||
+    !formData.value.phone ||
+    !formData.value.street ||
+    !formData.value.houseNumber ||
+    !formData.value.postalCode ||
+    !formData.value.city ||
+    !formData.value.terms
+  ) {
+    errorMessage.value = "Proszę wypełnić wszystkie wymagane pola";
+    return;
+  }
 
   let responseData;
   try {
@@ -454,20 +507,13 @@ const handlePayment = async () => {
             country: formData.value.country,
           },
         },
-        // Dodaj szczegóły zamówienia do metadanych przekazywanych do Stripe
-        // Te dane zostaną użyte na stronie success i w emailu potwierdzającym
+        // Dodaj podstawowe szczegóły zamówienia do metadanych przekazywanych do Stripe
+        // Minimalizujemy dane, aby nie przekroczyć limitu 500 znaków
         order_details: {
-          products: cartItems.value.map((item) => ({
-            id: item.product.id,
-            name: item.product.name,
-            price: item.product.price, // Cena jednostkowa
-            quantity: item.quantity,
-          })),
+          productCount: cartItems.value.length,
           subtotal: cartStore.subtotalPrice,
-          quantityDiscount: cartStore.cartDiscountAmount,
-          couponDiscount: cartStore.codeDiscountAmount,
-          total: totalPrice.value, // Całkowita kwota po rabatach
-          // vatAmount i vatRate mogą być dodane później, jeśli są obliczane serwerowo
+          discount: cartStore.subtotalPrice - totalPrice.value,
+          total: totalPrice.value,
         },
       }),
     });

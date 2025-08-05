@@ -59,13 +59,12 @@
         </div>
         <div>
           <ul
-            class="flex flex-col md:flex-row justify-center items-center space-x-4 uppercase tracking-[0.2em] text-xs"
+            class="flex flex-col md:flex-row justify-center items-center space-x-4 uppercase tracking-[0.2em] text-sm"
           >
             <li>Sklep</li>
             <li>O nas</li>
             <li>Kontakt</li>
             <li>Regulamin</li>
-            <li>Polityka cookies</li>
           </ul>
         </div>
       </div>
@@ -74,52 +73,43 @@
   <div>
     <div class="container mx-auto py-6">
       <div
-        class="flex flex-col md:flex-row md:justify-between space-y-4 md:space-y-0 text-sm tracking-widest"
+        class="flex flex-col md:flex-row md:justify-between space-y-4 md:space-y-0 text-xs md:text-sm text-gray-500 tracking-widest"
         name="aaa"
       >
-        <div class="text-center md:text-left flex flex-row">
+        <div
+          class="text-center items-center md:text-left flex flex-col md:flex-row"
+        >
           <p>Płatności realizowane przez</p>
           <img
             src="/icons/stripe-wermoss.svg"
             alt="Stripe"
-            class="h-5 ml-2 opacity-70"
+            class="h-5 ml-2 opacity-50 mt-2 md:mt-0"
           />
         </div>
-        <div class="text-center md:text-right">
-          <NuxtLink
-            to="/regulamin"
-            class="text-gray-600 hover:text-green-600 transition"
-          >
-            Regulamin sklepu
-          </NuxtLink>
-        </div>
-      </div>
-
-      <div
-        class="flex flex-col md:flex-row md:justify-between space-y-4 md:space-y-0 text-sm tracking-widest mt-4"
-      >
-        <div class="flex flex-col md:flex-row items-center">
-          <p class="mb-2 md:mb-0 md:mr-2">Dostępne formy płatności:</p>
+        <div
+          class="text-center items-center md:text-right flex flex-col md:flex-row"
+        >
+          <p class="mb-2 md:mb-0 md:mr-2">Dostępne formy płatności</p>
           <div class="flex flex-row">
             <img
               src="/icons/stripe-wermoss.svg"
               alt="Stripe"
-              class="h-5 ml-2 opacity-70"
+              class="h-5 ml-2 opacity-50 mt-1 md:mt-0"
             />
             <img
               src="/icons/stripe-wermoss.svg"
               alt="Visa"
-              class="h-5 ml-2 opacity-70"
+              class="h-5 ml-2 opacity-50 mt-1 md:mt-0"
             />
             <img
               src="/icons/stripe-wermoss.svg"
               alt="Mastercard"
-              class="h-5 ml-2 opacity-70"
+              class="h-5 ml-2 opacity-50 mt-1 md:mt-0"
             />
             <img
               src="/icons/stripe-wermoss.svg"
               alt="American Express"
-              class="h-5 ml-2 opacity-70"
+              class="h-5 ml-2 opacity-50 mt-1 md:mt-0"
             />
           </div>
         </div>

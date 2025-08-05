@@ -246,8 +246,34 @@
       </div>
     </div>
   </section>
-  <ContactForm />
+
+  <!-- Sekcja z produktami -->
+  <section class="py-16 bg-white">
+    <div class="container mx-auto">
+      <h2 class="text-3xl font-bold text-center mb-12 tracking-wide">
+        Nasze produkty
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-4">
+        <ProductCard
+          v-for="product in displayProducts"
+          :key="product.id"
+          :product="product"
+        />
+      </div>
+
+      <div class="text-center mt-12">
+        <NuxtLink
+          to="/shop"
+          class="inline-block bg-black text-white px-8 py-3 rounded-full hover:bg-opacity-80 transition-all"
+        >
+          Zobacz wszystkie produkty
+        </NuxtLink>
+      </div>
+    </div>
+  </section>
   <about />
+  <ContactForm />
+
   <Footer />
 </template>
 
@@ -255,6 +281,7 @@
 import ContactForm from "~/components/ContactForm.vue";
 import Footer from "~/components/Footer.vue";
 import about from "~/components/AboutMe.vue"; // Importujemy dane z pliku JSON
+import ProductCard from "~/components/shop/ProductCard.vue";
 import { useProductsStore } from "~/stores/shop/products";
 import { useCartStore } from "~/stores/shop/cart";
 import type { Product } from "~/types/shop";
@@ -311,6 +338,11 @@ const formatPrice = (price: number): string => {
     minimumFractionDigits: 2,
   }).format(price);
 };
+
+// Produkty do wyświetlenia w sekcji produktów
+const displayProducts = computed(() => {
+  return productsStore.products;
+});
 
 // Funkcje dla danych ze slidera - aktualizowane dla currentProduct
 const getFeatureValue = (name: string): string => {

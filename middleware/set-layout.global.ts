@@ -4,7 +4,7 @@ export default defineNuxtRouteMiddleware((to) => {
   if (to.path === "/shop/success" || to.path === "/layout-testa") {
     setPageLayout("clean");
   }
-  if (to.path === "/layout-test") {
+  if (to.path === "/shop/temp/layout-test") {
     setPageLayout("laytest");
   }
 });
