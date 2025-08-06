@@ -1,9 +1,9 @@
 <template>
-  <div class="bg-[#EBEBEB] rounded-lg p-10 relative">
+  <div class="bg-[#EBEBEB] rounded-lg p-6 md:10 relative">
     <!-- Discount badge - absolute positioned in top right corner -->
     <div
       v-if="showDiscount"
-      class="absolute top-3 right-3 z-10 bg-black text-white px-1.5 py-0.5 text-xs rounded"
+      class="absolute top-3 right-3 z-10 bg-black text-white px-3 py-1.5 text-xs rounded"
     >
       -{{ getTotalDisplayDiscount }}%
     </div>
@@ -40,34 +40,27 @@
           <!-- Kolorowe kółko dla cech z kolorem -->
           <span
             v-if="feature.colorCode"
-            class="ml-1 inline-block w-3 h-3 rounded-full border border-gray-300"
+            class="ml-1 inline-block w-5 h-5 rounded-full border border-gray-300"
             :style="{ backgroundColor: feature.colorCode }"
             :title="feature.value"
           ></span>
         </div>
       </div>
     </div>
-    <div class="flex justify-between items-center">
-      <div>
-        <div class="space-y-2 mt-4">
-          <div class="mt-4">
-            <button
-              @click="addToCart"
-              :disabled="!canAddToCart"
-              class="w-full bg-black text-white px-10 py-3 rounded-full hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-            >
-              {{ addToCartButtonText }}
-            </button>
-          </div>
-          <div v-if="isLimitReached" class="mt-2 text-sm text-red-600">
-            Osiągnięto limit {{ product.orderLimit }} szt.
-          </div>
-        </div>
+    <div class="flex justify-between items-center mt-5 md:mt-10">
+      <div class="w-2/3">
+        <button
+          @click="addToCart"
+          :disabled="!canAddToCart"
+          class="w-full text-xs md:text-sm tracking-wider uppercase bg-black text-white py-3 rounded-full hover:bg-green-600 disabled:bg-gray-300 disabled:text-black disabled:cursor-not-allowed transition-colors"
+        >
+          <span class="inline-block w-full">{{ addToCartButtonText }}</span>
+        </button>
       </div>
       <div>
-        <div class="my-3">
+        <div>
           <!-- Show either discounted price or normal price -->
-          <p class="text-2xl font-bold text-gray-900">
+          <p class="text-xl md:2xl font-bold text-gray-900">
             {{
               showDiscount
                 ? formatPrice(discountedPrice)

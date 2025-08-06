@@ -253,7 +253,7 @@
       <h2 class="text-3xl font-bold text-center mb-12 tracking-wide">
         Nasze produkty
       </h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-8">
         <ProductCard
           v-for="product in displayProducts"
           :key="product.id"
@@ -271,6 +271,7 @@
       </div>
     </div>
   </section>
+  <Features />
   <about />
   <ContactForm />
 
@@ -279,6 +280,7 @@
 
 <script setup lang="ts">
 import ContactForm from "~/components/ContactForm.vue";
+import Features from "~/components/shop/Features.vue";
 import Footer from "~/components/Footer.vue";
 import about from "~/components/AboutMe.vue"; // Importujemy dane z pliku JSON
 import ProductCard from "~/components/shop/ProductCard.vue";
