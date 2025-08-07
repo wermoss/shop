@@ -28,18 +28,22 @@
       <!-- Logo and Title -->
       <div class="grid grid-cols-12">
         <!-- Formularz zamówienia - Start -->
-        <div class="col-span-12 lg:col-span-8 bg-[#EBEBEB]" id="left-column">
-          <div
-            class="border-t border-b border-gray-300 py-6 tracking-wider px-8"
-          >
+        <div
+          class="col-span-12 lg:col-span-8 bg-[#EBEBEB] py-6"
+          id="left-columm"
+        >
+          <div class="py-6 tracking-wider px-8">
             <!-- Uproszczony układ wykorzystujący tylko Tailwind CSS -->
             <div
-              v-for="item in cartItems"
+              v-for="(item, index) in cartItems"
               :key="item.id"
-              class="space-y-4 lg:space-y-0 lg:flex lg:items-center lg:gap-8"
+              :class="[
+                'py-6 lg:flex lg:items-center lg:gap-8 relative',
+                index < cartItems.length - 1 ? 'border-b border-gray-300' : '',
+              ]"
             >
               <!-- Wizerunek produktu -->
-              <div
+              <!-- <div
                 class="aspect-square w-20 mx-auto lg:mx-0 lg:h-28 lg:w-28 bg-gray-100 flex items-center justify-center"
               >
                 <img
@@ -47,10 +51,10 @@
                   :alt="item.product?.name"
                   class="w-24 h-24 object-cover rounded bg-gray-200"
                 />
-              </div>
+              </div> -->
 
               <!-- Informacje o produkcie -->
-              <div class="text-sm lg:text-[16px] lg:flex-1">
+              <div class="text-md lg:flex-1">
                 <p class="font-semibold">{{ item.product?.name }}</p>
                 <div
                   v-if="
@@ -61,7 +65,7 @@
                   <div
                     v-for="feature in item.product.features"
                     :key="feature.name"
-                    class="text-sm flex items-center"
+                    class="text-md flex items-center"
                   >
                     <span class="font-medium text-gray-600"
                       >{{ feature.name }}:</span
@@ -103,41 +107,30 @@
 
               <!-- Ilość produktu -->
               <div class="inline-block w-1/2 lg:w-32 text-sm text-left">
-                <div class="flex">
-                  <div
-                    class="px-4 py-2 border-b border-t border-l border-gray-300 rounded-l-md"
-                  >
-                    -
-                  </div>
-                  <div class="px-4 py-2 border border-gray-300">2</div>
-                  <div
-                    class="px-4 py-2 border-b border-t border-r border-gray-300 rounded-r-md"
-                  >
-                    +
-                  </div>
-                </div>
-                <div class="flex items-center space-x-2 mt-2">
+                <div class="flex items-center mt-2">
                   <button
                     @click="cartStore.decrementQuantity(item.id)"
                     :disabled="!cartStore.canDecreaseQuantity(item.id)"
                     :class="[
-                      'px-2 py-1 rounded',
+                      'px-4 py-2 border-b border-t border-l border-gray-300 rounded-l-md',
                       cartStore.canDecreaseQuantity(item.id)
-                        ? 'bg-gray-100 hover:bg-gray-200'
-                        : 'bg-gray-200 text-gray-400 cursor-not-allowed',
+                        ? 'bg-transparent'
+                        : ' text-gray-400 cursor-not-allowed',
                     ]"
                   >
                     -
                   </button>
-                  <span>{{ item.quantity }}</span>
+                  <span class="px-4 py-2 border border-gray-300">{{
+                    item.quantity
+                  }}</span>
                   <button
                     @click="cartStore.incrementQuantity(item.id)"
                     :disabled="!cartStore.canIncreaseQuantity(item.id)"
                     :class="[
-                      'px-2 py-1 rounded',
+                      'px-4 py-2 border-b border-t border-r border-gray-300 rounded-r-md',
                       cartStore.canIncreaseQuantity(item.id)
-                        ? 'bg-gray-100 hover:bg-gray-200'
-                        : 'bg-gray-200 text-gray-400 cursor-not-allowed',
+                        ? 'bg-transparent hover:bg-gray-200'
+                        : ' text-gray-400 cursor-not-allowed',
                     ]"
                     :title="
                       !cartStore.canIncreaseQuantity(item.id)
@@ -165,16 +158,15 @@
               </div>
 
               <!-- Przycisk usunięcia -->
-              <div
-                class="hidden lg:flex w-8 h-8 items-center justify-center text-center bg-gray-300 text-white rounded-full leading-none"
-              >
-                x
-              </div>
               <button
                 @click="cartStore.removeFromCart(item.id)"
-                class="text-red-500"
+                class="absolute lg:static top-6 right-0 lg:flex w-8 h-8 items-center justify-center text-center bg-gray-300 rounded-full cursor-pointer"
               >
-                Usuń
+                <img
+                  src="/icons/close.svg"
+                  alt="Usuń produkt"
+                  class="w-4 h-4"
+                />
               </button>
             </div>
           </div>
