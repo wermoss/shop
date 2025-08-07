@@ -1,285 +1,339 @@
 <template>
-  <div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-8">Dane do zamówienia</h1>
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <div class="lg:col-span-2">
-        <VeeForm
-          @submit="handlePayment"
-          :validation-schema="schema"
-          v-slot="{ errors, meta }"
-        >
-          <div class="space-y-6">
-            <div class="space-y-4">
-              <div>
-                <label
-                  for="name"
-                  class="block text-sm font-medium text-gray-700"
-                  >Imię i nazwisko</label
-                >
-                <VeeField
-                  name="name"
-                  type="text"
-                  v-model="formData.name"
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                  :class="{ 'border-red-300': errors.name }"
-                />
-                <VeeErrorMessage
-                  name="name"
-                  class="text-sm text-red-500 mt-1"
-                />
-              </div>
-
-              <div>
-                <label
-                  for="email"
-                  class="block text-sm font-medium text-gray-700"
-                  >Email</label
-                >
-                <VeeField
-                  name="email"
-                  type="email"
-                  v-model="formData.email"
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                  :class="{ 'border-red-300': errors.email }"
-                />
-                <VeeErrorMessage
-                  name="email"
-                  class="text-sm text-red-500 mt-1"
-                />
-              </div>
-
-              <div>
-                <label
-                  for="phone"
-                  class="block text-sm font-medium text-gray-700"
-                  >Telefon</label
-                >
-                <VeeField
-                  name="phone"
-                  type="tel"
-                  v-model="formData.phone"
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                  :class="{ 'border-red-300': errors.phone }"
-                />
-                <VeeErrorMessage
-                  name="phone"
-                  class="text-sm text-red-500 mt-1"
-                />
-              </div>
-
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label
-                    for="street"
-                    class="block text-sm font-medium text-gray-700"
-                    >Ulica</label
-                  >
-                  <VeeField
-                    name="street"
-                    type="text"
-                    v-model="formData.street"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                    :class="{ 'border-red-300': errors.street }"
-                  />
-                  <VeeErrorMessage
-                    name="street"
-                    class="text-sm text-red-500 mt-1"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    for="houseNumber"
-                    class="block text-sm font-medium text-gray-700"
-                    >Numer domu/mieszkania</label
-                  >
-                  <VeeField
-                    name="houseNumber"
-                    type="text"
-                    v-model="formData.houseNumber"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                    :class="{ 'border-red-300': errors.houseNumber }"
-                  />
-                  <VeeErrorMessage
-                    name="houseNumber"
-                    class="text-sm text-red-500 mt-1"
-                  />
-                </div>
-              </div>
-
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label
-                    for="postalCode"
-                    class="block text-sm font-medium text-gray-700"
-                    >Kod pocztowy</label
-                  >
-                  <VeeField
-                    name="postalCode"
-                    type="text"
-                    v-model="formData.postalCode"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                    :class="{ 'border-red-300': errors.postalCode }"
-                  />
-                  <VeeErrorMessage
-                    name="postalCode"
-                    class="text-sm text-red-500 mt-1"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    for="city"
-                    class="block text-sm font-medium text-gray-700"
-                    >Miejscowość</label
-                  >
-                  <VeeField
-                    name="city"
-                    type="text"
-                    v-model="formData.city"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                    :class="{ 'border-red-300': errors.city }"
-                  />
-                  <VeeErrorMessage
-                    name="city"
-                    class="text-sm text-red-500 mt-1"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label
-                  for="country"
-                  class="block text-sm font-medium text-gray-700"
-                  >Kraj</label
-                >
-                <VeeField
-                  name="country"
-                  as="select"
-                  v-model="formData.country"
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                >
-                  <option value="PL">Polska</option>
-                </VeeField>
-              </div>
-
-              <div class="flex items-center">
-                <VeeField
-                  name="terms"
-                  type="checkbox"
-                  :value="true"
-                  :unchecked-value="false"
-                  v-model="formData.terms"
-                  class="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
-                />
-                <label for="terms" class="ml-2 block text-sm text-gray-900">
-                  Akceptuję regulamin sklepu
-                </label>
-                <VeeErrorMessage name="terms" class="text-red-500 ml-2" />
-              </div>
-            </div>
-
-            <div
-              v-if="errorMessage"
-              class="mb-4 p-4 bg-red-100 text-red-700 rounded-md"
-            >
-              {{ errorMessage }}
-            </div>
-
-            <button
-              type="submit"
-              :disabled="submitting || cartItems.length === 0 || !meta.valid"
-              class="w-full py-3 px-4 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
-            >
-              {{ submitting ? "Przetwarzanie..." : "Przejdź do płatności" }}
-            </button>
-          </div>
-        </VeeForm>
+  <div
+    class="relative lg:min-h-screen xl:min-h-screen 2xl:min-h-screen"
+    id="layout-container"
+  >
+    <!-- Background solution that aligns with grid -->
+    <div
+      class="absolute w-full h-full lg:min-h-screen xl:min-h-screen 2xl:min-h-screen"
+    >
+      <div class="container mx-auto h-full">
+        <div class="grid grid-cols-12 h-full">
+          <div class="col-span-12 lg:col-span-8 bg-white lg:bg-[#EBEBEB]"></div>
+          <div class="col-span-12 lg:col-span-4 bg-white lg:bg-white"></div>
+        </div>
       </div>
+    </div>
 
-      <div class="lg:col-span-1">
-        <div class="bg-gray-50 rounded-lg p-6 sticky top-4">
-          <h2 class="text-xl font-semibold mb-4">Podsumowanie zamówienia</h2>
-          <div class="space-y-4">
-            <div
-              v-for="item in cartItems"
-              :key="item.id"
-              class="flex flex-col border-b pb-2"
-            >
-              <div class="flex justify-between">
-                <span class="text-gray-600">
-                  {{ item.product.name }} x {{ item.quantity }}
-                </span>
+    <!-- Background extensions -->
+    <div
+      class="absolute top-0 lg:bottom-0 left-0 right-1/3 -z-10 bg-[#EBEBEB] lg:bg-[#EBEBEB] content-height lg:min-h-screen xl:min-h-screen 2xl:min-h-screen"
+    ></div>
+    <div
+      class="absolute top-0 lg:bottom-0 left-2/3 right-0 -z-10 bg-[#EBEBEB] lg:bg-white content-height lg:min-h-screen xl:min-h-screen 2xl:min-h-screen"
+    ></div>
+
+    <!-- Content -->
+    <div class="container mx-auto relative z-10 pt-[60px]">
+      <!-- Logo and Title -->
+
+      <div class="grid grid-cols-12">
+        <!-- Formularz zamówienia - Start -->
+        <div class="col-span-12 lg:col-span-8 bg-[#EBEBEB]" id="left-column">
+          <VeeForm
+            id="checkoutForm"
+            @submit="handlePayment"
+            :validation-schema="schema"
+            v-slot="{ errors, meta }"
+            class="rounded-lg px-8 py-12"
+          >
+            <div class="space-y-6">
+              <div class="space-y-4">
+                <div>
+                  <label
+                    for="name"
+                    class="block text-xs md:text-sm tracking-wider font-medium text-gray-500"
+                    >Imię i nazwisko</label
+                  >
+                  <VeeField
+                    name="name"
+                    type="text"
+                    v-model="formData.name"
+                    class="block w-full border-stone-300 border-b-1 py-2 outline-none"
+                    :class="{ 'border-red-300': errors.name }"
+                  />
+                  <VeeErrorMessage
+                    name="name"
+                    class="text-xs tracking-wider text-red-500 mt-1"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    for="email"
+                    class="block text-xs md:text-sm tracking-wider font-medium text-gray-500"
+                    >Email</label
+                  >
+                  <VeeField
+                    name="email"
+                    type="email"
+                    v-model="formData.email"
+                    class="block w-full border-stone-300 border-b-1 py-2 outline-none"
+                    :class="{ 'border-red-300': errors.email }"
+                  />
+                  <VeeErrorMessage
+                    name="email"
+                    class="text-xs tracking-wider text-red-500 mt-1"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    for="phone"
+                    class="block text-xs md:text-sm tracking-wider font-medium text-gray-500"
+                    >Telefon</label
+                  >
+                  <VeeField
+                    name="phone"
+                    type="tel"
+                    v-model="formData.phone"
+                    class="block w-full border-stone-300 border-b-1 py-2 outline-none"
+                    :class="{ 'border-red-300': errors.phone }"
+                  />
+                  <VeeErrorMessage
+                    name="phone"
+                    class="text-xs tracking-wider text-red-500 mt-1"
+                  />
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label
+                      for="street"
+                      class="block text-xs md:text-sm tracking-wider font-medium text-gray-500"
+                      >Ulica</label
+                    >
+                    <VeeField
+                      name="street"
+                      type="text"
+                      v-model="formData.street"
+                      class="block w-full border-stone-300 border-b-1 py-2 outline-none"
+                      :class="{ 'border-red-300': errors.street }"
+                    />
+                    <VeeErrorMessage
+                      name="street"
+                      class="text-xs tracking-wider text-red-500 mt-1"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      for="houseNumber"
+                      class="block text-xs md:text-sm tracking-wider font-medium text-gray-500"
+                      >Numer domu / mieszkania</label
+                    >
+                    <VeeField
+                      name="houseNumber"
+                      type="text"
+                      v-model="formData.houseNumber"
+                      class="block w-full border-stone-300 border-b-1 py-2 outline-none"
+                      :class="{ 'border-red-300': errors.houseNumber }"
+                    />
+                    <VeeErrorMessage
+                      name="houseNumber"
+                      class="text-xs tracking-wider text-red-500 mt-1"
+                    />
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label
+                      for="postalCode"
+                      class="block text-xs md:text-sm tracking-wider font-medium text-gray-500"
+                      >Kod pocztowy</label
+                    >
+                    <VeeField
+                      name="postalCode"
+                      type="text"
+                      v-model="formData.postalCode"
+                      class="block w-full border-stone-300 border-b-1 py-2 outline-none"
+                      :class="{ 'border-red-300': errors.postalCode }"
+                    />
+                    <VeeErrorMessage
+                      name="postalCode"
+                      class="text-xs tracking-wider text-red-500 mt-1"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      for="city"
+                      class="block text-xs md:text-sm tracking-wider font-medium text-gray-500"
+                      >Miejscowość</label
+                    >
+                    <VeeField
+                      name="city"
+                      type="text"
+                      v-model="formData.city"
+                      class="block w-full border-stone-300 border-b-1 py-2 outline-none"
+                      :class="{ 'border-red-300': errors.city }"
+                    />
+                    <VeeErrorMessage
+                      name="city"
+                      class="text-xs tracking-wider text-red-500 mt-1"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label
+                    for="country"
+                    class="block text-xs md:text-sm tracking-wider font-medium text-gray-500"
+                    >Kraj</label
+                  >
+                  <VeeField
+                    name="country"
+                    type="text"
+                    v-model="formData.country"
+                    value="Polska"
+                    disabled
+                    class="block w-full border-stone-300 border-b-1 py-2 outline-none"
+                  />
+                </div>
+
+                <div class="flex items-center">
+                  <VeeField
+                    name="terms"
+                    type="checkbox"
+                    :value="true"
+                    :unchecked-value="false"
+                    v-model="formData.terms"
+                    class="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                  />
+                  <label for="terms" class="ml-2 block text-sm text-gray-900">
+                    Akceptuję regulamin sklepu
+                  </label>
+                  <VeeErrorMessage name="terms" class="text-red-500 ml-2" />
+                </div>
+              </div>
+
+              <div
+                v-if="errorMessage"
+                class="mb-4 p-4 bg-red-100 text-red-700 rounded-md"
+              >
+                {{ errorMessage }}
+              </div>
+
+              <!-- <NuxtLink
+                to="/shop/cart"
+                class="block w-full border border-gray-300 text-black py-4 rounded-full hover:bg-gray-50 transition-all mt-4 cursor-pointer text-center"
+              >
+                Wróć do koszyka
+              </NuxtLink> -->
+            </div>
+          </VeeForm>
+        </div>
+        <!-- Formularz zamówienia - End -->
+
+        <!-- Podsumowanie zamówienia - Start -->
+        <div class="col-span-12 lg:col-span-4 bg-white p-10">
+          <p class="text-2xl tracking-wider">Podsumowanie</p>
+          <div
+            class="space-y-3 border-b border-t border-gray-200 my-6 py-6 tracking-wider"
+          >
+            <!-- Lista produktów -->
+            <div class="mb-4">
+              <div
+                v-for="(item, index) in cartItems"
+                :key="item.id"
+                :class="{
+                  'flex justify-between items-start pb-6 border-b border-gray-200': true,
+                  'pt-6': index > 0,
+                }"
+              >
+                <div class="flex-1">
+                  <p class="font-medium">
+                    {{ item.product.name }}
+                    <span class="text-gray-500">× {{ item.quantity }}</span>
+                  </p>
+
+                  <!-- Cechy produktu -->
+                  <div
+                    v-if="
+                      item.product.features && item.product.features.length > 0
+                    "
+                    class="mt-1 text-sm text-gray-500"
+                  >
+                    <div class="flex flex-wrap gap-1">
+                      <span
+                        v-for="feature in item.product.features"
+                        :key="feature.name"
+                        class="flex items-center"
+                      >
+                        {{ feature.name }}: {{ feature.value }}
+                        <!-- Kolorowe kółko dla cech z kolorem -->
+                        <span
+                          v-if="feature.colorCode"
+                          class="ml-1 inline-block w-2 h-2 rounded-full border border-gray-300"
+                          :style="{ backgroundColor: feature.colorCode }"
+                        ></span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
                 <div class="text-right">
                   <p>{{ formatPrice(item.product.price * item.quantity) }}</p>
                 </div>
               </div>
-
-              <!-- Cechy produktu -->
-              <div
-                v-if="item.product.features && item.product.features.length > 0"
-                class="mt-1 mb-2 pl-2"
-              >
-                <div class="flex flex-wrap gap-1">
-                  <div
-                    v-for="feature in item.product.features"
-                    :key="feature.name"
-                    class="inline-flex items-center text-xs text-gray-500"
-                  >
-                    <span class="font-medium">{{ feature.name }}:</span>
-                    <span class="ml-1">{{ feature.value }}</span>
-                    <!-- Kolorowe kółko dla cech z kolorem -->
-                    <span
-                      v-if="feature.colorCode"
-                      class="ml-1 inline-block w-2 h-2 rounded-full border border-gray-300"
-                      :style="{ backgroundColor: feature.colorCode }"
-                      :title="feature.value"
-                    ></span>
-                    <span class="mx-1">|</span>
-                  </div>
-                </div>
-              </div>
             </div>
 
-            <!-- Podsumowanie z rabatem -->
-            <div class="border-t pt-4 mt-4 space-y-2">
-              <div class="flex justify-between">
-                <span>Liczba produktów:</span>
-                <span>{{ cartStore.totalQuantity }} szt.</span>
-              </div>
+            <!-- Podsumowanie -->
+            <div class="flex justify-between">
+              <p>Liczba produktów</p>
+              <p class="text-right">{{ cartStore.totalQuantity }} szt.</p>
+            </div>
+            <div class="flex justify-between">
+              <p>Wartość produktów</p>
+              <p class="text-right">
+                {{ formatPrice(cartStore.subtotalPrice) }}
+              </p>
+            </div>
+            <div class="flex justify-between">
+              <p>Wartość VAT</p>
+              <p class="text-right">0,00 zł</p>
+            </div>
 
-              <div class="flex justify-between">
-                <span>Wartość przed rabatem:</span>
-                <span>{{ formatPrice(cartStore.subtotalPrice) }}</span>
-              </div>
+            <!-- Cart Quantity Discount -->
+            <div v-if="cartStore.cartDiscount > 0" class="flex justify-between">
+              <p>Rabat ilościowy -{{ cartStore.cartDiscount }}%</p>
+              <p class="text-right">
+                - {{ formatPrice(cartStore.cartDiscountAmount) }}
+              </p>
+            </div>
 
-              <!-- Rabat ilościowy -->
-              <div
-                v-if="cartStore.cartDiscount > 0"
-                class="flex justify-between text-green-600 font-medium"
-              >
-                <span>Rabat ilościowy ({{ cartStore.cartDiscount }}%):</span>
-                <span>-{{ formatPrice(cartStore.cartDiscountAmount) }}</span>
-              </div>
+            <!-- Code Discount -->
+            <div
+              v-if="cartStore.codeDiscount > 0"
+              class="flex justify-between text-green-600"
+            >
+              <p>Rabat z kodu -{{ cartStore.codeDiscount }}%</p>
+              <p class="text-right">
+                - {{ formatPrice(cartStore.codeDiscountAmount) }}
+              </p>
+            </div>
 
-              <!-- Rabat z kodu -->
-              <div
-                v-if="cartStore.codeDiscount > 0"
-                class="flex justify-between text-green-600 font-medium"
-              >
-                <span>Rabat z kodu ({{ cartStore.codeDiscount }}%):</span>
-                <span>-{{ formatPrice(cartStore.codeDiscountAmount) }}</span>
-              </div>
-
-              <div
-                class="flex justify-between text-lg font-bold pt-2 border-t border-gray-300"
-              >
-                <span>Do zapłaty:</span>
-                <span>{{ formatPrice(totalPrice) }}</span>
-              </div>
+            <div class="flex justify-between">
+              <p>Koszt wysyłki</p>
+              <p class="text-right">0,00 zł</p>
             </div>
           </div>
+
+          <div class="flex justify-between text-2xl tracking-wider">
+            <p>Suma</p>
+            <p class="text-right">{{ formatPrice(totalPrice) }}</p>
+          </div>
+
+          <button
+            type="submit"
+            form="checkoutForm"
+            :disabled="submitting || cartItems.length === 0 || !isFormValid"
+            class="w-full bg-black text-white py-4 rounded-full hover:opacity-100 opacity-90 transition-all mt-8 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {{ submitting ? "Przetwarzanie..." : "Przejdź do płatności" }}
+          </button>
         </div>
+        <!-- Podsumowanie zamówienia - End -->
       </div>
     </div>
   </div>
@@ -288,6 +342,7 @@
 <script setup lang="ts">
 definePageMeta({
   middleware: ["check-cart"],
+  layout: "laytest",
 });
 
 import { useCartStore } from "~/stores/shop/cart";
@@ -296,6 +351,7 @@ import { useStripe } from "~/composables/useStripe";
 import { z } from "zod";
 import { toTypedSchema } from "@vee-validate/zod";
 import type { CartItem, Product } from "~/types/shop";
+import { useForm } from "vee-validate";
 
 const schema = toTypedSchema(
   z.object({
@@ -305,28 +361,28 @@ const schema = toTypedSchema(
       .max(40, "Podaj poprawne imię i nazwisko")
       .regex(/^[^\d]+$/, "Podaj poprawne imię i nazwisko")
       .regex(/^.+\s.+$/, "Podaj poprawne imię i nazwisko"),
-    email: z.string().email("Nieprawidłowy format adresu email"),
+    email: z.string().email("Podaj poprawny adres email"),
     phone: z
       .string()
-      .regex(/^\+?[\d\s-]{9,}$/, "Nieprawidłowy format numeru telefonu"),
+      .regex(/^\+?[\d\s-]{9,}$/, "Podaj poprawny numer telefonu"),
     street: z
       .string()
       .min(4, "Podaj poprawną nazwę ulicy")
       .max(40, "Podaj poprawną nazwę ulicy"),
     houseNumber: z
       .string()
-      .min(1, "Podaj poprawne dane")
-      .max(10, "Podaj poprawne dane"),
+      .min(1, "Podaj poprawny numer domu")
+      .max(10, "Podaj poprawny numer domu"),
     postalCode: z
       .string()
-      .regex(/^\d{2}-\d{3}$/, "Nieprawidłowy format kodu pocztowego (XX-XXX)"),
+      .regex(/^\d{2}-\d{3}$/, "Podaj poprawny kod pocztowy (XX-XXX)"),
     city: z
       .string()
       .min(5, "Podaj poprawną nazwę miejscowości")
       .max(40, "Podaj poprawną nazwę miejscowości"),
     country: z.string().min(2, "Wybierz kraj"),
     terms: z.boolean().refine((val) => val === true, {
-      message: "Musisz zaakceptować regulamin sklepu",
+      message: "Akceptacja regulaminu jest wymagana.",
     }),
   })
 );
@@ -345,7 +401,7 @@ const formData = ref({
   houseNumber: "",
   postalCode: "",
   city: "",
-  country: "PL",
+  country: "Polska",
   terms: false,
 });
 
@@ -362,7 +418,6 @@ const totalPrice = computed<number>(() => cartStore.totalPrice);
 const discountValue = computed<number>(() => {
   return cartStore.subtotalPrice - cartStore.totalPrice;
 });
-
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat("pl-PL", {
     style: "currency",
@@ -370,8 +425,58 @@ const formatPrice = (price: number) => {
   }).format(price);
 };
 
+// Computed property to check if all form fields are filled correctly
+const isFormValid = computed(() => {
+  // Basic presence check
+  const hasAllFields =
+    formData.value.name &&
+    formData.value.email &&
+    formData.value.phone &&
+    formData.value.street &&
+    formData.value.houseNumber &&
+    formData.value.postalCode &&
+    formData.value.city &&
+    formData.value.terms;
+
+  if (!hasAllFields) return false;
+
+  // Additional format validations
+  const nameValid =
+    formData.value.name.length >= 6 &&
+    formData.value.name.length <= 40 &&
+    /^[^\d]+$/.test(formData.value.name) &&
+    /^.+\s.+$/.test(formData.value.name);
+
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.value.email);
+
+  const phoneValid = /^\+?[\d\s-]{9,}$/.test(formData.value.phone);
+
+  const postalCodeValid = /^\d{2}-\d{3}$/.test(formData.value.postalCode);
+
+  return nameValid && emailValid && phoneValid && postalCodeValid;
+});
+
 const handlePayment = async () => {
-  if (cartItems.value.length === 0) return;
+  // Check if there are items in the cart
+  if (cartItems.value.length === 0) {
+    errorMessage.value = "Twój koszyk jest pusty";
+    return;
+  }
+
+  // Simple form validation
+  if (
+    !formData.value.name ||
+    !formData.value.email ||
+    !formData.value.phone ||
+    !formData.value.street ||
+    !formData.value.houseNumber ||
+    !formData.value.postalCode ||
+    !formData.value.city ||
+    !formData.value.terms
+  ) {
+    errorMessage.value = "Proszę wypełnić wszystkie wymagane pola";
+    return;
+  }
 
   let responseData;
   try {
@@ -402,20 +507,13 @@ const handlePayment = async () => {
             country: formData.value.country,
           },
         },
-        // Dodaj szczegóły zamówienia do metadanych przekazywanych do Stripe
-        // Te dane zostaną użyte na stronie success i w emailu potwierdzającym
+        // Dodaj podstawowe szczegóły zamówienia do metadanych przekazywanych do Stripe
+        // Minimalizujemy dane, aby nie przekroczyć limitu 500 znaków
         order_details: {
-          products: cartItems.value.map((item) => ({
-            id: item.product.id,
-            name: item.product.name,
-            price: item.product.price, // Cena jednostkowa
-            quantity: item.quantity,
-          })),
+          productCount: cartItems.value.length,
           subtotal: cartStore.subtotalPrice,
-          quantityDiscount: cartStore.cartDiscountAmount,
-          couponDiscount: cartStore.codeDiscountAmount,
-          total: totalPrice.value, // Całkowita kwota po rabatach
-          // vatAmount i vatRate mogą być dodane później, jeśli są obliczane serwerowo
+          discount: cartStore.subtotalPrice - totalPrice.value,
+          total: totalPrice.value,
         },
       }),
     });
@@ -581,16 +679,53 @@ onBeforeUnmount(() => {
   sessionStorage.removeItem("stripe_session_id");
   sessionStorage.removeItem("current_order_number");
 });
+
+// Script to adjust background height based on content
+onMounted(() => {
+  const adjustBackgroundHeight = () => {
+    if (window.innerWidth < 1024) {
+      // lg breakpoint in Tailwind
+      const leftColumn = document.getElementById("left-column");
+      const bgElements = document.querySelectorAll(".content-height");
+
+      if (leftColumn && bgElements.length) {
+        const height = leftColumn.offsetHeight + 60; // 60px is the padding-top
+        bgElements.forEach((el) => {
+          (el as HTMLElement).style.height = `${height}px`;
+          (el as HTMLElement).style.bottom = "auto";
+        });
+      }
+    } else {
+      // Restore default styles for larger screens
+      const bgElements = document.querySelectorAll(".content-height");
+      bgElements.forEach((el) => {
+        (el as HTMLElement).style.height = "100vh";
+        (el as HTMLElement).style.bottom = "0";
+      });
+    }
+  };
+
+  // Run the function on load and on resize
+  adjustBackgroundHeight();
+  window.addEventListener("resize", adjustBackgroundHeight);
+
+  // Additional cleanup
+  onUnmounted(() => {
+    window.removeEventListener("resize", adjustBackgroundHeight);
+  });
+});
 </script>
 
 <style scoped>
-.container {
-  max-width: 1200px;
+@media (max-width: 1023px) {
+  #layout-container {
+    min-height: auto;
+  }
 }
 
-.sticky {
-  position: -webkit-sticky;
-  position: sticky;
-  top: 1rem;
+@media (min-width: 1024px) {
+  #layout-container {
+    min-height: 100vh;
+  }
 }
 </style>

@@ -7,7 +7,7 @@
     <div
       class="absolute w-full h-full lg:min-h-screen xl:min-h-screen 2xl:min-h-screen"
     >
-      <div class="container mx-auto h-full">
+      <div class="container mx-auto min-h-full">
         <div class="grid grid-cols-12 h-full">
           <div class="col-span-12 lg:col-span-8 bg-white lg:bg-[#EBEBEB]"></div>
           <div class="col-span-12 lg:col-span-4 bg-white lg:bg-white"></div>
