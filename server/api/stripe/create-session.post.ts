@@ -24,6 +24,9 @@ export default defineEventHandler(async (event) => {
     const orderNumber = generateOrderNumber();
     const orderTimestamp = Date.now().toString();
 
+    // Import crypto dla tworzenia podpisu
+    const crypto = await import("crypto");
+
     // Przygotowanie danych produktów dla calculateOrderTotals
     const cartItemsForCalc = cartItems.map((item: CartItem) => {
       const product = productsData.products.find((p) => p.id === item.id);
@@ -125,6 +128,27 @@ export default defineEventHandler(async (event) => {
       emailSent: "false",
     };
 
+    // Tworzenie podpisu dla URL
+    const signatureData = `${orderNumber}:${orderTimestamp}`;
+    const signature = crypto.default
+      .createHmac("sha256", config.orderSignatureSecret)
+      .update(signatureData)
+      .digest("hex");
+
+    // Tworzenie URL sukcesu z poprawnym rozdzieleniem parametrów
+    const successUrl = new URL(`${baseUrl}/shop/success`);
+    successUrl.searchParams.append("order", orderNumber);
+    successUrl.searchParams.append("timestamp", orderTimestamp);
+    successUrl.searchParams.append("signature", signature);
+
+    // Logowanie dla celów debugowania
+    console.log("Wygenerowany URL sukcesu:", successUrl.toString());
+    console.log("Parametry podpisu:", {
+      orderNumber,
+      orderTimestamp,
+      signature,
+    });
+
     // Podstawowa konfiguracja sesji
     const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       payment_method_types: ["card", "p24"],
@@ -136,7 +160,7 @@ export default defineEventHandler(async (event) => {
       locale: "pl",
       line_items: lineItems,
       mode: "payment",
-      success_url: `${baseUrl}/shop/success?order=${orderNumber}&timestamp=${orderTimestamp}`,
+      success_url: successUrl.toString(),
       cancel_url: `${baseUrl}/shop/cart`,
       customer_email: customer?.email,
       metadata: metadata,

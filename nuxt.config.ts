@@ -69,6 +69,8 @@ export default defineNuxtConfig({
       process.env.USE_TEST_KEYS === "true"
         ? process.env.STRIPE_TEST_WEBHOOK_SECRET
         : process.env.STRIPE_LIVE_WEBHOOK_SECRET,
+    orderSignatureSecret:
+      process.env.ORDER_SIGNATURE_SECRET || "defaultSecretKey123!@#",
     public: {
       stripePublicKey:
         process.env.USE_TEST_KEYS === "true"
