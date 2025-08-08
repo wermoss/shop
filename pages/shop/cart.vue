@@ -210,8 +210,12 @@
                 </button>
               </div>
 
-              <!-- Show only error messages -->
-              <p v-if="codeMessage && !codeSuccess" class="mt-2 text-red-500">
+              <!-- Show messages (errors and warnings) -->
+              <p
+                v-if="codeMessage"
+                class="mt-2"
+                :class="codeSuccess ? 'text-yellow-600' : 'text-red-500'"
+              >
                 {{ codeMessage }}
               </p>
             </div>
@@ -239,18 +243,20 @@
               <p>Wartość VAT</p>
               <p class="text-right">0,00 zł</p>
             </div>
-            <!-- Cart Quantity Discount -->
-            <div v-if="cartStore.cartDiscount > 0" class="flex justify-between">
-              <p>Rabat ilościowy -{{ cartStore.cartDiscount }}%</p>
-              <p class="text-right">
-                - {{ cartStore.cartDiscountAmount.toFixed(2) }} zł
+            <!-- Display only the higher discount -->
+            <div
+              v-if="cartStore.totalDiscount > 0"
+              class="flex justify-between"
+            >
+              <p>
+                {{
+                  cartStore.cartDiscount >= cartStore.codeDiscount
+                    ? `Rabat ilościowy -${cartStore.cartDiscount}%`
+                    : `Rabat dodatkowy -${cartStore.codeDiscount}%`
+                }}
               </p>
-            </div>
-            <!-- Code Discount -->
-            <div v-if="cartStore.codeDiscount > 0" class="flex justify-between">
-              <p>Rabat dodatkowy -{{ cartStore.codeDiscount }}%</p>
               <p class="text-right">
-                - {{ cartStore.codeDiscountAmount.toFixed(2) }} zł
+                - {{ cartStore.totalDiscountAmount.toFixed(2) }} zł
               </p>
             </div>
             <div class="flex justify-between">
@@ -338,15 +344,28 @@ function applyDiscountCode() {
   // Try to apply the discount code
   const result = cartStore.applyDiscountCode();
 
-  if (result) {
-    // Just clear the input after successful application
+  if (result.success) {
+    // Clear the input after successful application
     discountCode.value = "";
-  } else {
-    // Only show error message for invalid codes
-    codeSuccess.value = false;
-    codeMessage.value = "Nieprawidłowy kod rabatowy";
 
-    // Clear the error message after 5 seconds
+    // Show warning if the code discount is lower than cart discount
+    if (result.warning) {
+      codeSuccess.value = true;
+      codeMessage.value =
+        result.message ||
+        "Zastosowano kod rabatowy, ale rabat ilościowy jest wyższy.";
+
+      // Clear the message after 5 seconds
+      setTimeout(() => {
+        codeMessage.value = "";
+      }, 5000);
+    }
+  } else {
+    // Show error or warning message
+    codeSuccess.value = result.warning || false;
+    codeMessage.value = result.message || "Nieprawidłowy kod rabatowy";
+
+    // Clear the message after 5 seconds
     setTimeout(() => {
       codeMessage.value = "";
     }, 5000);
@@ -363,9 +382,9 @@ const cartDiscountTiers = CART_DISCOUNT_TIERS.sort(
   (a, b) => b.quantity - a.quantity
 );
 
-// Calculate the total discount percentage (quantity + code)
+// Calculate the total discount percentage (maximum of quantity or code discount)
 const getTotalDiscount = computed((): number => {
-  return cartStore.cartDiscount + cartStore.codeDiscount;
+  return Math.max(cartStore.cartDiscount, cartStore.codeDiscount);
 });
 
 // Find the next discount tier that the user can reach

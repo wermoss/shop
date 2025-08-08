@@ -45,51 +45,83 @@
                 <div>{{ formatPrice(orderMetadata?.subtotal || 0) }} zł</div>
               </div>
 
-              <div
-                v-if="orderMetadata?.vatAmount"
-                class="flex justify-between items-center text-sm"
-              >
-                <div>VAT ({{ orderMetadata.vatRate }}%)</div>
-                <div>{{ formatPrice(orderMetadata.vatAmount) }} zł</div>
+              <!-- VAT - always show even if zero -->
+              <div class="flex justify-between items-center">
+                <div>Wartość VAT</div>
+                <div>{{ formatPrice(orderMetadata?.vatAmount || 0) }} zł</div>
               </div>
 
+              <!-- Show the applied discount (using the higher of the two) -->
               <div
-                v-if="
-                  orderMetadata?.quantityDiscount &&
-                  orderMetadata.quantityDiscount > 0
-                "
+                v-if="showNewDiscountFormat"
                 class="flex justify-between items-center"
               >
                 <div>
-                  Rabat ilościowy ({{
-                    orderMetadata.cartDiscountPercent || 10
-                  }}%)
-                </div>
-                <div>-{{ formatPrice(orderMetadata.quantityDiscount) }} zł</div>
-              </div>
-
-              <div
-                v-if="
-                  orderMetadata?.couponDiscount &&
-                  orderMetadata.couponDiscount > 0
-                "
-                class="flex justify-between items-center"
-              >
-                <div>
-                  Rabat dodatkowy
+                  {{ getDiscountTypeLabel() }}
+                  ({{ orderMetadata?.appliedDiscountPercent || 0 }}%)
                   {{
-                    orderMetadata.codeDiscountPercent &&
-                    orderMetadata.codeDiscountPercent > 0
-                      ? "(" + orderMetadata.codeDiscountPercent + "%)"
-                      : ""
-                  }}
-                  {{
-                    orderMetadata.appliedDiscountCode
+                    orderMetadata?.appliedDiscountType === "code" &&
+                    orderMetadata?.appliedDiscountCode
                       ? " (kod: " + orderMetadata.appliedDiscountCode + ")"
                       : ""
                   }}
                 </div>
-                <div>-{{ formatPrice(orderMetadata.couponDiscount) }} zł</div>
+                <div>
+                  -{{ formatPrice(orderMetadata?.appliedDiscountAmount || 0) }}
+                  zł
+                </div>
+              </div>
+
+              <!-- Fallback for backward compatibility -->
+              <template v-else>
+                <div
+                  v-if="
+                    orderMetadata?.quantityDiscount &&
+                    orderMetadata.quantityDiscount > 0
+                  "
+                  class="flex justify-between items-center"
+                >
+                  <div>
+                    Rabat ilościowy ({{
+                      orderMetadata.cartDiscountPercent || 10
+                    }}%)
+                  </div>
+                  <div>
+                    -{{ formatPrice(orderMetadata.quantityDiscount) }} zł
+                  </div>
+                </div>
+
+                <div
+                  v-if="
+                    orderMetadata?.couponDiscount &&
+                    orderMetadata.couponDiscount > 0
+                  "
+                  class="flex justify-between items-center"
+                >
+                  <div>
+                    Rabat dodatkowy
+                    {{
+                      orderMetadata.codeDiscountPercent &&
+                      orderMetadata.codeDiscountPercent > 0
+                        ? "(" + orderMetadata.codeDiscountPercent + "%)"
+                        : ""
+                    }}
+                    {{
+                      orderMetadata.appliedDiscountCode
+                        ? " (kod: " + orderMetadata.appliedDiscountCode + ")"
+                        : ""
+                    }}
+                  </div>
+                  <div>-{{ formatPrice(orderMetadata.couponDiscount) }} zł</div>
+                </div>
+              </template>
+
+              <!-- Shipping cost -->
+              <div class="flex justify-between items-center">
+                <div>Koszt wysyłki</div>
+                <div>
+                  {{ formatPrice(orderMetadata?.shippingCost || 0) }} zł
+                </div>
               </div>
 
               <div class="flex justify-between items-center pt-6 font-bold">
@@ -193,7 +225,22 @@ const formatPrice = (price: number) => {
   }).format(price);
 };
 
-// Używamy bezpośrednio wartości total i rabatu z orderMetadata, bez ponownego obliczania
+// Helper function to determine if we should use the new discount format
+const showNewDiscountFormat = computed(() => {
+  return (
+    orderMetadata.value?.appliedDiscountAmount !== undefined &&
+    orderMetadata.value?.appliedDiscountAmount > 0
+  );
+});
+
+// Helper function to get the discount type label
+function getDiscountTypeLabel() {
+  if (!orderMetadata.value?.appliedDiscountType) return "Rabat";
+
+  return orderMetadata.value.appliedDiscountType === "quantity"
+    ? "Rabat ilościowy"
+    : "Rabat dodatkowy";
+}
 
 console.log("Success page loaded");
 console.log("Route:", route.fullPath);

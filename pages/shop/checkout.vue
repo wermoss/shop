@@ -294,22 +294,20 @@
               <p class="text-right">0,00 zł</p>
             </div>
 
-            <!-- Cart Quantity Discount -->
-            <div v-if="cartStore.cartDiscount > 0" class="flex justify-between">
-              <p>Rabat ilościowy -{{ cartStore.cartDiscount }}%</p>
-              <p class="text-right">
-                - {{ formatPrice(cartStore.cartDiscountAmount) }}
-              </p>
-            </div>
-
-            <!-- Code Discount -->
+            <!-- Display only the higher discount -->
             <div
-              v-if="cartStore.codeDiscount > 0"
-              class="flex justify-between text-green-600"
+              v-if="cartStore.totalDiscount > 0"
+              class="flex justify-between"
             >
-              <p>Rabat z kodu -{{ cartStore.codeDiscount }}%</p>
+              <p>
+                {{
+                  cartStore.cartDiscount >= cartStore.codeDiscount
+                    ? `Rabat ilościowy -${cartStore.cartDiscount}%`
+                    : `Rabat dodatkowy -${cartStore.codeDiscount}%`
+                }}
+              </p>
               <p class="text-right">
-                - {{ formatPrice(cartStore.codeDiscountAmount) }}
+                - {{ formatPrice(cartStore.totalDiscountAmount) }}
               </p>
             </div>
 
@@ -545,10 +543,11 @@ const handlePayment = async () => {
       subtotal: cartStore.subtotalPrice,
       vatAmount: 0, // Placeholder, jeśli VAT nie jest jeszcze obliczony
       vatRate: 0, // Placeholder
-      quantityDiscount:
-        cartStore.cartDiscount > 0 ? cartStore.cartDiscountAmount : 0,
-      couponDiscount:
-        cartStore.codeDiscount > 0 ? cartStore.codeDiscountAmount : 0,
+      shippingCost: 0, // Koszt wysyłki (obecnie darmowa)
+      appliedDiscountType:
+        cartStore.cartDiscount >= cartStore.codeDiscount ? "quantity" : "code",
+      appliedDiscountPercent: cartStore.totalDiscount,
+      appliedDiscountAmount: cartStore.totalDiscountAmount,
       cartDiscountPercent: cartStore.cartDiscount,
       codeDiscountPercent: cartStore.codeDiscount,
       appliedDiscountCode: cartStore.appliedDiscountCode,
@@ -580,8 +579,12 @@ const handlePayment = async () => {
             orderNumber: responseData.orderNumber,
             items: cartItems.value,
             totalPrice: totalPrice.value,
-            cartDiscountPercent: cartStore.cartDiscount,
-            codeDiscountPercent: cartStore.codeDiscount,
+            appliedDiscountType:
+              cartStore.cartDiscount >= cartStore.codeDiscount
+                ? "ilościowy"
+                : "dodatkowy",
+            appliedDiscountPercent: cartStore.totalDiscount,
+            appliedDiscountAmount: cartStore.totalDiscountAmount,
             discountCode: cartStore.appliedDiscountCode,
             customerEmail: formData.value.email, // Upewnij się że to pole jest wypełnione
             customerName: formData.value.name,

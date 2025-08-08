@@ -59,7 +59,7 @@ export default defineNuxtConfig({
     useTestKeys: process.env.USE_TEST_KEYS === "true",
     brevo: {
       apiKey: process.env.BREVO_API_KEY,
-      adminEmail: process.env.ADMIN_EMAIL || "konrad@wooboo.pl",
+      adminEmail: process.env.ADMIN_EMAIL || "services@wooboo.pl",
     },
     stripeSecretKey:
       process.env.USE_TEST_KEYS === "true"

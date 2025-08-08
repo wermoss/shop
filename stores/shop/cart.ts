@@ -98,14 +98,15 @@ export const useCartStore = defineStore("cart", {
       return Math.round(amount * 100) / 100;
     },
 
-    // Łączna wartość rabatu
+    // Łączna wartość rabatu (stosujemy wyższy rabat)
     totalDiscountAmount(): number {
-      return this.cartDiscountAmount + this.codeDiscountAmount;
+      // Wybieramy wyższą wartość z dwóch rabatów
+      return Math.max(this.cartDiscountAmount, this.codeDiscountAmount);
     },
 
-    // Łączny procent rabatu (koszyk + kod)
+    // Łączny procent rabatu (stosujemy wyższy rabat)
     totalDiscount(): number {
-      return this.cartDiscount + this.codeDiscount;
+      return Math.max(this.cartDiscount, this.codeDiscount);
     },
 
     // Cena po rabacie
@@ -207,11 +208,34 @@ export const useCartStore = defineStore("cart", {
     // Zastosowanie kodu rabatowego
     applyDiscountCode() {
       if (this.discountCodeValid) {
+        // Znajdź kod rabatowy
+        const discountCodeObj = DISCOUNT_CODES.find(
+          (code) => code.code.toUpperCase() === this.discountCode?.toUpperCase()
+        );
+
+        // Sprawdź, czy rabat z kodu jest mniejszy lub równy rabatowi ilościowemu
+        if (discountCodeObj && discountCodeObj.discount <= this.cartDiscount) {
+          // Nie stosujemy kodu, tylko zwracamy informację
+          const message =
+            discountCodeObj.discount < this.cartDiscount
+              ? "Kod rabatowy daje mniejszą zniżkę niż aktualnie posiadasz"
+              : "Kod rabatowy daje taką samą zniżkę jak posiadasz";
+
+          // Resetujemy tymczasowy kod bez stosowania go
+          this.discountCode = null;
+          return {
+            success: false,
+            warning: true,
+            message: message,
+          };
+        }
+
+        // Normalnie zastosuj kod (tylko gdy daje większy rabat)
         this.appliedDiscountCode = this.discountCode;
         this.discountCode = null;
-        return true;
+        return { success: true, warning: false };
       }
-      return false;
+      return { success: false };
     },
 
     // Usunięcie zastosowanego kodu rabatowego

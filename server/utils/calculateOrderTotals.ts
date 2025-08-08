@@ -84,8 +84,8 @@ export function calculateOrderTotals(
       ? Math.round(subtotalAmount * (codeDiscountPercent / 100))
       : 0;
 
-  // Total discount is the sum of the two, but ensure it doesn't exceed subtotal
-  let totalDiscountAmount = cartDiscountAmount + codeDiscountAmount;
+  // Apply the higher discount of the two (not combined)
+  let totalDiscountAmount = Math.max(cartDiscountAmount, codeDiscountAmount);
   if (totalDiscountAmount > subtotalAmount) {
     totalDiscountAmount = subtotalAmount;
   }

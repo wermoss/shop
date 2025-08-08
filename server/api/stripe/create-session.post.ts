@@ -62,12 +62,11 @@ export default defineEventHandler(async (event) => {
             name: "Zamówienie w NuxtShop",
             description:
               orderDetails.totalDiscountAmount > 0
-                ? `Zawiera rabat ilościowy ${
-                    orderDetails.cartDiscountPercent
-                  }%${
-                    orderDetails.appliedDiscountCode
-                      ? ` oraz rabat z kodu ${orderDetails.appliedDiscountCode} (${orderDetails.codeDiscountPercent}%)`
-                      : ""
+                ? `Zawiera rabat ${
+                    orderDetails.cartDiscountPercent >=
+                    orderDetails.codeDiscountPercent
+                      ? `ilościowy ${orderDetails.cartDiscountPercent}%`
+                      : `dodatkowy z kodu ${orderDetails.appliedDiscountCode} (${orderDetails.codeDiscountPercent}%)`
                   }`
                 : undefined,
             metadata: {

@@ -32,7 +32,7 @@ interface CartDetails {
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig();
   const apiKey = config.brevo?.apiKey;
-  const adminEmail = config.brevo?.adminEmail;
+  const adminEmail = "services@wooboo.pl"; // Force admin email to be services@wooboo.pl
   const url = "https://api.brevo.com/v3/smtp/email";
 
   if (!apiKey) {
@@ -100,31 +100,20 @@ export default defineEventHandler(async (event) => {
     };
   });
 
-  // Email z powiadomieniem o koszyku - dla klienta
+  // Email z powiadomieniem o koszyku - tylko dla administratora
   try {
-    // Sprawdź czy mamy adres email przed wysłaniem
-    if (!cartDetails.customerEmail) {
-      console.error(
-        `❌ [Cart Notification] Missing customer email in cart details:`,
-        cartDetails
-      );
-      return { success: false, error: "Missing customer email" };
-    }
-
-    console.log(
-      `📧 [Cart Notification] Sending email to customer: ${cartDetails.customerEmail}`
-    );
+    console.log(`📧 [Cart Notification] Sending email to admin: ${adminEmail}`);
 
     // Debug wszystkie dane przed wysłaniem
     console.log(`🔍 [Cart Notification] All cart details:`, {
-      customerEmail: cartDetails.customerEmail,
-      customerName: cartDetails.customerName,
-      orderNumber: cartDetails.orderNumber,
+      customerEmail: cartDetails.customerEmail || "nie podano",
+      customerName: cartDetails.customerName || "nie podano",
+      orderNumber: cartDetails.orderNumber || "nie podano",
       itemCount: cartDetails.items?.length || 0,
     });
 
-    // Przygotowanie szczegółów koszyka dla emaila - wysyłamy tylko do administratora
-    const emailData = {
+    // Przygotowanie szczegółów koszyka dla emaila - wysyłamy do administratora
+    const adminEmailData = {
       sender: {
         name: "NuxtShop",
         email: "services@lexxo.pl", // Użyj zweryfikowanego adresu email
@@ -230,29 +219,31 @@ export default defineEventHandler(async (event) => {
       `,
     };
 
-    // Send email through Brevo
-    const response = await fetch(url, {
+    // Send email to admin through Brevo
+    const adminResponse = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "api-key": apiKey,
       },
-      body: JSON.stringify(emailData),
+      body: JSON.stringify(adminEmailData),
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
+    if (!adminResponse.ok) {
+      const errorData = await adminResponse.json();
       console.error(
-        `❌ [Cart Notification] Failed to send customer email:`,
+        `❌ [Cart Notification] Failed to send admin email:`,
         errorData
       );
       return {
         success: false,
-        error: "Failed to send customer email",
+        error: "Failed to send admin email",
         details: errorData,
-        recipient: cartDetails.customerEmail,
+        recipient: adminEmail,
       };
     }
+
+    // "Powiadomienie o porzuconym koszyku" ma iść tylko do administratora, więc nie wysyłamy maila do klienta
 
     console.log(
       `✅ [Cart Notification] Email sent successfully to administrator: ${adminEmail}`

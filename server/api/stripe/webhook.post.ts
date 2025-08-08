@@ -190,16 +190,33 @@ export default defineEventHandler(async (event) => {
         finalAmount,
       });
 
-      const emailResponse = await $fetch("/api/mail/order-confirmation", {
-        method: "POST",
-        body: {
-          customerEmail: session.metadata?.customerEmail,
-          orderDetails: orderDetailsForEmail,
-        },
-      });
+      console.log(
+        `📧 [Webhook] Attempting to send order confirmation email to ${session.metadata?.customerEmail}`
+      );
 
-      if (!emailResponse.success) {
-        throw new Error("Failed to send order confirmation email");
+      try {
+        const emailResponse = await $fetch("/api/mail/order-confirmation", {
+          method: "POST",
+          body: {
+            customerEmail: session.metadata?.customerEmail,
+            orderDetails: orderDetailsForEmail,
+          },
+        });
+
+        console.log(`📧 [Webhook] Email API response:`, emailResponse);
+
+        if (!emailResponse.success) {
+          console.error(
+            `❌ [Webhook] Email API reported failure:`,
+            emailResponse
+          );
+          throw new Error("Failed to send order confirmation email");
+        }
+
+        console.log(`✅ [Webhook] Order confirmation email sent successfully`);
+      } catch (error) {
+        console.error(`❌ [Webhook] Error calling email API:`, error);
+        throw error;
       }
 
       // Zawsze oznacz sesję jako obsłużoną

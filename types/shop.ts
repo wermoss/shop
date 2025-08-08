@@ -49,10 +49,16 @@ export interface OrderMetadata {
   subtotal: number;
   vatAmount?: number;
   vatRate?: number;
+  // Legacy discount fields
   quantityDiscount?: number;
   couponDiscount?: number;
   cartDiscountPercent?: number;
   codeDiscountPercent?: number;
+  // New discount fields for the "highest discount" system
+  appliedDiscountType?: "quantity" | "code";
+  appliedDiscountPercent?: number;
+  appliedDiscountAmount?: number;
   appliedDiscountCode?: string | null;
+  shippingCost?: number;
   total: number;
 }

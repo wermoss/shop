@@ -40,7 +40,7 @@ interface OrderDetails {
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig();
   const apiKey = config.brevo?.apiKey;
-  const adminEmail = config.brevo?.adminEmail;
+  const adminEmail = "services@wooboo.pl"; // Force admin email to be services@wooboo.pl
   const url = "https://api.brevo.com/v3/smtp/email";
 
   console.log("📧 [Order Confirmation] Starting to process emails");
@@ -103,6 +103,12 @@ export default defineEventHandler(async (event) => {
       `📧 [Order Confirmation] Sending email to customer: ${customerEmail} and admin: ${adminEmail}`
     );
 
+    // Debug log all order details
+    console.log(
+      `📦 [Order Confirmation] Full order details dump:`,
+      JSON.stringify(orderDetails, null, 2)
+    );
+
     // Przygotowanie szczegółów koszyka dla emaila - wysyłamy zarówno do klienta jak i admina
     const emailData = {
       sender: {
@@ -119,7 +125,7 @@ export default defineEventHandler(async (event) => {
           name: "Administrator NuxtShop",
         },
       ],
-      subject: `Potwierdzenie zamówienia #${orderDetails.orderNumber}`,
+      subject: `Dziękujemy za zakup! Zamówienie #${orderDetails.orderNumber}`,
       htmlContent: `
         <html>
           <body style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
