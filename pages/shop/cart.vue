@@ -173,6 +173,48 @@
                 </div>
               </button>
             </div>
+
+            <!-- Discount Code Input -->
+            <div
+              v-if="cartItems.length > 0"
+              class="mt-6 border-t border-gray-300 pt-6"
+            >
+              <!-- Show input when no discount code is applied -->
+              <div v-if="!cartStore.appliedDiscountCode">
+                <div class="flex flex-col lg:flex-row lg:items-center gap-4">
+                  <div class="flex flex-1">
+                    <input
+                      type="text"
+                      v-model="discountCode"
+                      placeholder="Wpisz kod rabatowy"
+                      class="px-4 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-1 focus:ring-black w-full"
+                    />
+                    <button
+                      @click="applyDiscountCode"
+                      class="px-4 py-2 bg-black text-white rounded-r-md hover:opacity-90"
+                      :disabled="!discountCode.trim()"
+                    >
+                      Zastosuj
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Show only removal option when code is applied -->
+              <div v-else class="flex items-center justify-end">
+                <button
+                  @click="removeDiscountCode"
+                  class="text-sm text-gray-600 hover:text-black underline"
+                >
+                  Usuń kod rabatowy
+                </button>
+              </div>
+
+              <!-- Show only error messages -->
+              <p v-if="codeMessage && !codeSuccess" class="mt-2 text-red-500">
+                {{ codeMessage }}
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -205,11 +247,8 @@
               </p>
             </div>
             <!-- Code Discount -->
-            <div
-              v-if="cartStore.codeDiscount > 0"
-              class="flex justify-between text-green-600"
-            >
-              <p>Rabat z kodu -{{ cartStore.codeDiscount }}%</p>
+            <div v-if="cartStore.codeDiscount > 0" class="flex justify-between">
+              <p>Rabat dodatkowy -{{ cartStore.codeDiscount }}%</p>
               <p class="text-right">
                 - {{ cartStore.codeDiscountAmount.toFixed(2) }} zł
               </p>
@@ -284,8 +323,40 @@ import { useProductsStore } from "~/stores/shop/products";
 const cartStore = useCartStore();
 const productsStore = useProductsStore();
 
-// Reference for toggling discount code input visibility
-const showDiscountCodeInput = ref(false);
+// Discount code handling
+const discountCode = ref("");
+const codeMessage = ref("");
+const codeSuccess = ref(false);
+
+// Apply discount code function
+function applyDiscountCode() {
+  if (!discountCode.value.trim()) return;
+
+  // Set the discount code in the cart store
+  cartStore.setDiscountCode(discountCode.value);
+
+  // Try to apply the discount code
+  const result = cartStore.applyDiscountCode();
+
+  if (result) {
+    // Just clear the input after successful application
+    discountCode.value = "";
+  } else {
+    // Only show error message for invalid codes
+    codeSuccess.value = false;
+    codeMessage.value = "Nieprawidłowy kod rabatowy";
+
+    // Clear the error message after 5 seconds
+    setTimeout(() => {
+      codeMessage.value = "";
+    }, 5000);
+  }
+}
+
+// Remove discount code function
+function removeDiscountCode() {
+  cartStore.removeDiscountCode();
+}
 
 const cartItems = computed(() => cartStore.itemsWithDiscounts);
 const cartDiscountTiers = CART_DISCOUNT_TIERS.sort(
