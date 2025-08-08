@@ -60,7 +60,7 @@
                   v-if="
                     item.product?.features && item.product.features.length > 0
                   "
-                  class="flex flex-wrap gap-2 my-1"
+                  class="flex flex-wrap gap-2 my-2"
                 >
                   <div
                     v-for="feature in item.product.features"
@@ -80,34 +80,34 @@
                     <!-- Show color circle if colorCode exists -->
                   </div>
                 </div>
-                <div class="mt-1 flex items-center">
-                  <!-- Original price when there's a discount -->
-                  <p
-                    v-if="getTotalDiscount > 0"
-                    class="text-gray-400 line-through mr-4"
-                  >
-                    {{ item.product?.price.toFixed(2) }} zł
-                  </p>
-
+                <div class="mt-2 flex items-center">
                   <!-- Discounted price or regular price -->
                   <p class="text-gray-800 font-semibold flex items-center">
-                    <template v-if="getTotalDiscount > 0">
-                      <span
-                        class="bg-black text-white px-1 py-0.5 text-xs rounded mr-1"
-                        >-{{ getTotalDiscount }}%</span
+                    <transition name="discount-badge" mode="out-in">
+                      <div
+                        :key="getTotalDiscount || 'regular'"
+                        class="flex items-center"
                       >
-                      {{ calculateDiscountedUnitPrice(item).toFixed(2) }} zł
-                    </template>
-                    <template v-else>
-                      {{ item.product?.price.toFixed(2) }} zł
-                    </template>
+                        <template v-if="getTotalDiscount > 0">
+                          <span
+                            class="bg-black text-white px-2 py-1 text-xs rounded mr-1"
+                          >
+                            -{{ getTotalDiscount }}%
+                          </span>
+                          {{ calculateDiscountedUnitPrice(item).toFixed(2) }} zł
+                        </template>
+                        <template v-else>
+                          {{ item.product?.price.toFixed(2) }} zł
+                        </template>
+                      </div>
+                    </transition>
                   </p>
                 </div>
               </div>
 
               <!-- Ilość produktu -->
               <div class="inline-block w-1/2 lg:w-32 text-sm text-left">
-                <div class="flex items-center mt-2">
+                <div class="flex items-center mt-6">
                   <button
                     @click="cartStore.decrementQuantity(item.id)"
                     :disabled="!cartStore.canDecreaseQuantity(item.id)"
@@ -163,12 +163,12 @@
                 class="absolute lg:static top-6 right-0"
               >
                 <div
-                  class="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-400 transition-colors"
+                  class="w-6 h-6 bg-gray-250 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-400 transition-colors"
                 >
                   <img
                     src="/icons/close.svg"
                     alt="Usuń produkt"
-                    class="w-3 h-3"
+                    class="w-4 h-4"
                   />
                 </div>
               </button>
@@ -369,5 +369,16 @@ onMounted(() => {
   #layout-container {
     min-height: 100vh;
   }
+}
+
+/* Animation for discount badge */
+.discount-badge-enter-active,
+.discount-badge-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.discount-badge-enter-from,
+.discount-badge-leave-to {
+  opacity: 0;
 }
 </style>
