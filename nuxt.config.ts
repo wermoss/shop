@@ -9,7 +9,9 @@ export default defineNuxtConfig({
   },
 
   app: {
-    layoutTransition: { name: "layout", mode: "out-in" },
+    layoutTransition: false, // Wyłączamy domyślne przejścia layoutów, które mogą powodować problemy
+    pageTransition: false, // Wyłączamy domyślne przejścia stron
+    keepalive: false, // Wyłączamy keepalive, aby strony były zawsze na nowo renderowane
   },
 
   css: ["~/assets/css/hamburgers.css", "mapbox-gl/dist/mapbox-gl.css"],

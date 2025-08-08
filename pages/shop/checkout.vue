@@ -340,7 +340,7 @@
 <script setup lang="ts">
 definePageMeta({
   middleware: ["check-cart"],
-  layout: "laytest",
+  layout: "layout-checkout",
 });
 
 import { useCartStore } from "~/stores/shop/cart";

@@ -319,7 +319,7 @@
 
 <script setup lang="ts">
 definePageMeta({
-  layout: "clean",
+  layout: "layout-cart",
 });
 
 import { useCartStore, CART_DISCOUNT_TIERS } from "~/stores/shop/cart";
