@@ -1,11 +1,15 @@
 <template>
   <div class="absolute w-full z-20 bg-white lg:bg-transparent">
     <div
-      class="container mx-auto flex justify-between items-center h-[60px] px-10"
+      class="container mx-auto flex justify-between items-center h-[60px] px-8"
     >
-      <p class="font-bold text-3xl">wermoss</p>
-      <nuxt-link to="/shop/cart" class="text-black text-lg"
-        >Wróć do koszyk</nuxt-link
+      <NuxtLink to="/main" class="font-bold text-3xl">wermoss</NuxtLink>
+      <NuxtLink to="/shop/cart" class="text-black text-sm"
+        ><img
+          src="/icons/back.svg"
+          alt="Wróć do sklepu"
+          class="inline-block mr-2 w-6 h-6"
+        />Wróć do koszyka</NuxtLink
       >
     </div>
   </div>
@@ -18,6 +22,8 @@
 </template>
 
 <script setup lang="ts">
+import { NuxtLink } from "#components";
+
 // Ten layout nie zawiera headera ani innych elementów wspólnych
 // Służy do wyświetlania stron, które potrzebują "czystego" widoku
 </script>

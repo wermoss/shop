@@ -3,9 +3,13 @@
     <div
       class="container mx-auto flex justify-between items-center h-[60px] px-8"
     >
-      <p class="font-bold text-3xl">wermoss</p>
-      <nuxt-link to="/shop" class="text-black text-lg"
-        >Wróć do sklepu</nuxt-link
+      <NuxtLink to="/main" class="font-bold text-3xl">wermoss</NuxtLink>
+      <NuxtLink to="/shop" class="text-black text-sm"
+        ><img
+          src="/icons/back.svg"
+          alt="Wróć do sklepu"
+          class="inline-block mr-2 w-4 h-4"
+        />Wróć do sklepu</NuxtLink
       >
     </div>
   </div>
@@ -18,6 +22,8 @@
 </template>
 
 <script setup lang="ts">
+import { NuxtLink } from "#components";
+
 // Ten layout nie zawiera headera ani innych elementów wspólnych
 // Służy do wyświetlania stron, które potrzebują "czystego" widoku
 </script>

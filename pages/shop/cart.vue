@@ -25,14 +25,13 @@
 
     <!-- Content -->
     <div class="container mx-auto relative z-10 pt-[60px]">
-      <!-- Logo and Title -->
       <div class="grid grid-cols-12">
-        <!-- Formularz zamówienia - Start -->
+        <!-- Lewa kolumna: lista produktów -->
         <div
           class="col-span-12 lg:col-span-8 bg-[#EBEBEB] py-6"
-          id="left-columm"
+          id="left-column"
         >
-          <div class="py-6 tracking-wider px-8">
+          <div v-if="cartItems.length > 0" class="py-6 tracking-wider px-8">
             <!-- Uproszczony układ wykorzystujący tylko Tailwind CSS -->
             <div
               v-for="(item, index) in cartItems"
@@ -181,8 +180,10 @@
             >
               <!-- Show input when no discount code is applied -->
               <div v-if="!cartStore.appliedDiscountCode">
-                <div class="flex flex-col lg:flex-row lg:items-center gap-4">
-                  <div class="flex flex-1">
+                <div
+                  class="flex flex-col lg:flex-row lg:items-center lg:justify-end gap-4"
+                >
+                  <div class="flex flex-1 md:max-w-md">
                     <input
                       type="text"
                       v-model="discountCode"
@@ -191,8 +192,13 @@
                     />
                     <button
                       @click="applyDiscountCode"
-                      class="px-4 py-2 bg-black text-white rounded-r-md hover:opacity-90"
-                      :disabled="!discountCode.trim()"
+                      :class="[
+                        'px-4 py-2 rounded-r-md',
+                        discountCode.trim().length >= 2
+                          ? 'bg-black text-white hover:opacity-90 cursor-pointer'
+                          : 'bg-gray-400 text-gray-200 cursor-not-allowed',
+                      ]"
+                      :disabled="discountCode.trim().length < 2"
                     >
                       Zastosuj
                     </button>
@@ -204,7 +210,7 @@
               <div v-else class="flex items-center justify-end">
                 <button
                   @click="removeDiscountCode"
-                  class="text-sm text-gray-600 hover:text-black underline"
+                  class="text-sm text-gray-600 hover:text-black underline cursor-pointer"
                 >
                   Usuń kod rabatowy
                 </button>
@@ -221,63 +227,75 @@
             </div>
           </div>
         </div>
-      </div>
 
-      <div v-if="cartItems.length > 0" class="grid grid-cols-12">
+        <!-- Prawa kolumna: podsumowanie -->
         <div class="col-span-12 lg:col-span-4 bg-white p-10">
           <p class="text-2xl tracking-wider">Podsumowanie</p>
           <div
             class="space-y-3 border-b border-t border-gray-200 my-6 py-6 tracking-wider"
           >
-            <div class="flex justify-between">
-              <p>Liczba produktów</p>
-              <p class="text-right">{{ cartStore.totalQuantity }} szt.</p>
-            </div>
-            <div class="flex justify-between">
-              <p>Wartość produktów</p>
-              <p class="text-right">
-                {{ cartStore.subtotalPrice.toFixed(2) }} zł
-              </p>
-            </div>
-            <div class="flex justify-between">
-              <p>Wartość VAT</p>
-              <p class="text-right">0,00 zł</p>
-            </div>
-            <!-- Display only the higher discount -->
             <div
-              v-if="cartStore.totalDiscount > 0"
-              class="flex justify-between"
+              v-if="cartItems.length === 0"
+              class="flex flex-col items-center"
             >
-              <p>
-                {{
-                  cartStore.cartDiscount >= cartStore.codeDiscount
-                    ? `Rabat ilościowy -${cartStore.cartDiscount}%`
-                    : `Rabat dodatkowy -${cartStore.codeDiscount}%`
-                }}
-              </p>
-              <p class="text-right">
-                - {{ cartStore.totalDiscountAmount.toFixed(2) }} zł
-              </p>
+              <p class="text-gray-500 italic mb-4">Koszyk jest pusty</p>
             </div>
-            <div class="flex justify-between">
-              <p>Koszt wysyłki</p>
-              <p class="text-right">0,00 zł</p>
+            <div v-else>
+              <div class="flex justify-between">
+                <p>Liczba produktów</p>
+                <p class="text-right">{{ cartStore.totalQuantity }} szt.</p>
+              </div>
+              <div class="flex justify-between">
+                <p>Wartość produktów</p>
+                <p class="text-right">
+                  {{ cartStore.subtotalPrice.toFixed(2) }} zł
+                </p>
+              </div>
+              <div class="flex justify-between">
+                <p>Wartość VAT</p>
+                <p class="text-right">0,00 zł</p>
+              </div>
+              <!-- Display only the higher discount -->
+              <div
+                v-if="cartStore.totalDiscount > 0"
+                class="flex justify-between"
+              >
+                <p>
+                  {{
+                    cartStore.cartDiscount >= cartStore.codeDiscount
+                      ? `Rabat ilościowy -${cartStore.cartDiscount}%`
+                      : `Rabat dodatkowy -${cartStore.codeDiscount}%`
+                  }}
+                </p>
+                <p class="text-right">
+                  - {{ cartStore.totalDiscountAmount.toFixed(2) }} zł
+                </p>
+              </div>
+              <div class="flex justify-between">
+                <p>Koszt wysyłki</p>
+                <p class="text-right">0,00 zł</p>
+              </div>
             </div>
+            <div
+              v-if="cartItems.length > 0"
+              class="flex justify-between text-2xl tracking-wider"
+            >
+              <p>Suma</p>
+              <p class="text-right">{{ cartStore.totalPrice.toFixed(2) }} zł</p>
+            </div>
+            <NuxtLink
+              v-if="cartItems.length > 0"
+              to="/shop/checkout"
+              class="block w-full bg-black text-white py-4 rounded-full hover:opacity-100 opacity-90 transition-all mt-16 cursor-pointer text-center"
+            >
+              Przejdź do zamówienia
+            </NuxtLink>
           </div>
-          <div class="flex justify-between text-2xl tracking-wider">
-            <p>Suma</p>
-            <p class="text-right">{{ cartStore.totalPrice.toFixed(2) }} zł</p>
-          </div>
-          <NuxtLink
-            to="/shop/checkout"
-            class="block w-full bg-black text-white py-4 rounded-full hover:opacity-100 opacity-90 transition-all mt-16 cursor-pointer text-center"
-          >
-            Przejdź do zamówienia
-          </NuxtLink>
         </div>
       </div>
 
-      <div v-else class="grid grid-cols-12">
+      <!-- Empty cart state -->
+      <div v-if="cartItems.length === 0" class="grid grid-cols-12">
         <div
           class="col-span-12 lg:col-span-8 bg-[#EBEBEB] p-10 flex flex-col items-center justify-center min-h-[50vh]"
         >
@@ -336,10 +354,11 @@ const codeSuccess = ref(false);
 
 // Apply discount code function
 function applyDiscountCode() {
-  if (!discountCode.value.trim()) return;
+  const trimmedCode = discountCode.value.trim();
+  if (!trimmedCode || trimmedCode.length < 2) return;
 
   // Set the discount code in the cart store
-  cartStore.setDiscountCode(discountCode.value);
+  cartStore.setDiscountCode(trimmedCode);
 
   // Try to apply the discount code
   const result = cartStore.applyDiscountCode();
