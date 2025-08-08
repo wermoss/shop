@@ -1,6 +1,16 @@
-# Nuxt Minimal Starter
+# NuxtShop
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+A Nuxt.js e-commerce application with Stripe integration and email notifications.
+
+## Features
+
+- Product catalog
+- Shopping cart
+- Stripe checkout integration
+- Order confirmation emails
+- Cart abandonment notifications
+- Discount codes
+- World sales map
 
 ## Setup
 
@@ -15,9 +25,17 @@ pnpm install
 
 # yarn
 yarn install
+```
 
-# bun
-bun install
+### Environment Variables
+
+Create a `.env` file in the root directory with the following variables:
+
+```
+NUXT_STRIPE_SECRET_KEY=sk_test_...
+NUXT_STRIPE_PUBLIC_KEY=pk_test_...
+NUXT_STRIPE_WEBHOOK_SECRET=whsec_...
+NUXT_BREVO_API_KEY=xkeysib-...
 ```
 
 ## Development Server
@@ -33,9 +51,14 @@ pnpm dev
 
 # yarn
 yarn dev
+```
 
-# bun
-bun run dev
+### Stripe Webhook Setup for Local Development
+
+For testing Stripe webhooks locally, follow the instructions in [STRIPE-WEBHOOK-SETUP.md](STRIPE-WEBHOOK-SETUP.md) or use the provided helper script:
+
+```bash
+./stripe-webhook-test.sh
 ```
 
 ## Production

@@ -80,24 +80,49 @@ export default defineEventHandler(async (event) => {
       },
     ];
 
-    // Przygotuj skrócone dane produktów dla metadanych - zredukowane do minimum, aby zmieścić się w limicie 500 znaków
+    // Przygotuj dane produktów dla metadanych - potrzebujemy pełnych informacji dla emaila
     const productsWithDetails = orderDetails.productsWithCalculatedPrices.map(
       (p) => ({
         id: p.id,
-        qty: p.quantity,
-        // Eliminujemy większość pól, aby zmieścić się w limicie metadanych Stripe (500 znaków)
+        name: p.name,
+        price: p.price,
+        quantity: p.quantity,
+        lineItemTotalPrice: p.lineItemTotalPrice,
+        discountAppliedToLineItem: p.discountAppliedToLineItem,
+        lineItemTotalPriceWithDiscount: p.lineItemTotalPriceWithDiscount,
+        image: p.image,
       })
     );
 
-    // Zapisz tylko najważniejsze informacje w metadanych (limit 500 znaków)
+    // Zapisz wszystkie informacje potrzebne do emaila potwierdzenia zamówienia
     const metadata = {
       orderNumber,
+      customerName: customer.name,
       customerEmail: customer.email,
+      customerPhone: customer.phone || "",
 
-      // Minimalna ilość danych o zamówieniu
-      total: orderDetails.finalAmount.toString(),
-      discount: orderDetails.totalDiscountAmount.toString(),
-      items: JSON.stringify(productsWithDetails),
+      // Dane adresowe
+      shippingStreet: customer.address?.street || "",
+      shippingHouseNumber: customer.address?.houseNumber || "",
+      shippingPostalCode: customer.address?.postalCode || "",
+      shippingCity: customer.address?.city || "",
+      shippingCountry: customer.address?.country || "",
+
+      // Dane finansowe
+      subtotalAmount: orderDetails.subtotalAmount.toString(),
+      cartDiscountPercent: orderDetails.cartDiscountPercent.toString(),
+      cartDiscountAmount: orderDetails.cartDiscountAmount.toString(),
+      codeDiscountPercent: orderDetails.codeDiscountPercent.toString(),
+      codeDiscountAmount: orderDetails.codeDiscountAmount.toString(),
+      totalDiscountAmount: orderDetails.totalDiscountAmount.toString(),
+      appliedDiscountCode: orderDetails.appliedDiscountCode || "",
+      finalAmount: orderDetails.finalAmount.toString(),
+
+      // Dane produktów - zapisujemy jako JSON string
+      products: JSON.stringify(productsWithDetails),
+
+      // Flaga określająca czy email został już wysłany (używana przez webhook)
+      emailSent: "false",
     };
 
     // Podstawowa konfiguracja sesji
