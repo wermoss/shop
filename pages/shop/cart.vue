@@ -65,7 +65,7 @@
                   <div
                     v-for="feature in item.product.features"
                     :key="feature.name"
-                    class="text-md flex items-center"
+                    class="text-sm flex items-center"
                   >
                     <span class="font-medium text-gray-600"
                       >{{ feature.name }}:</span
@@ -160,13 +160,17 @@
               <!-- Przycisk usunięcia -->
               <button
                 @click="cartStore.removeFromCart(item.id)"
-                class="absolute lg:static top-6 right-0 lg:flex w-8 h-8 items-center justify-center text-center bg-gray-300 rounded-full cursor-pointer"
+                class="absolute lg:static top-6 right-0"
               >
-                <img
-                  src="/icons/close.svg"
-                  alt="Usuń produkt"
-                  class="w-4 h-4"
-                />
+                <div
+                  class="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-400 transition-colors"
+                >
+                  <img
+                    src="/icons/close.svg"
+                    alt="Usuń produkt"
+                    class="w-3 h-3"
+                  />
+                </div>
               </button>
             </div>
           </div>
