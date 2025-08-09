@@ -1,0 +1,21 @@
+import { defineEventHandler } from "h3";
+
+/**
+ * Endpoint diagnostyczny do przechwytywania wszystkich żądań HTTP
+ * i zapisywania ich do logów - może pomóc w debugowaniu problemów z webhookami
+ */
+export default defineEventHandler(async (event) => {
+  const method = event.node.req.method;
+  const url = event.node.req.url;
+  const headers = event.node.req.headers;
+  
+  console.log(`🔍 [HTTP Debug] ${method} ${url}`);
+  console.log(`🔍 [HTTP Debug] Headers:`, headers);
+  
+  // Zezwalamy na wszystkie żądania, ale je logujemy
+  return {
+    success: true,
+    message: "Request logged for debugging purposes",
+    timestamp: new Date().toISOString()
+  };
+});

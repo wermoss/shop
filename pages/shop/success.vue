@@ -287,7 +287,7 @@ const verifyOrderSignature = async () => {
 };
 
 onMounted(async () => {
-  console.log("Success page mounted");
+  console.log("🔔 [Success Page] Success page mounted");
   cartStore.clearCart();
 
   // Najpierw weryfikujemy podpis URL na serwerze
@@ -298,11 +298,248 @@ onMounted(async () => {
     // Tutaj możemy pobrać dane zamówienia z sessionStorage lub z serwera
     const storedData = sessionStorage.getItem(`order_${orderNumber.value}`);
 
+    console.log(
+      `🔍 [Success Page] Checking sessionStorage for order_${orderNumber.value}`
+    );
+    console.log(
+      `📦 [Success Page] Data found in sessionStorage: ${!!storedData}`
+    );
+
     if (storedData) {
       try {
         const parsedData = JSON.parse(storedData);
         orderMetadata.value = parsedData;
-        console.log("Sparsowane dane zamówienia:", parsedData);
+        console.log(
+          "📦 [Success Page] Sparsowane dane zamówienia:",
+          parsedData
+        );
+        console.log(
+          `📦 [Success Page] Influencer email in data: ${
+            parsedData.influencerEmail || "NOT FOUND"
+          }`
+        );
+        console.log(
+          `📦 [Success Page] Applied discount code: ${
+            parsedData.appliedDiscountCode || "NONE"
+          }`
+        );
+        console.log(
+          `📦 [Success Page] Code discount percent: ${
+            parsedData.codeDiscountPercent || 0
+          }%`
+        );
+
+        // Jeśli mamy dane influencera, wyślij powiadomienie
+        if (
+          parsedData.influencerEmail &&
+          parsedData.influencerEmail.trim() !== ""
+        ) {
+          console.log(
+            `� [Success Page] Detected influencer email: ${parsedData.influencerEmail}, sending notification`
+          );
+
+          // Przygotuj dane dla API powiadomienia
+          const completePayload = {
+            influencerEmail: parsedData.influencerEmail,
+            orderDetails: {
+              customerName: parsedData.customerName,
+              customerEmail: parsedData.customerEmail,
+              orderNumber: parsedData.orderNumber,
+              appliedDiscountCode: parsedData.appliedDiscountCode || "",
+              // Przygotuj dane produktów w oczekiwanym formacie
+              items: parsedData.products
+                ? JSON.parse(parsedData.products).map((item: any) => {
+                    // Obsługa zarówno skompresowanego jak i pełnego formatu danych produktu
+                    const isCompressed = item.n !== undefined;
+                    return {
+                      product: {
+                        id: item.id || 0,
+                        name: isCompressed ? item.n : item.name,
+                        price: isCompressed ? item.p : item.price,
+                        image: item.image || "",
+                        description: "",
+                      },
+                      quantity: isCompressed ? item.q : item.quantity,
+                    };
+                  })
+                : [],
+              subtotalAmount: parseFloat(parsedData.subtotalAmount),
+              finalAmount: parseFloat(parsedData.finalAmount),
+              codeDiscountPercent: parseFloat(parsedData.codeDiscountPercent),
+            },
+          };
+
+          console.log(
+            `� [Success Page] Sending notification payload:`,
+            JSON.stringify(completePayload, null, 2)
+          );
+
+          // Spróbujmy wysłać maila na dwa sposoby - bezpośrednio do influencera i przez order-confirmation
+
+          try {
+            // 1. Wywołaj API do bezpośredniego wysłania powiadomienia do influencera
+            console.log(
+              `🚨 [Success Page] Method 1: Sending direct notification to influencer`
+            );
+            const notificationResult = await $fetch(
+              "/api/mail/influencer-notification",
+              {
+                method: "POST",
+                body: completePayload,
+                timeout: 30000,
+              }
+            );
+
+            console.log(
+              `� [Success Page] Direct notification result:`,
+              JSON.stringify(notificationResult, null, 2)
+            );
+
+            if (notificationResult.success) {
+              console.log(
+                `✅ [Success Page] Influencer direct notification sent successfully`
+              );
+            } else {
+              console.error(
+                `❌ [Success Page] Failed to send influencer direct notification`
+              );
+              // TypeScript-bezpieczny sposób sprawdzania błędu
+              console.error(
+                `❌ [Success Page] Error details:`,
+                JSON.stringify(notificationResult)
+              );
+            }
+          } catch (notificationError: any) {
+            console.error(
+              `❌ [Success Page] Error calling direct notification API:`,
+              notificationError
+            );
+            console.error(`❌ [Success Page] Error details:`, {
+              message: notificationError.message || "Unknown error",
+              name: notificationError.name,
+              stack: notificationError.stack,
+            });
+          }
+
+          // 2. Wywołaj API order-confirmation jako zapasowy mechanizm
+          try {
+            console.log(
+              `🚨 [Success Page] Method 2: Sending notification via order-confirmation endpoint`
+            );
+
+            // Przygotuj payload dla order-confirmation
+            const orderConfirmationPayload = {
+              customerEmail: parsedData.customerEmail,
+              influencerEmail: parsedData.influencerEmail,
+              orderDetails: {
+                orderNumber: parsedData.orderNumber,
+                customerName: parsedData.customerName,
+                customerEmail: parsedData.customerEmail,
+                customerPhone: parsedData.customerPhone || "",
+                shippingAddress: {
+                  street: parsedData.shippingStreet || "",
+                  houseNumber: parsedData.shippingHouseNumber || "",
+                  postalCode: parsedData.shippingPostalCode || "",
+                  city: parsedData.shippingCity || "",
+                  country: parsedData.shippingCountry || "",
+                },
+                subtotalAmount: parseFloat(parsedData.subtotalAmount),
+                cartDiscountPercent: parseFloat(
+                  parsedData.cartDiscountPercent || "0"
+                ),
+                cartDiscountAmount: parseFloat(
+                  parsedData.cartDiscountAmount || "0"
+                ),
+                codeDiscountPercent: parseFloat(
+                  parsedData.codeDiscountPercent || "0"
+                ),
+                codeDiscountAmount: parseFloat(
+                  parsedData.codeDiscountAmount || "0"
+                ),
+                totalDiscountAmount: parseFloat(
+                  parsedData.totalDiscountAmount || "0"
+                ),
+                appliedDiscountCode: parsedData.appliedDiscountCode || "",
+                amount: parseFloat(parsedData.finalAmount),
+                items: parsedData.products
+                  ? JSON.parse(parsedData.products).map((item: any) => {
+                      const isCompressed = item.n !== undefined;
+                      return {
+                        name: isCompressed ? item.n : item.name,
+                        quantity: isCompressed ? item.q : item.quantity,
+                        unitPrice: isCompressed ? item.p : item.price,
+                        totalPrice:
+                          (isCompressed ? item.p : item.price) *
+                          (isCompressed ? item.q : item.quantity),
+                        priceWithDiscount: isCompressed
+                          ? item.f
+                          : item.lineItemTotalPriceWithDiscount || 0,
+                        discountAmount: isCompressed
+                          ? item.d
+                          : item.discountAppliedToLineItem || 0,
+                        image: item.image || "",
+                      };
+                    })
+                  : [],
+              },
+            };
+
+            console.log(
+              `🚨 [Success Page] Order confirmation payload:`,
+              JSON.stringify(orderConfirmationPayload, null, 2)
+            );
+
+            const orderConfirmationResult = await $fetch(
+              "/api/mail/order-confirmation",
+              {
+                method: "POST",
+                body: orderConfirmationPayload,
+                timeout: 30000,
+              }
+            );
+
+            console.log(
+              `🚨 [Success Page] Order confirmation result:`,
+              JSON.stringify(orderConfirmationResult, null, 2)
+            );
+
+            if (orderConfirmationResult.success) {
+              console.log(
+                `✅ [Success Page] Order confirmation email sent successfully`
+              );
+              // TypeScript-bezpieczny sposób sprawdzania wyników
+              console.log(
+                `✅ [Success Page] Order confirmation response:`,
+                JSON.stringify(orderConfirmationResult)
+              );
+
+              // @ts-ignore - wiemy że może istnieć recipients.influencer
+              if (orderConfirmationResult.recipients?.influencer) {
+                console.log(
+                  `✅ [Success Page] Influencer notification via order-confirmation sent successfully`
+                );
+              }
+            } else {
+              console.error(
+                `❌ [Success Page] Failed to send via order-confirmation`
+              );
+            }
+          } catch (orderConfirmationError: any) {
+            console.error(
+              `❌ [Success Page] Error calling order-confirmation API:`,
+              orderConfirmationError
+            );
+            console.error(`❌ [Success Page] Error details:`, {
+              message: orderConfirmationError.message || "Unknown error",
+              name: orderConfirmationError.name,
+              stack: orderConfirmationError.stack,
+            });
+          }
+        } else {
+          console.log(
+            `ℹ️ [Success Page] No influencer email found in order data`
+          );
+        }
       } catch (e) {
         console.error("Błąd parsowania danych zamówienia:", e);
       }

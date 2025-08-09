@@ -20,5 +20,25 @@
       "discount": 20,
       "description": "Specjalna promocja 20%"
     }
+  ],
+  "influencerCodes": [
+    {
+      "code": "INFL01",
+      "discount": 15,
+      "description": "Kod influencera #1",
+      "email": "konrad@minister.com"
+    },
+    {
+      "code": "INFL02",
+      "discount": 10,
+      "description": "Kod influencera #2",
+      "email": "influencer2@example.com"
+    },
+    {
+      "code": "CREATOR",
+      "discount": 20,
+      "description": "Specjalny kod twórcy",
+      "email": "creator@example.com"
+    }
   ]
 }

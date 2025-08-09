@@ -55,14 +55,14 @@ export default defineEventHandler(async (event) => {
   };
 
   try {
-    // Call the order confirmation endpoint directly
-    console.log("📧 [Test] Sending order confirmation email");
     // Get the host and construct the base URL
     const headers = event.node.req.headers;
     const protocol = headers["x-forwarded-proto"] || "http";
     const host = headers["x-forwarded-host"] || headers.host;
     const baseUrl = `${protocol}://${host}`;
 
+    // Call the order confirmation endpoint directly
+    console.log("📧 [Test] Sending order confirmation email");
     const orderConfirmationUrl = `${baseUrl}/api/mail/order-confirmation`;
     console.log(
       `📧 [Test] Using full URL for order confirmation: ${orderConfirmationUrl}`
@@ -141,10 +141,7 @@ export default defineEventHandler(async (event) => {
       },
     };
   } catch (error) {
-    console.error(
-      "❌ [Test] Failed to trigger order confirmation email:",
-      error
-    );
+    console.error("❌ [Test] Failed to trigger test emails:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error occurred",

@@ -4,6 +4,7 @@ import discountsData from "../../data/discounts.json";
 
 const CART_DISCOUNT_TIERS = discountsData.cartDiscountTiers;
 const DISCOUNT_CODES = discountsData.discountCodes;
+const INFLUENCER_CODES = discountsData.influencerCodes;
 
 interface OrderTotals {
   subtotalAmount: number;
@@ -65,11 +66,22 @@ export function calculateOrderTotals(
 
   let codeDiscountPercent = 0;
   if (appliedDiscountCode) {
+    // Sprawdź najpierw zwykłe kody rabatowe
     const discountCodeInfo = DISCOUNT_CODES.find(
       (code) => code.code.toUpperCase() === appliedDiscountCode.toUpperCase()
     );
+
     if (discountCodeInfo) {
       codeDiscountPercent = discountCodeInfo.discount;
+    } else {
+      // Jeśli nie znaleziono w zwykłych kodach, sprawdź kody influencerów
+      const influencerCodeInfo = INFLUENCER_CODES.find(
+        (code) => code.code.toUpperCase() === appliedDiscountCode.toUpperCase()
+      );
+
+      if (influencerCodeInfo) {
+        codeDiscountPercent = influencerCodeInfo.discount;
+      }
     }
   }
 

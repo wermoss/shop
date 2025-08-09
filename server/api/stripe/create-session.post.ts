@@ -1,8 +1,12 @@
 import Stripe from "stripe";
 import { CartItem, Product } from "~/types/shop";
 import productsData from "../../../data/products.json";
+import discountsData from "../../../data/discounts.json";
 import { generateOrderNumber } from "~/utils/orderNumber";
 import { calculateOrderTotals } from "../../utils/calculateOrderTotals";
+import { $fetch } from "ofetch";
+import crypto from "crypto";
+import { v4 as uuidv4 } from "uuid";
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig();
@@ -83,19 +87,35 @@ export default defineEventHandler(async (event) => {
       },
     ];
 
-    // Przygotuj dane produktów dla metadanych - potrzebujemy pełnych informacji dla emaila
+    // Przygotuj dane produktów dla metadanych - ograniczamy dane do minimum, aby zmieścić się w limicie metadanych Stripe (500 znaków)
     const productsWithDetails = orderDetails.productsWithCalculatedPrices.map(
       (p) => ({
         id: p.id,
-        name: p.name,
-        price: p.price,
-        quantity: p.quantity,
-        lineItemTotalPrice: p.lineItemTotalPrice,
-        discountAppliedToLineItem: p.discountAppliedToLineItem,
-        lineItemTotalPriceWithDiscount: p.lineItemTotalPriceWithDiscount,
-        image: p.image,
+        n: p.name.substring(0, 20), // Skrócona nazwa
+        p: p.price,
+        q: p.quantity,
+        d: p.discountAppliedToLineItem,
+        f: p.lineItemTotalPriceWithDiscount,
       })
     );
+
+    // Sprawdzamy czy kod rabatowy jest kodem influencera
+    let influencerEmail = null;
+
+    if (appliedDiscountCode) {
+      // Próbujemy znaleźć kod w tablicy kodów influencerów
+      const influencerCode = discountsData.influencerCodes?.find(
+        (code: { code: string; email: string; discount: number }) =>
+          code.code.toUpperCase() === appliedDiscountCode.toUpperCase()
+      );
+
+      if (influencerCode && influencerCode.email) {
+        influencerEmail = influencerCode.email;
+        console.log(
+          `📧 [Create Session] Found influencer code with email: ${influencerEmail}`
+        );
+      }
+    }
 
     // Zapisz wszystkie informacje potrzebne do emaila potwierdzenia zamówienia
     const metadata = {
@@ -119,6 +139,7 @@ export default defineEventHandler(async (event) => {
       codeDiscountAmount: orderDetails.codeDiscountAmount.toString(),
       totalDiscountAmount: orderDetails.totalDiscountAmount.toString(),
       appliedDiscountCode: orderDetails.appliedDiscountCode || "",
+      influencerEmail: influencerEmail || "", // Dodajemy email influencera jeśli jest dostępny
       finalAmount: orderDetails.finalAmount.toString(),
 
       // Dane produktów - zapisujemy jako JSON string
@@ -174,6 +195,13 @@ export default defineEventHandler(async (event) => {
 
     // Utwórz sesję płatności
     const session = await stripe.checkout.sessions.create(sessionConfig);
+
+    // Influencer email będzie wysłany przez webhook po zakończeniu płatności
+    if (influencerEmail) {
+      console.log(
+        `📧 [Create Session] Influencer email (${influencerEmail}) zapisany w metadanych. Email zostanie wysłany po zakończeniu płatności.`
+      );
+    }
 
     return { sessionId: session.id, orderNumber };
   } catch (error) {

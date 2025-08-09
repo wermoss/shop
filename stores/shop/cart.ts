@@ -7,6 +7,7 @@ interface CartState {
   items: CartItem[];
   discountCode: string | null;
   appliedDiscountCode: string | null;
+  isInfluencerCode: boolean;
 }
 
 export interface CartItemWithDiscount extends CartItem {
@@ -16,12 +17,14 @@ export interface CartItemWithDiscount extends CartItem {
 // Importujemy progi rabatowe i kody rabatowe z pliku JSON
 export const CART_DISCOUNT_TIERS = discountsData.cartDiscountTiers;
 export const DISCOUNT_CODES = discountsData.discountCodes;
+export const INFLUENCER_CODES = discountsData.influencerCodes;
 
 export const useCartStore = defineStore("cart", {
   state: () => ({
     items: [] as CartItem[],
     discountCode: null as string | null,
     appliedDiscountCode: null as string | null,
+    isInfluencerCode: false,
   }),
 
   getters: {
@@ -61,7 +64,21 @@ export const useCartStore = defineStore("cart", {
     // Sprawdzanie poprawności kodu rabatowego
     discountCodeValid(): boolean {
       if (!this.discountCode) return false;
-      return DISCOUNT_CODES.some(
+      // Sprawdź zarówno zwykłe kody rabatowe jak i kody influencerów
+      return (
+        DISCOUNT_CODES.some(
+          (code) => code.code.toUpperCase() === this.discountCode?.toUpperCase()
+        ) ||
+        INFLUENCER_CODES.some(
+          (code) => code.code.toUpperCase() === this.discountCode?.toUpperCase()
+        )
+      );
+    },
+
+    // Sprawdza czy kod jest kodem influencera
+    isInfluencerCodeValid(): boolean {
+      if (!this.discountCode) return false;
+      return INFLUENCER_CODES.some(
         (code) => code.code.toUpperCase() === this.discountCode?.toUpperCase()
       );
     },
@@ -70,12 +87,33 @@ export const useCartStore = defineStore("cart", {
     codeDiscount(): number {
       if (!this.appliedDiscountCode) return 0;
 
+      // Sprawdź najpierw zwykłe kody rabatowe
       const discountCode = DISCOUNT_CODES.find(
         (code) =>
           code.code.toUpperCase() === this.appliedDiscountCode?.toUpperCase()
       );
 
-      return discountCode?.discount || 0;
+      if (discountCode) return discountCode.discount;
+
+      // Jeśli nie znaleziono w zwykłych kodach, sprawdź kody influencerów
+      const influencerCode = INFLUENCER_CODES.find(
+        (code) =>
+          code.code.toUpperCase() === this.appliedDiscountCode?.toUpperCase()
+      );
+
+      return influencerCode?.discount || 0;
+    },
+
+    // Pobiera email influencera dla zastosowanego kodu
+    influencerEmail(): string | null {
+      if (!this.appliedDiscountCode || !this.isInfluencerCode) return null;
+
+      const influencerCode = INFLUENCER_CODES.find(
+        (code) =>
+          code.code.toUpperCase() === this.appliedDiscountCode?.toUpperCase()
+      );
+
+      return influencerCode?.email || null;
     },
 
     // Suma cen przed rabatem
@@ -208,16 +246,31 @@ export const useCartStore = defineStore("cart", {
     // Zastosowanie kodu rabatowego
     applyDiscountCode() {
       if (this.discountCodeValid) {
-        // Znajdź kod rabatowy
-        const discountCodeObj = DISCOUNT_CODES.find(
-          (code) => code.code.toUpperCase() === this.discountCode?.toUpperCase()
-        );
+        // Najpierw sprawdzamy, czy to kod influencera
+        const isInfluencer = this.isInfluencerCodeValid;
+        let discountAmount = 0;
+
+        if (isInfluencer) {
+          // Znajdź kod influencera
+          const influencerCodeObj = INFLUENCER_CODES.find(
+            (code) =>
+              code.code.toUpperCase() === this.discountCode?.toUpperCase()
+          );
+          discountAmount = influencerCodeObj?.discount || 0;
+        } else {
+          // Znajdź zwykły kod rabatowy
+          const discountCodeObj = DISCOUNT_CODES.find(
+            (code) =>
+              code.code.toUpperCase() === this.discountCode?.toUpperCase()
+          );
+          discountAmount = discountCodeObj?.discount || 0;
+        }
 
         // Sprawdź, czy rabat z kodu jest mniejszy lub równy rabatowi ilościowemu
-        if (discountCodeObj && discountCodeObj.discount <= this.cartDiscount) {
+        if (discountAmount <= this.cartDiscount) {
           // Nie stosujemy kodu, tylko zwracamy informację
           const message =
-            discountCodeObj.discount < this.cartDiscount
+            discountAmount < this.cartDiscount
               ? "Kod rabatowy daje mniejszą zniżkę niż aktualnie posiadasz"
               : "Kod rabatowy daje taką samą zniżkę jak posiadasz";
 
@@ -232,6 +285,7 @@ export const useCartStore = defineStore("cart", {
 
         // Normalnie zastosuj kod (tylko gdy daje większy rabat)
         this.appliedDiscountCode = this.discountCode;
+        this.isInfluencerCode = isInfluencer; // Zapisujemy, czy to kod influencera
         this.discountCode = null;
         return { success: true, warning: false };
       }
@@ -247,12 +301,21 @@ export const useCartStore = defineStore("cart", {
     getAppliedDiscountInfo() {
       if (!this.appliedDiscountCode) return null;
 
-      return (
-        DISCOUNT_CODES.find(
-          (code) =>
-            code.code.toUpperCase() === this.appliedDiscountCode?.toUpperCase()
-        ) || null
+      // Najpierw sprawdź w zwykłych kodach rabatowych
+      const regularCode = DISCOUNT_CODES.find(
+        (code) =>
+          code.code.toUpperCase() === this.appliedDiscountCode?.toUpperCase()
       );
+
+      if (regularCode) return regularCode;
+
+      // Jeśli nie znaleziono, sprawdź w kodach influencerów
+      const influencerCode = INFLUENCER_CODES.find(
+        (code) =>
+          code.code.toUpperCase() === this.appliedDiscountCode?.toUpperCase()
+      );
+
+      return influencerCode || null;
     },
 
     // Clear cart
@@ -260,6 +323,7 @@ export const useCartStore = defineStore("cart", {
       this.items = [];
       this.discountCode = null;
       this.appliedDiscountCode = null;
+      this.isInfluencerCode = false;
     },
   },
 

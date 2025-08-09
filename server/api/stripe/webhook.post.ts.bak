@@ -14,7 +14,16 @@ interface ProductDetail {
   image?: string;
 }
 
-// Skompresowany format szczegółów produktu używany do oszczędzania miejsca w metadanych Stripe
+// Skompresowany f            console.log(
+              `🔔 [Webhook] Influencer notification result:`,
+              JSON.stringify(influencerNotificationResult, null, 2)
+            );
+
+            if (!influencerNotificationResult.success) {
+              console.error(
+                `❌ [Webhook] Failed to send influencer notification:`,
+                JSON.stringify(influencerNotificationResult, null, 2)
+              );egółów produktu używany do oszczędzania miejsca w metadanych Stripe
 interface CompressedProductDetail {
   id: number;
   n: string; // skrócona nazwa (name)
@@ -346,12 +355,10 @@ export default defineEventHandler(async (event) => {
         if (influencerEmail) {
           try {
             console.log(
-              `🔔 [Webhook] Sending notification to influencer: ${influencerEmail}`
+              `� [Webhook] Sending notification to influencer: ${influencerEmail}`
             );
-            console.log(
-              `🔔 [Webhook] Source type: ${isStripeCLI ? "CLI" : "production"}`
-            );
-            console.log(`🔔 [Webhook] Session ID: ${session.id}`);
+            console.log(`🔔 [Webhook] Source type: ${isStripeCLI ? "CLI" : "production"}`);
+            console.log(`� [Webhook] Session ID: ${session.id}`);
 
             console.log(`🔔 [Webhook] Host info for influencer notification:`, {
               protocol,
@@ -433,7 +440,7 @@ export default defineEventHandler(async (event) => {
             });
 
             console.log(
-              `🔔 [Webhook] Influencer notification result:`,
+              `📧 [Webhook] Influencer notification result:`,
               JSON.stringify(influencerNotificationResult, null, 2)
             );
 
