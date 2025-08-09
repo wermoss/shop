@@ -2,6 +2,11 @@ import { defineEventHandler, readBody, readRawBody, getHeader } from "h3";
 import Stripe from "stripe";
 import type { Product } from "~/types/shop";
 
+// Globalna mapa do śledzenia przetworzonych sesji
+declare global {
+  var processedWebhookSessions: Set<string>;
+}
+
 // Oryginalny format szczegółów produktu
 interface ProductDetail {
   id: number;
@@ -30,6 +35,11 @@ export default defineEventHandler(async (event) => {
     apiVersion: "2025-05-28.basil",
   });
 
+  // Inicjalizacja globalnej mapy śledzenia sesji
+  if (!global.processedWebhookSessions) {
+    global.processedWebhookSessions = new Set();
+  }
+
   console.log("🔔 [Webhook] Endpoint hit - " + new Date().toISOString());
 
   const signature = getHeader(event, "stripe-signature");
@@ -41,6 +51,36 @@ export default defineEventHandler(async (event) => {
   // Sprawdzamy źródło webhooka (StripeCD lub rzeczywisty)
   const webhookSource = getHeader(event, "user-agent") || "";
   const isStripeCLI = webhookSource.toLowerCase().includes("stripecli");
+
+  // Dodatkowe sprawdzenie IP i innych headers
+  const clientIP =
+    getHeader(event, "x-forwarded-for") ||
+    getHeader(event, "x-real-ip") ||
+    event.node.req.socket?.remoteAddress ||
+    "unknown";
+  const host = getHeader(event, "host") || "unknown";
+  const origin = getHeader(event, "origin") || "unknown";
+
+  console.log(`🔍 [Webhook] DETAILED SOURCE INFO:`);
+  console.log(`  - User-Agent: ${webhookSource}`);
+  console.log(`  - Is Stripe CLI: ${isStripeCLI}`);
+  console.log(`  - Client IP: ${clientIP}`);
+  console.log(`  - Host: ${host}`);
+  console.log(`  - Origin: ${origin}`);
+  console.log(`  - Timestamp: ${new Date().toISOString()}`);
+
+  // BLOKOWANIE STRIPE CLI - odkomentuj tę linię jeśli chcesz zablokować webhooks ze Stripe CLI
+  if (isStripeCLI) {
+    console.warn(
+      `⚠️ [Webhook] BLOCKING Stripe CLI webhook to prevent duplicates`
+    );
+    return {
+      blocked: true,
+      reason: "Stripe CLI webhooks are disabled to prevent duplicates",
+      source: "CLI",
+      timestamp: new Date().toISOString(),
+    };
+  }
   console.log(
     `🔍 [Webhook] Source: ${
       isStripeCLI ? "Stripe CLI" : "Production"
@@ -101,6 +141,30 @@ export default defineEventHandler(async (event) => {
       orderNumber: session.metadata?.orderNumber,
       source: isStripeCLI ? "CLI" : "production",
     });
+
+    // GLOBALNA DEDUPLICACJA - sprawdź czy ta sesja już była przetwarzana
+    const sessionKey = `${session.id}_${
+      session.metadata?.orderNumber || "no-order"
+    }`;
+    if (global.processedWebhookSessions.has(sessionKey)) {
+      console.warn(
+        `⚠️ [Webhook] DUPLICATE SESSION DETECTED! Session ${session.id} with order ${session.metadata?.orderNumber} already processed - SKIPPING`
+      );
+      return {
+        success: true,
+        status: "duplicate_prevented",
+        sessionId: session.id,
+        orderNumber: session.metadata?.orderNumber,
+        source: isStripeCLI ? "CLI" : "production",
+        timestamp: new Date().toISOString(),
+      };
+    }
+
+    // Dodaj sesję do zbioru przetworzonych
+    global.processedWebhookSessions.add(sessionKey);
+    console.log(
+      `✅ [Webhook] Session ${sessionKey} added to processed sessions tracking`
+    );
 
     // Wypisz wszystkie metadane sesji do analizy problemu
     console.log(
@@ -302,7 +366,7 @@ export default defineEventHandler(async (event) => {
 
         const emailPayload = {
           customerEmail: session.metadata?.customerEmail,
-          influencerEmail: influencerEmail,
+          // Removed influencerEmail to ensure influencer doesn't receive customer email
           orderDetails: orderDetailsForEmail,
         };
 

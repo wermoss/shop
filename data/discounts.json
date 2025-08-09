@@ -23,8 +23,8 @@
   ],
   "influencerCodes": [
     {
-      "code": "INFL01",
-      "discount": 15,
+      "code": "konrad",
+      "discount": 50,
       "description": "Kod influencera #1",
       "email": "konrad@minister.com"
     },

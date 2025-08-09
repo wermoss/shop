@@ -18,9 +18,20 @@ interface OrderDetails {
   codeDiscountPercent: number;
 }
 
+// Dodajemy interfejs dla globalnej zmiennej śledzenia powiadomień
+declare global {
+  var sentInfluencerNotifications: Map<string, Set<string>>;
+}
+
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig();
   const apiKey = config.brevo?.apiKey;
+
+  // Obiekt do śledzenia wysłanych powiadomień do influencerów w ramach tej samej sesji
+  // Używamy globalnego obiektu przypiętego do procesu Node.js
+  if (!global.sentInfluencerNotifications) {
+    global.sentInfluencerNotifications = new Map();
+  }
 
   console.log("📣 [Influencer Notification] PROCESSING EMAIL REQUEST");
 
@@ -117,6 +128,50 @@ export default defineEventHandler(async (event) => {
       hasOrderDetails: !!orderDetails,
     });
     return { success: false, error: "Missing required data" };
+  }
+
+  // Sprawdź czy nie wysłaliśmy już powiadomienia do tego influencera o tym zamówieniu
+  const orderNumber = orderDetails.orderNumber;
+  if (!global.sentInfluencerNotifications) {
+    global.sentInfluencerNotifications = new Map();
+  }
+
+  console.log(
+    `🔍 [Influencer Notification] Checking for duplicates - order: ${orderNumber}, influencer: ${influencerEmail}`
+  );
+  console.log(
+    `🔍 [Influencer Notification] Current tracking map size: ${global.sentInfluencerNotifications.size}`
+  );
+
+  // Utworzenie klucza dla śledzenia powiadomień dla danego zamówienia
+  if (!global.sentInfluencerNotifications.has(orderNumber)) {
+    global.sentInfluencerNotifications.set(orderNumber, new Set());
+    console.log(
+      `🔍 [Influencer Notification] Created new tracking set for order: ${orderNumber}`
+    );
+  }
+
+  // Sprawdź czy już wysłaliśmy powiadomienie do tego influencera dla tego zamówienia
+  const notificationsForOrder =
+    global.sentInfluencerNotifications.get(orderNumber);
+
+  console.log(
+    `🔍 [Influencer Notification] Notifications for order ${orderNumber}:`,
+    Array.from(notificationsForOrder || [])
+  );
+
+  if (notificationsForOrder?.has(influencerEmail)) {
+    console.warn(
+      `⚠️ [Influencer Notification] DUPLICATE DETECTED! Already sent notification to ${influencerEmail} for order #${orderNumber} - SKIPPING`
+    );
+    return {
+      success: true,
+      skipped: true,
+      message: "Duplicate notification prevented - notification already sent",
+      recipients: {
+        influencer: influencerEmail,
+      },
+    };
   }
 
   console.log(
@@ -274,6 +329,24 @@ export default defineEventHandler(async (event) => {
       influencerEmail,
       "and admin:",
       adminEmail
+    );
+
+    // Zapisz informację, że powiadomienie zostało wysłane, aby zapobiec duplikatom
+    const orderNumber = orderDetails.orderNumber;
+    if (!global.sentInfluencerNotifications.has(orderNumber)) {
+      global.sentInfluencerNotifications.set(orderNumber, new Set());
+    }
+    global.sentInfluencerNotifications.get(orderNumber)?.add(influencerEmail);
+
+    console.log(
+      `✅ [Influencer Notification] RECORDED notification to ${influencerEmail} for order #${orderNumber} to prevent duplicates`
+    );
+    console.log(
+      `✅ [Influencer Notification] Updated tracking map size: ${global.sentInfluencerNotifications.size}`
+    );
+    console.log(
+      `✅ [Influencer Notification] Notifications for this order now:`,
+      Array.from(global.sentInfluencerNotifications.get(orderNumber) || [])
     );
 
     return {

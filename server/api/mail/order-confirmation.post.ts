@@ -52,15 +52,41 @@ export default defineEventHandler(async (event) => {
     JSON.stringify(rawBody, null, 2)
   );
 
-  const { customerEmail, influencerEmail, orderDetails } = rawBody as {
+  // Extract values but make influencerEmail variable so we can modify it
+  const { customerEmail, orderDetails } = rawBody as {
     customerEmail: string;
     influencerEmail?: string;
     orderDetails: OrderDetails;
   };
 
+  // Extract influencerEmail separately so we can modify it
+  let influencerEmail = (rawBody as any).influencerEmail;
+
   console.log("📧 [Order Confirmation] Extracted values:");
   console.log(`- Customer Email: ${customerEmail}`);
-  console.log(`- Influencer Email: ${influencerEmail || "None provided"}`);
+
+  // Aggressively handle any influencerEmail to make absolutely sure it's not included
+  if (influencerEmail) {
+    const tempInfluencer = influencerEmail; // Save for logging only
+    console.log(
+      `- Influencer Email found in payload: ${tempInfluencer} - REMOVING IT COMPLETELY`
+    );
+
+    // Setting to undefined to ensure it's not used anywhere
+    influencerEmail = undefined;
+
+    // Also remove it from the raw body to be extra sure
+    if (
+      rawBody &&
+      typeof rawBody === "object" &&
+      "influencerEmail" in rawBody
+    ) {
+      delete (rawBody as any).influencerEmail;
+      console.log(`- Removed influencerEmail from raw body`);
+    }
+  } else {
+    console.log(`- No Influencer Email in payload (good)`);
+  }
   console.log(`- Order Details Present: ${!!orderDetails}`);
 
   if (!customerEmail || !orderDetails) {
@@ -113,9 +139,7 @@ export default defineEventHandler(async (event) => {
   // Email z potwierdzeniem zamówienia - dla klienta
   try {
     console.log(
-      `📧 [Order Confirmation] Sending email to customer: ${customerEmail} and admin: ${adminEmail}${
-        influencerEmail ? ` and influencer: ${influencerEmail}` : ""
-      }`
+      `📧 [Order Confirmation] Sending email to: customer (${customerEmail}) and admin (${adminEmail}) only`
     );
 
     // Debug log all order details
@@ -124,11 +148,20 @@ export default defineEventHandler(async (event) => {
       JSON.stringify(orderDetails, null, 2)
     );
 
-    // Przygotowanie odbiorców emaila
+    // HARDCODED - bezpośrednie przypisanie tylko 2 odbiorców
+    // NIE korzystamy z wartości przekazanych w żądaniu - ustalimy je bezpośrednio
+    const customerMail = orderDetails.customerEmail; // Używamy email z orderDetails, a nie z payloadu
+
+    console.log(
+      `📧 [Order Confirmation] Customer mail from orderDetails: ${customerMail}`
+    );
+    console.log(`📧 [Order Confirmation] Admin mail hardcoded: ${adminEmail}`);
+
+    // Przygotowanie odbiorców emaila - TYLKO klient i admin
     const emailRecipients = [
       {
-        email: customerEmail,
-        name: orderDetails.customerName || customerEmail,
+        email: customerMail,
+        name: orderDetails.customerName || customerMail,
       },
       {
         email: adminEmail,
@@ -136,37 +169,38 @@ export default defineEventHandler(async (event) => {
       },
     ];
 
-    // Dodaj email influencera jeśli jest dostępny
-    console.log(
-      `📧 [Order Confirmation] Checking influencer email: ${
-        influencerEmail || "None"
-      }`
-    );
+    // Dodatkowe zabezpieczenie - sprawdź czy nie ma influencera w emailRecipients
+    const filteredRecipients = emailRecipients.filter((recipient) => {
+      const isInfluencer =
+        recipient.email.includes("minister.com") ||
+        recipient.email.includes("influencer") ||
+        recipient.name.includes("Partner");
+      if (isInfluencer) {
+        console.error(
+          `❌ [Order Confirmation] ZNALEZIONO INFLUENCERA W LIŚCIE ADRESATÓW: ${recipient.email} - USUWAM!`
+        );
+        return false;
+      }
+      return true;
+    });
 
-    if (influencerEmail && influencerEmail.trim() !== "") {
-      console.log(
-        `📧 [Order Confirmation] Adding influencer as recipient: ${influencerEmail}`
-      );
-      emailRecipients.push({
-        email: influencerEmail,
-        name: "Partner NuxtShop",
-      });
-    } else {
-      console.log(`📧 [Order Confirmation] No valid influencer email to add`);
-    }
+    // We don't add any influencer to this email - influencers get separate notifications
+    console.log(
+      `📧 [Order Confirmation] Only sending to customer and admin (no influencers)`
+    );
 
     console.log(
       `📧 [Order Confirmation] Final email recipients:`,
-      JSON.stringify(emailRecipients, null, 2)
+      JSON.stringify(filteredRecipients, null, 2)
     );
 
-    // Przygotowanie szczegółów koszyka dla emaila - wysyłamy do wszystkich odbiorców
+    // Przygotowanie szczegółów koszyka dla emaila - wysyłamy TYLKO do klienta i admina
     const emailData = {
       sender: {
         name: "NuxtShop",
         email: "services@lexxo.pl", // Użyj zweryfikowanego adresu email
       },
-      to: emailRecipients,
+      to: filteredRecipients, // Używamy przefiltrowanej listy odbiorców
       subject: `Dziękujemy za zakup! Zamówienie #${orderDetails.orderNumber}`,
       htmlContent: `
         <html>
@@ -271,6 +305,98 @@ export default defineEventHandler(async (event) => {
       emailRecipients.map((r) => r.email).join(", ")
     );
 
+    // Log the EXACT email data being sent (excluding API key)
+    const emailDataClone = { ...emailData };
+    console.log(
+      `📧 [Order Confirmation] EXACT EMAIL PAYLOAD:`,
+      JSON.stringify(emailDataClone, null, 2)
+    );
+
+    // Double check there's no CC field somehow
+    if ("cc" in emailDataClone) {
+      console.error(
+        `❌ [Order Confirmation] UNEXPECTED CC FIELD FOUND! REMOVING IT!`
+      );
+      delete (emailDataClone as any).cc;
+    }
+
+    // Double check there's no bcc field either
+    if ("bcc" in emailDataClone) {
+      console.error(
+        `❌ [Order Confirmation] UNEXPECTED BCC FIELD FOUND! REMOVING IT!`
+      );
+      delete (emailDataClone as any).bcc;
+    }
+
+    // Dodatkowe zabezpieczenie - sprawdzenie czy są odbiorcy typu "Partner"
+    if (emailDataClone.to && Array.isArray(emailDataClone.to)) {
+      const originalLength = emailDataClone.to.length;
+      emailDataClone.to = emailDataClone.to.filter((recipient: any) => {
+        if (!recipient || typeof recipient !== "object") return true;
+
+        const isInfluencer =
+          (recipient.email &&
+            (recipient.email.includes("minister.com") ||
+              recipient.email.includes("influencer") ||
+              recipient.email === "konrad@minister.com")) ||
+          (recipient.name &&
+            (recipient.name.includes("Partner") ||
+              recipient.name.includes("Partner NuxtShop")));
+
+        if (isInfluencer) {
+          console.error(
+            `❌ [Order Confirmation] ZNALEZIONO INFLUENCERA W TO: ${JSON.stringify(
+              recipient
+            )} - USUWAM!`
+          );
+          return false;
+        }
+        return true;
+      });
+
+      if (emailDataClone.to.length !== originalLength) {
+        console.error(
+          `❌ [Order Confirmation] USUNIĘTO ${
+            originalLength - emailDataClone.to.length
+          } INFLUENCERÓW Z LISTY ODBIORCÓW!`
+        );
+      }
+
+      // Dodatkowe sprawdzenie - upewnij się że lista ma dokładnie 2 odbiorców
+      if (emailDataClone.to.length !== 2) {
+        console.error(
+          `❌ [Order Confirmation] BŁĘDNA LICZBA ODBIORCÓW: ${emailDataClone.to.length}, OCZEKIWANO 2`
+        );
+        console.error(
+          `❌ [Order Confirmation] OBECNI ODBIORCY:`,
+          JSON.stringify(emailDataClone.to, null, 2)
+        );
+
+        // Wymuszenie tylko 2 odbiorców - klient i admin
+        emailDataClone.to = [
+          {
+            email: customerMail,
+            name: orderDetails.customerName || customerMail,
+          },
+          { email: adminEmail, name: "Administrator NuxtShop" },
+        ];
+        console.error(
+          `❌ [Order Confirmation] WYMUSZONO POPRAWNĄ LISTĘ ODBIORCÓW:`,
+          JSON.stringify(emailDataClone.to, null, 2)
+        );
+      }
+    }
+
+    // OSTATECZNE SPRAWDZENIE - upewnij się że NIE MA pól cc, bcc ani innych dodatkowych odbiorców
+    ["cc", "bcc", "replyTo"].forEach((field) => {
+      if (field in emailDataClone) {
+        console.error(
+          `❌ [Order Confirmation] ZNALEZIONO DODATKOWE POLE: ${field} - USUWAM!`
+        );
+        delete (emailDataClone as any)[field];
+      }
+    });
+
     // Send email through Brevo
     const response = await fetch(url, {
       method: "POST",
@@ -278,7 +404,7 @@ export default defineEventHandler(async (event) => {
         "Content-Type": "application/json",
         "api-key": apiKey,
       },
-      body: JSON.stringify(emailData),
+      body: JSON.stringify(emailDataClone),
     });
 
     if (!response.ok) {
@@ -295,137 +421,27 @@ export default defineEventHandler(async (event) => {
       };
     }
 
+    // Only record customer and admin as recipients - no influencer should ever be included
     const recipients: Record<string, string> = {
       customer: customerEmail,
       admin: adminEmail,
     };
-    if (influencerEmail) {
-      recipients.influencer = influencerEmail;
-    }
-
+    // Explicitly logging all recipients for debugging
     console.log(
-      `✅ [Order Confirmation] Email sent successfully to customer: ${customerEmail}, administrator: ${adminEmail}${
-        influencerEmail ? `, and influencer: ${influencerEmail}` : ""
-      }`
+      `📧 [Order Confirmation] FINAL RECIPIENTS LIST: ${Object.keys(
+        recipients
+      ).join(", ")}`
     );
 
-    // Jeśli mamy email influencera, wyślij również powiadomienie do niego
+    console.log(
+      `✅ [Order Confirmation] Email sent successfully to customer: ${customerEmail} and administrator: ${adminEmail} ONLY (no influencers)`
+    );
+
+    // ZMODYFIKOWANE: Usunięto wysyłanie powiadomienia dla influencera z tego miejsca, aby zapobiec duplikatom maili
     if (influencerEmail && influencerEmail.trim() !== "") {
-      try {
-        console.log(
-          `� [Order Confirmation] INFLUENCER NOTIFICATION: Now sending to: ${influencerEmail}`
-        );
-
-        // Przygotuj dane dla API powiadomienia influencera
-        const influencerPayload = {
-          influencerEmail: influencerEmail,
-          orderDetails: {
-            customerName: orderDetails.customerName,
-            customerEmail: orderDetails.customerEmail,
-            orderNumber: orderDetails.orderNumber,
-            appliedDiscountCode: orderDetails.appliedDiscountCode || "",
-            // Konwersja produktów do formatu oczekiwanego przez influencer-notification
-            items: orderDetails.items.map((item) => ({
-              product: {
-                id: 0,
-                name: item.name,
-                price: item.unitPrice,
-                image: item.image || "",
-                description: "",
-              },
-              quantity: item.quantity,
-            })),
-            subtotalAmount: orderDetails.subtotalAmount,
-            finalAmount: orderDetails.amount,
-            codeDiscountPercent: orderDetails.codeDiscountPercent,
-          },
-        };
-
-        console.log(
-          `� [Order Confirmation] INFLUENCER NOTIFICATION: Complete payload:`,
-          JSON.stringify(influencerPayload, null, 2)
-        );
-
-        // Wewnętrznie wywołaj endpoint influencer-notification
-        // Pobierz URL bazowy dla spójności z resztą kodu
-        const headers = event.node.req.headers;
-        const protocol = headers["x-forwarded-proto"] || "http";
-        const host = headers["x-forwarded-host"] || headers.host;
-        const baseUrl = `${protocol}://${host}`;
-
-        const influencerNotificationUrl = `${baseUrl}/api/mail/influencer-notification`;
-        console.log(
-          `� [Order Confirmation] INFLUENCER NOTIFICATION: Calling API: ${influencerNotificationUrl}`
-        );
-
-        // Definiujemy interfejs dla odpowiedzi
-        interface InfluencerNotificationResponse {
-          success: boolean;
-          data?: any;
-          recipients?: {
-            influencer: string;
-            admin: string;
-          };
-          error?: any;
-        }
-
-        const influencerResult = await $fetch<InfluencerNotificationResponse>(
-          influencerNotificationUrl,
-          {
-            method: "POST",
-            body: influencerPayload,
-            timeout: 60000, // Zwiększamy timeout do 60 sekund
-            // Dodajemy retry aby zapewnić, że request zostanie wykonany nawet przy problemach sieciowych
-            retry: 3,
-          }
-        );
-
-        console.log(
-          `� [Order Confirmation] INFLUENCER NOTIFICATION: API result:`,
-          JSON.stringify(influencerResult, null, 2)
-        );
-
-        if (influencerResult.success) {
-          console.log(
-            `✅ [Order Confirmation] INFLUENCER NOTIFICATION SUCCESS! Email sent to: ${influencerEmail}`
-          );
-
-          // Sprawdź czy mail został faktycznie wysłany i odbiorca jest prawidłowy
-          if (influencerResult.recipients?.influencer === influencerEmail) {
-            console.log(
-              `✅ [Order Confirmation] INFLUENCER NOTIFICATION VERIFIED: Recipient matches requested email`
-            );
-          } else {
-            console.warn(
-              `⚠️ [Order Confirmation] INFLUENCER NOTIFICATION WARNING: Recipient mismatch`
-            );
-            console.warn(`  - Expected: ${influencerEmail}`);
-            console.warn(
-              `  - Actual: ${
-                influencerResult.recipients?.influencer || "unknown"
-              }`
-            );
-          }
-        } else {
-          console.error(
-            `❌ [Order Confirmation] INFLUENCER NOTIFICATION FAILED!`,
-            influencerResult.error
-              ? JSON.stringify(influencerResult.error)
-              : "Unknown error"
-          );
-        }
-      } catch (influencerError: any) {
-        console.error(
-          `❌ [Order Confirmation] Error sending influencer notification:`,
-          influencerError
-        );
-        console.error(`❌ [Order Confirmation] Error details:`, {
-          message: influencerError.message || "Unknown error",
-          name: influencerError.name,
-          stack: influencerError.stack,
-        });
-        // Nie blokujemy sukcesu głównego emaila przez błąd notyfikacji influencera
-      }
+      console.log(
+        `ℹ️ [Order Confirmation] Found influencer email (${influencerEmail}), but skipping notification from order-confirmation to prevent duplicate emails. Notification will be handled by webhook.`
+      );
     }
 
     return {

@@ -374,52 +374,12 @@ onMounted(async () => {
             JSON.stringify(completePayload, null, 2)
           );
 
-          // Spróbujmy wysłać maila na dwa sposoby - bezpośrednio do influencera i przez order-confirmation
+          // Wysyłamy tylko order-confirmation, webhook zajmie się powiadomieniem dla influencera
 
-          try {
-            // 1. Wywołaj API do bezpośredniego wysłania powiadomienia do influencera
-            console.log(
-              `🚨 [Success Page] Method 1: Sending direct notification to influencer`
-            );
-            const notificationResult = await $fetch(
-              "/api/mail/influencer-notification",
-              {
-                method: "POST",
-                body: completePayload,
-                timeout: 30000,
-              }
-            );
-
-            console.log(
-              `� [Success Page] Direct notification result:`,
-              JSON.stringify(notificationResult, null, 2)
-            );
-
-            if (notificationResult.success) {
-              console.log(
-                `✅ [Success Page] Influencer direct notification sent successfully`
-              );
-            } else {
-              console.error(
-                `❌ [Success Page] Failed to send influencer direct notification`
-              );
-              // TypeScript-bezpieczny sposób sprawdzania błędu
-              console.error(
-                `❌ [Success Page] Error details:`,
-                JSON.stringify(notificationResult)
-              );
-            }
-          } catch (notificationError: any) {
-            console.error(
-              `❌ [Success Page] Error calling direct notification API:`,
-              notificationError
-            );
-            console.error(`❌ [Success Page] Error details:`, {
-              message: notificationError.message || "Unknown error",
-              name: notificationError.name,
-              stack: notificationError.stack,
-            });
-          }
+          // Usunięto bezpośrednie wywołanie influencer-notification.post.ts, aby uniknąć duplikatów
+          console.log(
+            `ℹ️ [Success Page] Skipping direct influencer notification to prevent duplicates. Will be handled by webhook instead.`
+          );
 
           // 2. Wywołaj API order-confirmation jako zapasowy mechanizm
           try {
@@ -427,10 +387,10 @@ onMounted(async () => {
               `🚨 [Success Page] Method 2: Sending notification via order-confirmation endpoint`
             );
 
-            // Przygotuj payload dla order-confirmation
+            // Przygotuj payload dla order-confirmation - bez influencerEmail, żeby nie otrzymywał maila do klienta
             const orderConfirmationPayload = {
               customerEmail: parsedData.customerEmail,
-              influencerEmail: parsedData.influencerEmail,
+              // Usunięto influencerEmail, żeby nie otrzymywał maila do klienta
               orderDetails: {
                 orderNumber: parsedData.orderNumber,
                 customerName: parsedData.customerName,

@@ -1,315 +1,188 @@
 <template>
-  <div
-    class="relative lg:min-h-screen xl:min-h-screen 2xl:min-h-screen"
-    id="layout-container"
-  >
-    <!-- Background solution that aligns with grid -->
-    <div
-      class="absolute w-full h-full lg:min-h-screen xl:min-h-screen 2xl:min-h-screen"
-    >
-      <div class="container mx-auto h-full">
-        <div class="grid grid-cols-12 h-full">
-          <div class="col-span-12 lg:col-span-8 bg-white lg:bg-[#EBEBEB]"></div>
-          <div class="col-span-12 lg:col-span-4 bg-white lg:bg-white"></div>
-        </div>
+  <div class="min-h-screen bg-[#EBEBEB]">
+    <div class="max-w-md mx-auto py-16">
+      <!-- Komunikat o błędzie weryfikacji -->
+      <div
+        v-if="verificationError"
+        class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4"
+        role="alert"
+      >
+        <strong class="font-bold">Błąd weryfikacji!</strong>
+        <span class="block sm:inline"> {{ verificationError }}</span>
+        <p class="mt-2">Zostaniesz przekierowany do strony sklepu...</p>
       </div>
-    </div>
 
-    <!-- Background extensions -->
-    <div
-      class="absolute top-0 lg:bottom-0 left-0 right-1/3 -z-10 bg-[#EBEBEB] lg:bg-[#EBEBEB] content-height lg:min-h-screen xl:min-h-screen 2xl:min-h-screen"
-    ></div>
-    <div
-      class="absolute top-0 lg:bottom-0 left-2/3 right-0 -z-10 bg-[#EBEBEB] lg:bg-white content-height lg:min-h-screen xl:min-h-screen 2xl:min-h-screen"
-    ></div>
-
-    <!-- Content -->
-    <div class="container mx-auto relative z-10 pt-[60px]">
-      <!-- Logo and Title -->
-      <div class="grid grid-cols-12">
-        <!-- Formularz zamówienia - Start -->
+      <div v-if="isOrderVerified" class="bg-white rounded-md">
+        <!-- Order Details -->
         <div
-          class="col-span-12 lg:col-span-8 bg-[#EBEBEB] py-6"
-          id="left-columm"
+          class="max-w-lg mx-auto px-10 py-10 bg-white font-roboto-mono text-black text-sm"
         >
-          <div class="py-6 tracking-wider px-8">
-            <!-- Uproszczony układ wykorzystujący tylko Tailwind CSS -->
+          <!-- Order Number and Date -->
+          <div class="mb-10">
+            <div class="flex justify-between items-center">
+              <div class="text-gray-600">Numer zamówienia</div>
+              <div class="text-gray-600">Data zamówienia</div>
+            </div>
+            <div class="flex justify-between items-center">
+              <div>{{ orderNumber }}</div>
+              <div>{{ orderTimestamp }}</div>
+            </div>
+          </div>
+
+          <!-- Products List -->
+          <div v-if="orderMetadata?.products" class="mb-6">
             <div
-              v-for="(item, index) in cartItems"
-              :key="item.id"
-              :class="[
-                'py-6 lg:flex lg:items-center lg:gap-8 relative',
-                index < cartItems.length - 1 ? 'border-b border-gray-300' : '',
-              ]"
+              v-for="product in orderMetadata.products"
+              :key="product.id"
+              class="flex justify-between items-top"
             >
-              <!-- Wizerunek produktu -->
-              <!-- <div
-                class="aspect-square w-20 mx-auto lg:mx-0 lg:h-28 lg:w-28 bg-gray-100 flex items-center justify-center"
-              >
-                <img
-                  :src="item.product?.image"
-                  :alt="item.product?.name"
-                  class="w-24 h-24 object-cover rounded bg-gray-200"
-                />
-              </div> -->
-
-              <!-- Informacje o produkcie -->
-              <div class="text-md lg:flex-1">
-                <p class="font-semibold">{{ item.product?.name }}</p>
-                <div
-                  v-if="
-                    item.product?.features && item.product.features.length > 0
-                  "
-                  class="flex flex-wrap gap-2 my-2"
-                >
-                  <div
-                    v-for="feature in item.product.features"
-                    :key="feature.name"
-                    class="text-sm flex items-center"
-                  >
-                    <span class="font-medium text-gray-600"
-                      >{{ feature.name }}:</span
-                    >
-                    <span
-                      v-if="feature.colorCode"
-                      class="ml-1 inline-block w-3 h-3 rounded-full border border-gray-300"
-                      :style="{ backgroundColor: feature.colorCode }"
-                      :title="feature.value"
-                    ></span>
-                    <span class="ml-1 text-gray-800">{{ feature.value }}</span>
-                    <!-- Show color circle if colorCode exists -->
-                  </div>
-                </div>
-                <div class="mt-2 flex items-center">
-                  <!-- Discounted price or regular price -->
-                  <p class="text-gray-800 font-semibold flex items-center">
-                    <transition name="discount-badge" mode="out-in">
-                      <div
-                        :key="getTotalDiscount || 'regular'"
-                        class="flex items-center"
-                      >
-                        <template v-if="getTotalDiscount > 0">
-                          <span
-                            class="bg-black text-white px-2 py-1 text-xs rounded mr-1"
-                          >
-                            -{{ getTotalDiscount }}%
-                          </span>
-                          {{ calculateDiscountedUnitPrice(item).toFixed(2) }} zł
-                        </template>
-                        <template v-else>
-                          {{ item.product?.price.toFixed(2) }} zł
-                        </template>
-                      </div>
-                    </transition>
-                  </p>
+              <div class="flex-1">
+                <div>{{ product.name }}</div>
+                <div class="">
+                  {{ product.quantity }} szt. ×
+                  {{ formatPrice(product.price) }} zł
                 </div>
               </div>
-
-              <!-- Ilość produktu -->
-              <div class="inline-block w-1/2 lg:w-32 text-sm text-left">
-                <div class="flex items-center mt-6">
-                  <button
-                    @click="cartStore.decrementQuantity(item.id)"
-                    :disabled="!cartStore.canDecreaseQuantity(item.id)"
-                    :class="[
-                      'px-4 py-2 border-b border-t border-l border-gray-300 rounded-l-md',
-                      cartStore.canDecreaseQuantity(item.id)
-                        ? 'bg-transparent'
-                        : ' text-gray-400 cursor-not-allowed',
-                    ]"
-                  >
-                    -
-                  </button>
-                  <span class="px-4 py-2 border border-gray-300">{{
-                    item.quantity
-                  }}</span>
-                  <button
-                    @click="cartStore.incrementQuantity(item.id)"
-                    :disabled="!cartStore.canIncreaseQuantity(item.id)"
-                    :class="[
-                      'px-4 py-2 border-b border-t border-r border-gray-300 rounded-r-md',
-                      cartStore.canIncreaseQuantity(item.id)
-                        ? 'bg-transparent hover:bg-gray-200'
-                        : ' text-gray-400 cursor-not-allowed',
-                    ]"
-                    :title="
-                      !cartStore.canIncreaseQuantity(item.id)
-                        ? `Maksymalny limit: ${item.product?.orderLimit}`
-                        : ''
-                    "
-                  >
-                    +
-                  </button>
-                </div>
+              <div class="">
+                {{ formatPrice(product.price * product.quantity) }} zł
               </div>
+            </div>
+          </div>
 
-              <!-- Cena produktu -->
-              <div
-                class="inline-block w-1/2 lg:w-24 text-[16px] font-medium text-right"
-              >
+          <div class="border-t border-gray-200 py-6">
+            <div class="flex justify-between items-center">
+              <div>Wartość produktów</div>
+              <div>{{ formatPrice(orderMetadata?.subtotal || 0) }} zł</div>
+            </div>
+
+            <!-- VAT - always show even if zero -->
+            <div class="flex justify-between items-center">
+              <div>Wartość VAT</div>
+              <div>{{ formatPrice(orderMetadata?.vatAmount || 0) }} zł</div>
+            </div>
+
+            <!-- Show the applied discount (using the higher of the two) -->
+            <div
+              v-if="showNewDiscountFormat"
+              class="flex justify-between items-center"
+            >
+              <div>
+                {{ getDiscountTypeLabel() }}
+                ({{ orderMetadata?.appliedDiscountPercent || 0 }}%)
                 {{
-                  getTotalDiscount > 0
-                    ? (
-                        calculateDiscountedUnitPrice(item) * item.quantity
-                      ).toFixed(2)
-                    : (item.product?.price * item.quantity).toFixed(2)
+                  orderMetadata?.appliedDiscountType === "code" &&
+                  orderMetadata?.appliedDiscountCode
+                    ? " (kod: " + orderMetadata.appliedDiscountCode + ")"
+                    : ""
                 }}
+              </div>
+              <div>
+                -{{ formatPrice(orderMetadata?.appliedDiscountAmount || 0) }}
                 zł
               </div>
-
-              <!-- Przycisk usunięcia -->
-              <button
-                @click="cartStore.removeFromCart(item.id)"
-                class="absolute lg:static top-6 right-0"
-              >
-                <div
-                  class="w-6 h-6 bg-gray-250 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-400 transition-colors"
-                >
-                  <img
-                    src="/icons/close.svg"
-                    alt="Usuń produkt"
-                    class="w-4 h-4"
-                  />
-                </div>
-              </button>
             </div>
 
-            <!-- Discount Code Input -->
-            <div
-              v-if="cartItems.length > 0"
-              class="mt-6 border-t border-gray-300 pt-6"
-            >
-              <!-- Show input when no discount code is applied -->
-              <div v-if="!cartStore.appliedDiscountCode">
-                <div class="flex flex-col lg:flex-row lg:items-center gap-4">
-                  <div class="flex flex-1">
-                    <input
-                      type="text"
-                      v-model="discountCode"
-                      placeholder="Wpisz kod rabatowy"
-                      class="px-4 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-1 focus:ring-black w-full"
-                    />
-                    <button
-                      @click="applyDiscountCode"
-                      class="px-4 py-2 bg-black text-white rounded-r-md hover:opacity-90"
-                      :disabled="!discountCode.trim()"
-                    >
-                      Zastosuj
-                    </button>
-                  </div>
+            <!-- Fallback for backward compatibility -->
+            <template v-else>
+              <div
+                v-if="
+                  orderMetadata?.quantityDiscount &&
+                  orderMetadata.quantityDiscount > 0
+                "
+                class="flex justify-between items-center"
+              >
+                <div>
+                  Rabat ilościowy ({{
+                    orderMetadata.cartDiscountPercent || 10
+                  }}%)
                 </div>
+                <div>-{{ formatPrice(orderMetadata.quantityDiscount) }} zł</div>
               </div>
 
-              <!-- Show only removal option when code is applied -->
-              <div v-else class="flex items-center justify-end">
-                <button
-                  @click="removeDiscountCode"
-                  class="text-sm text-gray-600 hover:text-black underline"
-                >
-                  Usuń kod rabatowy
-                </button>
-              </div>
-
-              <!-- Show messages (errors and warnings) -->
-              <p
-                v-if="codeMessage"
-                class="mt-2"
-                :class="codeSuccess ? 'text-yellow-600' : 'text-red-500'"
+              <div
+                v-if="
+                  orderMetadata?.couponDiscount &&
+                  orderMetadata.couponDiscount > 0
+                "
+                class="flex justify-between items-center"
               >
-                {{ codeMessage }}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+                <div>
+                  Rabat dodatkowy
+                  {{
+                    orderMetadata.codeDiscountPercent &&
+                    orderMetadata.codeDiscountPercent > 0
+                      ? "(" + orderMetadata.codeDiscountPercent + "%)"
+                      : ""
+                  }}
+                  {{
+                    orderMetadata.appliedDiscountCode
+                      ? " (kod: " + orderMetadata.appliedDiscountCode + ")"
+                      : ""
+                  }}
+                </div>
+                <div>-{{ formatPrice(orderMetadata.couponDiscount) }} zł</div>
+              </div>
+            </template>
 
-      <div v-if="cartItems.length > 0" class="grid grid-cols-12">
-        <div class="col-span-12 lg:col-span-4 bg-white p-10">
-          <p class="text-2xl tracking-wider">Podsumowanie</p>
-          <div
-            class="space-y-3 border-b border-t border-gray-200 my-6 py-6 tracking-wider"
-          >
-            <div class="flex justify-between">
-              <p>Liczba produktów</p>
-              <p class="text-right">{{ cartStore.totalQuantity }} szt.</p>
+            <!-- Shipping cost -->
+            <div class="flex justify-between items-center">
+              <div>Koszt wysyłki</div>
+              <div>{{ formatPrice(orderMetadata?.shippingCost || 0) }} zł</div>
             </div>
-            <div class="flex justify-between">
-              <p>Wartość produktów</p>
-              <p class="text-right">
-                {{ cartStore.subtotalPrice.toFixed(2) }} zł
-              </p>
-            </div>
-            <div class="flex justify-between">
-              <p>Wartość VAT</p>
-              <p class="text-right">0,00 zł</p>
-            </div>
-            <!-- Display only the higher discount -->
-            <div
-              v-if="cartStore.totalDiscount > 0"
-              class="flex justify-between"
-            >
-              <p>
-                {{
-                  cartStore.cartDiscount >= cartStore.codeDiscount
-                    ? `Rabat ilościowy -${cartStore.cartDiscount}%`
-                    : `Rabat dodatkowy -${cartStore.codeDiscount}%`
-                }}
-              </p>
-              <p class="text-right">
-                - {{ cartStore.totalDiscountAmount.toFixed(2) }} zł
-              </p>
-            </div>
-            <div class="flex justify-between">
-              <p>Koszt wysyłki</p>
-              <p class="text-right">0,00 zł</p>
-            </div>
-          </div>
-          <div class="flex justify-between text-2xl tracking-wider">
-            <p>Suma</p>
-            <p class="text-right">{{ cartStore.totalPrice.toFixed(2) }} zł</p>
-          </div>
-          <NuxtLink
-            to="/shop/checkout"
-            class="block w-full bg-black text-white py-4 rounded-full hover:opacity-100 opacity-90 transition-all mt-16 cursor-pointer text-center"
-          >
-            Przejdź do zamówienia
-          </NuxtLink>
-        </div>
-      </div>
 
-      <div v-else class="grid grid-cols-12">
-        <div
-          class="col-span-12 lg:col-span-8 bg-[#EBEBEB] p-10 flex flex-col items-center justify-center min-h-[50vh]"
-        >
-          <img
-            src="/images/empty-cart.png"
-            alt="Empty Cart"
-            class="mx-auto w-[450px] h-auto mb-6"
-          />
-          <p class="text-3xl text-gray-600 mb-4 tracking-wide text-center">
-            Twój koszyk jest pusty
-          </p>
-          <NuxtLink
-            to="/shop"
-            class="inline-block px-8 py-3 bg-black text-white rounded-full hover:opacity-100 opacity-90 transition-all"
-          >
-            Wróć do sklepu
-          </NuxtLink>
-        </div>
-        <div class="col-span-12 lg:col-span-4 bg-white p-10">
-          <!-- Empty cart summary placeholder -->
-          <p class="text-2xl tracking-wider">Podsumowanie</p>
-          <div
-            class="space-y-3 border-b border-t border-gray-200 my-6 py-6 tracking-wider"
-          >
-            <div class="flex justify-between">
-              <p>Koszyk jest pusty</p>
-              <p class="text-right">0,00 zł</p>
+            <div class="flex justify-between items-center pt-6 font-bold">
+              <div>Suma</div>
+              <div>{{ formatPrice(orderMetadata?.total || 0) }} zł</div>
             </div>
           </div>
-          <div class="flex justify-between text-2xl tracking-wider">
-            <p>Suma</p>
-            <p class="text-right">0,00 zł</p>
+
+          <!-- Customer Details -->
+          <div v-if="orderMetadata">
+            <!-- Dane klienta -->
+            <div class="border-t border-gray-200 py-6">
+              <div class="grid grid-cols-1">
+                <div class="flex">
+                  <span class="text-gray-800">{{
+                    orderMetadata.customerName
+                  }}</span>
+                </div>
+                <div class="flex">
+                  <span class="text-gray-800">{{
+                    orderMetadata.customerEmail
+                  }}</span>
+                </div>
+                <div v-if="orderMetadata.customerPhone" class="flex">
+                  <span class="text-gray-800">{{
+                    orderMetadata.customerPhone
+                  }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Adres wysyłki -->
+            <div class="border-t border-gray-200 py-6">
+              <div class="grid grid-cols-1">
+                <div class="flex">
+                  <span class="text-gray-800">{{
+                    orderMetadata.shippingAddress
+                  }}</span>
+                </div>
+                <div class="flex">
+                  <span class="text-gray-800"
+                    >{{ orderMetadata.shippingPostalCode }}
+                    {{ orderMetadata.shippingCity }},
+                    {{ orderMetadata.shippingCountry }}</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-4">
+            <p class="text-gray-600">
+              Dodatkowe podsumowanie zamówienia oraz kod rabatowy na następne
+              zakupy wysłaliśmy na wskazany przez Ciebie adres email.
+            </p>
           </div>
         </div>
       </div>
@@ -323,152 +196,357 @@ definePageMeta({
 });
 
 import { useCartStore, CART_DISCOUNT_TIERS } from "~/stores/shop/cart";
-import type { CartItem } from "~/types/shop";
-import { useProductsStore } from "~/stores/shop/products";
+import type { OrderMetadata } from "~/types/shop";
+import discountsData from "~/data/discounts.json";
 
+const route = useRoute();
 const cartStore = useCartStore();
-const productsStore = useProductsStore();
-
-// Discount code handling
-const discountCode = ref("");
-const codeMessage = ref("");
-const codeSuccess = ref(false);
-
-// Apply discount code function
-function applyDiscountCode() {
-  if (!discountCode.value.trim()) return;
-
-  // Set the discount code in the cart store
-  cartStore.setDiscountCode(discountCode.value);
-
-  // Try to apply the discount code
-  const result = cartStore.applyDiscountCode();
-
-  if (result.success) {
-    // Clear the input after successful application
-    discountCode.value = "";
-
-    // Show warning if the code discount is lower than cart discount
-    if (result.warning) {
-      codeSuccess.value = true;
-      codeMessage.value =
-        result.message ||
-        "Zastosowano kod rabatowy, ale rabat ilościowy jest wyższy.";
-
-      // Clear the message after 5 seconds
-      setTimeout(() => {
-        codeMessage.value = "";
-      }, 5000);
-    }
-  } else {
-    // Show error or warning message
-    codeSuccess.value = result.warning || false;
-    codeMessage.value = result.message || "Nieprawidłowy kod rabatowy";
-
-    // Clear the message after 5 seconds
-    setTimeout(() => {
-      codeMessage.value = "";
-    }, 5000);
-  }
-}
-
-// Remove discount code function
-function removeDiscountCode() {
-  cartStore.removeDiscountCode();
-}
-
-const cartItems = computed(() => cartStore.itemsWithDiscounts);
-const cartDiscountTiers = CART_DISCOUNT_TIERS.sort(
-  (a, b) => b.quantity - a.quantity
-);
-
-// Calculate the total discount percentage (maximum of quantity or code discount)
-const getTotalDiscount = computed((): number => {
-  return Math.max(cartStore.cartDiscount, cartStore.codeDiscount);
-});
-
-// Find the next discount tier that the user can reach
-const nextDiscountTier = computed(() => {
-  if (cartStore.cartDiscount > 0) return null; // Już mamy rabat, nie pokazujemy następnego progu
-
-  // Sortujemy progi rosnąco (od najmniejszego do największego) i znajdujemy pierwszy osiągalny
-  return [...cartDiscountTiers]
-    .sort((a, b) => a.quantity - b.quantity) // Sortowanie rosnąco po ilości
-    .find((tier) => tier.quantity > cartStore.totalQuantity);
-});
-
-/**
- * Calculate the discounted unit price for a cart item
- */
-function calculateDiscountedUnitPrice(
-  item: CartItem & { product: any }
-): number {
-  if (!item.product) return 0;
-
-  const originalPrice = item.product.price;
-  const discountMultiplier = 1 - getTotalDiscount.value / 100;
-
-  // Round to 2 decimal places
-  return Math.round(originalPrice * discountMultiplier * 100) / 100;
-}
-
-// Script to adjust background height based on content
-onMounted(() => {
-  const adjustBackgroundHeight = () => {
-    if (window.innerWidth < 1024) {
-      // lg breakpoint in Tailwind
-      const leftColumn = document.getElementById("left-column");
-      const bgElements = document.querySelectorAll(".content-height");
-
-      if (leftColumn && bgElements.length) {
-        const height = leftColumn.offsetHeight + 60; // 60px is the padding-top
-        bgElements.forEach((el) => {
-          (el as HTMLElement).style.height = `${height}px`;
-          (el as HTMLElement).style.bottom = "auto";
-        });
-      }
-    } else {
-      // Restore default styles for larger screens
-      const bgElements = document.querySelectorAll(".content-height");
-      bgElements.forEach((el) => {
-        (el as HTMLElement).style.height = "100vh";
-        (el as HTMLElement).style.bottom = "0";
-      });
-    }
-  };
-
-  // Run the function on load and on resize
-  adjustBackgroundHeight();
-  window.addEventListener("resize", adjustBackgroundHeight);
-
-  // Cleanup on unmount
-  onUnmounted(() => {
-    window.removeEventListener("resize", adjustBackgroundHeight);
+const orderMetadata = ref<OrderMetadata | null>(null);
+const orderNumber = computed(() => route.query.order as string);
+const orderTimestamp = computed(() => {
+  const timestamp = route.query.timestamp as string;
+  if (!timestamp) return new Date().toLocaleString("pl-PL");
+  return new Date(parseInt(timestamp)).toLocaleString("pl-PL", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 });
+
+// Formatowanie ceny w stylu polskim
+const formatPrice = (price: number) => {
+  return new Intl.NumberFormat("pl-PL", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(price);
+};
+
+// Helper function to determine if we should use the new discount format
+const showNewDiscountFormat = computed(() => {
+  return (
+    orderMetadata.value?.appliedDiscountAmount !== undefined &&
+    orderMetadata.value?.appliedDiscountAmount > 0
+  );
+});
+
+// Helper function to get the discount type label
+function getDiscountTypeLabel() {
+  if (!orderMetadata.value?.appliedDiscountType) return "Rabat";
+
+  return orderMetadata.value.appliedDiscountType === "quantity"
+    ? "Rabat ilościowy"
+    : "Rabat dodatkowy";
+}
+
+// Zmienna do przechowywania statusu weryfikacji
+const isOrderVerified = ref(false);
+const verificationError = ref("");
+
+// Weryfikacja podpisu URL na serwerze
+const verifyOrderSignature = async () => {
+  try {
+    const { order, timestamp, signature } = route.query;
+
+    // Wywołaj API do weryfikacji podpisu
+    const result = await $fetch("/api/orders/verify-signature", {
+      method: "GET",
+      params: {
+        order,
+        timestamp,
+        signature,
+      },
+    });
+
+    console.log("Wynik weryfikacji podpisu:", result);
+
+    if (result.verified) {
+      isOrderVerified.value = true;
+      // Tutaj możemy pobrać dane zamówienia z serwera
+    } else {
+      // Poprawiono dostęp do właściwości error za pomocą bezpiecznego sprawdzenia typów
+      verificationError.value = "Nie udało się zweryfikować zamówienia";
+      if ("error" in result && typeof result.error === "string") {
+        verificationError.value = result.error;
+      }
+      console.error("Błąd weryfikacji:", verificationError.value);
+      // Przekierowanie nastąpi po krótkim opóźnieniu
+      setTimeout(() => {
+        navigateTo("/shop");
+      }, 3000);
+    }
+  } catch (error) {
+    console.error("Błąd podczas weryfikacji zamówienia:", error);
+    verificationError.value = "Wystąpił błąd podczas weryfikacji";
+    // Przekierowanie nastąpi po krótkim opóźnieniu
+    setTimeout(() => {
+      navigateTo("/shop");
+    }, 3000);
+  }
+};
+
+onMounted(async () => {
+  console.log("🔔 [Success Page] Success page mounted");
+  cartStore.clearCart();
+
+  // Najpierw weryfikujemy podpis URL na serwerze
+  await verifyOrderSignature();
+
+  // Jeśli podpis jest poprawny, pobieramy dane zamówienia
+  if (isOrderVerified.value && process.client && orderNumber.value) {
+    // Tutaj możemy pobrać dane zamówienia z sessionStorage lub z serwera
+    const storedData = sessionStorage.getItem(`order_${orderNumber.value}`);
+
+    console.log(
+      `🔍 [Success Page] Checking sessionStorage for order_${orderNumber.value}`
+    );
+    console.log(
+      `📦 [Success Page] Data found in sessionStorage: ${!!storedData}`
+    );
+
+    if (storedData) {
+      try {
+        const parsedData = JSON.parse(storedData);
+        orderMetadata.value = parsedData;
+        console.log(
+          "📦 [Success Page] Sparsowane dane zamówienia:",
+          parsedData
+        );
+        console.log(
+          `📦 [Success Page] Influencer email in data: ${
+            parsedData.influencerEmail || "NOT FOUND"
+          }`
+        );
+        console.log(
+          `📦 [Success Page] Applied discount code: ${
+            parsedData.appliedDiscountCode || "NONE"
+          }`
+        );
+        console.log(
+          `📦 [Success Page] Code discount percent: ${
+            parsedData.codeDiscountPercent || 0
+          }%`
+        );
+
+        // Jeśli mamy dane influencera, wyślij powiadomienie
+        if (
+          parsedData.influencerEmail &&
+          parsedData.influencerEmail.trim() !== ""
+        ) {
+          console.log(
+            `� [Success Page] Detected influencer email: ${parsedData.influencerEmail}, sending notification`
+          );
+
+          // Przygotuj dane dla API powiadomienia
+          const completePayload = {
+            influencerEmail: parsedData.influencerEmail,
+            orderDetails: {
+              customerName: parsedData.customerName,
+              customerEmail: parsedData.customerEmail,
+              orderNumber: parsedData.orderNumber,
+              appliedDiscountCode: parsedData.appliedDiscountCode || "",
+              // Przygotuj dane produktów w oczekiwanym formacie
+              items: parsedData.products
+                ? JSON.parse(parsedData.products).map((item: any) => {
+                    // Obsługa zarówno skompresowanego jak i pełnego formatu danych produktu
+                    const isCompressed = item.n !== undefined;
+                    return {
+                      product: {
+                        id: item.id || 0,
+                        name: isCompressed ? item.n : item.name,
+                        price: isCompressed ? item.p : item.price,
+                        image: item.image || "",
+                        description: "",
+                      },
+                      quantity: isCompressed ? item.q : item.quantity,
+                    };
+                  })
+                : [],
+              subtotalAmount: parseFloat(parsedData.subtotalAmount),
+              finalAmount: parseFloat(parsedData.finalAmount),
+              codeDiscountPercent: parseFloat(parsedData.codeDiscountPercent),
+            },
+          };
+
+          console.log(
+            `� [Success Page] Sending notification payload:`,
+            JSON.stringify(completePayload, null, 2)
+          );
+
+          // Spróbujmy wysłać maila na dwa sposoby - bezpośrednio do influencera i przez order-confirmation
+
+          try {
+            // 1. Wywołaj API do bezpośredniego wysłania powiadomienia do influencera
+            console.log(
+              `🚨 [Success Page] Method 1: Sending direct notification to influencer`
+            );
+            const notificationResult = await $fetch(
+              "/api/mail/influencer-notification",
+              {
+                method: "POST",
+                body: completePayload,
+                timeout: 30000,
+              }
+            );
+
+            console.log(
+              `� [Success Page] Direct notification result:`,
+              JSON.stringify(notificationResult, null, 2)
+            );
+
+            if (notificationResult.success) {
+              console.log(
+                `✅ [Success Page] Influencer direct notification sent successfully`
+              );
+            } else {
+              console.error(
+                `❌ [Success Page] Failed to send influencer direct notification`
+              );
+              // TypeScript-bezpieczny sposób sprawdzania błędu
+              console.error(
+                `❌ [Success Page] Error details:`,
+                JSON.stringify(notificationResult)
+              );
+            }
+          } catch (notificationError: any) {
+            console.error(
+              `❌ [Success Page] Error calling direct notification API:`,
+              notificationError
+            );
+            console.error(`❌ [Success Page] Error details:`, {
+              message: notificationError.message || "Unknown error",
+              name: notificationError.name,
+              stack: notificationError.stack,
+            });
+          }
+
+          // 2. Wywołaj API order-confirmation jako zapasowy mechanizm
+          try {
+            console.log(
+              `🚨 [Success Page] Method 2: Sending notification via order-confirmation endpoint`
+            );
+
+            // Przygotuj payload dla order-confirmation
+            const orderConfirmationPayload = {
+              customerEmail: parsedData.customerEmail,
+              influencerEmail: parsedData.influencerEmail,
+              orderDetails: {
+                orderNumber: parsedData.orderNumber,
+                customerName: parsedData.customerName,
+                customerEmail: parsedData.customerEmail,
+                customerPhone: parsedData.customerPhone || "",
+                shippingAddress: {
+                  street: parsedData.shippingStreet || "",
+                  houseNumber: parsedData.shippingHouseNumber || "",
+                  postalCode: parsedData.shippingPostalCode || "",
+                  city: parsedData.shippingCity || "",
+                  country: parsedData.shippingCountry || "",
+                },
+                subtotalAmount: parseFloat(parsedData.subtotalAmount),
+                cartDiscountPercent: parseFloat(
+                  parsedData.cartDiscountPercent || "0"
+                ),
+                cartDiscountAmount: parseFloat(
+                  parsedData.cartDiscountAmount || "0"
+                ),
+                codeDiscountPercent: parseFloat(
+                  parsedData.codeDiscountPercent || "0"
+                ),
+                codeDiscountAmount: parseFloat(
+                  parsedData.codeDiscountAmount || "0"
+                ),
+                totalDiscountAmount: parseFloat(
+                  parsedData.totalDiscountAmount || "0"
+                ),
+                appliedDiscountCode: parsedData.appliedDiscountCode || "",
+                amount: parseFloat(parsedData.finalAmount),
+                items: parsedData.products
+                  ? JSON.parse(parsedData.products).map((item: any) => {
+                      const isCompressed = item.n !== undefined;
+                      return {
+                        name: isCompressed ? item.n : item.name,
+                        quantity: isCompressed ? item.q : item.quantity,
+                        unitPrice: isCompressed ? item.p : item.price,
+                        totalPrice:
+                          (isCompressed ? item.p : item.price) *
+                          (isCompressed ? item.q : item.quantity),
+                        priceWithDiscount: isCompressed
+                          ? item.f
+                          : item.lineItemTotalPriceWithDiscount || 0,
+                        discountAmount: isCompressed
+                          ? item.d
+                          : item.discountAppliedToLineItem || 0,
+                        image: item.image || "",
+                      };
+                    })
+                  : [],
+              },
+            };
+
+            console.log(
+              `🚨 [Success Page] Order confirmation payload:`,
+              JSON.stringify(orderConfirmationPayload, null, 2)
+            );
+
+            const orderConfirmationResult = await $fetch(
+              "/api/mail/order-confirmation",
+              {
+                method: "POST",
+                body: orderConfirmationPayload,
+                timeout: 30000,
+              }
+            );
+
+            console.log(
+              `🚨 [Success Page] Order confirmation result:`,
+              JSON.stringify(orderConfirmationResult, null, 2)
+            );
+
+            if (orderConfirmationResult.success) {
+              console.log(
+                `✅ [Success Page] Order confirmation email sent successfully`
+              );
+              // TypeScript-bezpieczny sposób sprawdzania wyników
+              console.log(
+                `✅ [Success Page] Order confirmation response:`,
+                JSON.stringify(orderConfirmationResult)
+              );
+
+              // @ts-ignore - wiemy że może istnieć recipients.influencer
+              if (orderConfirmationResult.recipients?.influencer) {
+                console.log(
+                  `✅ [Success Page] Influencer notification via order-confirmation sent successfully`
+                );
+              }
+            } else {
+              console.error(
+                `❌ [Success Page] Failed to send via order-confirmation`
+              );
+            }
+          } catch (orderConfirmationError: any) {
+            console.error(
+              `❌ [Success Page] Error calling order-confirmation API:`,
+              orderConfirmationError
+            );
+            console.error(`❌ [Success Page] Error details:`, {
+              message: orderConfirmationError.message || "Unknown error",
+              name: orderConfirmationError.name,
+              stack: orderConfirmationError.stack,
+            });
+          }
+        } else {
+          console.log(
+            `ℹ️ [Success Page] No influencer email found in order data`
+          );
+        }
+      } catch (e) {
+        console.error("Błąd parsowania danych zamówienia:", e);
+      }
+    } else {
+      console.warn("Nie znaleziono danych zamówienia w sessionStorage");
+      // Tutaj możemy dodać logikę pobierania danych z serwera
+    }
+  }
+});
 </script>
-
-<style scoped>
-@media (max-width: 1023px) {
-  #layout-container {
-    min-height: auto;
-  }
-}
-
-@media (min-width: 1024px) {
-  #layout-container {
-    min-height: 100vh;
-  }
-}
-
-/* Animation for discount badge */
-.discount-badge-enter-active,
-.discount-badge-leave-active {
-  transition: opacity 0.5s ease;
-}
-
-.discount-badge-enter-from,
-.discount-badge-leave-to {
-  opacity: 0;
-}
-</style>
